@@ -1,4 +1,4 @@
-/* base.css : 기본 디자인을 구성하는 파일, 오로지 색상만 적용 */
+/* base.css : 기본 디자인을 구성하는 파일 */
 :root {
   /* 시스템 배경 및 레이아웃 컬러 */
   --bg-main: #111111;         /* 전체 화면 배경 */
@@ -16,4 +16,22 @@
 }
 
 html { margin: 0; }
-body { margin: 0; }
+body {
+  background-color: var(--bg-main);
+}
+
+/* Base */
+
+
+/* Mobile */
+
+
+/* Tablet */
+@media screen and (min-width: 768px) {
+
+}
+
+/* Desktop */
+@media screen and (min-width: 1024px) {
+
+}
