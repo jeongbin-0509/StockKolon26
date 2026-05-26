@@ -1,4 +1,6 @@
 /* base.css : 기본 디자인을 구성하는 파일 */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap');
+
 :root {
   /* 시스템 배경 및 레이아웃 컬러 */
   --bg-main: #111111;         /* 전체 화면 배경 */
@@ -18,6 +20,42 @@
 html { margin: 0; }
 body {
   background-color: var(--bg-main);
+}
+
+.head1 { /* 제목1 size */
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-style: normal;
+  color: var(--text-primary);
+}
+.head2 { /* 제목2 size */
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 600;
+  font-style: normal;
+  color: var(--text-primary);
+}
+.head3 { /* 제목3 size */
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+  color: var(--text-primary);
+}
+.main_text { /* maintext size 일반 글씨 */
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  color: var(--text-primary);
+}
+.sub_text { /* subtext size 흐린 글씨*/
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-style: normal;
+  color: var(--text-secondary);
 }
 
 /* Base */
