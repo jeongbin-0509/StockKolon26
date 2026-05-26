@@ -1,0 +1,22 @@
+/* 오로지 header만 관리 */
+
+/* Mobile */
+img {
+    width: 70%;
+    height: auto;
+}
+
+/* Tablet */
+@media screen and (min-width: 768px) {
+
+}
+
+/* Desktop */
+@media screen and (min-width: 1024px) {
+    
+img {
+    width: 20%;
+    height: auto;
+}
+
+}

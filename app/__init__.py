@@ -10,9 +10,11 @@ def create_app():
 
     # routes/main.py 에서 main Blueprint 가져오기
     from app.routes.main import main
+    from app.routes.auth import auth
 
     # Blueprint 등록
     app.register_blueprint(main)
+    app.register_blueprint(auth)
 
     # 완성된 Flask 앱 반환
     return app
