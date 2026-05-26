@@ -1,3 +1,33 @@
+<<<<<<< HEAD
 venv/
 __pycache__/
 *.pyc
+=======
+# # Python
+# __pycache__/
+# *.py[cod]
+# *.pyo
+
+# # 가상환경
+# venv/
+# .venv/
+# env/
+
+# # 환경변수
+# .env
+
+# # Flask
+# instance/
+# *.sqlite3
+# *.db
+
+# # VS Code
+# .vscode/
+
+# # OS
+# .DS_Store
+# Thumbs.db
+
+# # 로그
+# *.log
+>>>>>>> d898a1a (비상ㅇㅇㅇ)
