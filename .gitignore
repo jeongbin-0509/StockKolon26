@@ -1,27 +1,27 @@
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
+# # Python
+# __pycache__/
+# *.py[cod]
+# *.pyo
 
-# 가상환경
-venv/
-.venv/
-env/
+# # 가상환경
+# venv/
+# .venv/
+# env/
 
-# 환경변수
-.env
+# # 환경변수
+# .env
 
-# Flask
-instance/
-*.sqlite3
-*.db
+# # Flask
+# instance/
+# *.sqlite3
+# *.db
 
-# VS Code
-.vscode/
+# # VS Code
+# .vscode/
 
-# OS
-.DS_Store
-Thumbs.db
+# # OS
+# .DS_Store
+# Thumbs.db
 
-# 로그
-*.log
+# # 로그
+# *.log
