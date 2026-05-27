@@ -12,4 +12,4 @@ main = Blueprint("main", __name__)
 def index():
 
     # templates/index.html 반환
-    return render_template("index.html")
+    return render_template("auth/login.html")
