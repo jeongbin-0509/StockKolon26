@@ -36,5 +36,5 @@ form.addEventListener("submit", (event) => {
 const signup_btn = document.getElementById("moveto_signup_btn");
 
 signup_btn.addEventListener("click", event => {
-    location.href = "/signup"
+    location.href = "/auth/signup"
 });

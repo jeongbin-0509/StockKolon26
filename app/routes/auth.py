@@ -39,7 +39,7 @@ def login():
         flash("로그인되었습니다.")
         return redirect(url_for("main.index"))
     
-    return render_template("auth/signup.html")
+    return render_template("auth/login.html")
 
 # 회원가입 페이지
 @auth.route("/signup", methods=["GET", "POST"])
@@ -83,7 +83,9 @@ def signup():
 
         flash("회원가입이 완료되었습니다.")
 
-    return redirect(url_for("auth.login"))
+        return redirect(url_for("auth.login"))
+
+    return render_template("auth/signup.html")
 
 
 
