@@ -220,4 +220,3 @@
 - club_name
 - club_description
 - stock_price
-- 

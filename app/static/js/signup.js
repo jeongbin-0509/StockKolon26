@@ -5,7 +5,7 @@ sendCodeBtn.addEventListener("click", async () => {
 
     const email = emailId + "@goedu.kr";
 
-    if (!email) {
+    if (!emailId) {
         alert("이메일을 입력하세요.");
         return;
     }

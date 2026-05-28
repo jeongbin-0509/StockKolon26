@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 from app.services.email_service import generate_code, send_email_code
+from werkzeug.security import generate_password_hash, check_password_hash
+from app.services.supabase_client import supabase
 
 auth = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -13,10 +15,31 @@ def login():
         password = request.form.get("password")
 
         # 로그인 로직
+
+        # DB에서 학번으로 사용자 찾기
+        result = supabase.table("users").select("*").eq("usernum", usernum).execute()
+
+        # 사용자가 없으면
+        if len(result.data) == 0:
+            flash("존재하지 않는 학번입니다.")
+            return redirect(url_for("auth.login"))
+
+        user = result.data[0]
+
+        # 비밀번호 확인
+        if not check_password_hash(user["password"], password):
+            flash("비밀번호가 일치하지 않습니다.")
+            return redirect(url_for("auth.login"))
+        
+        # 로그인 성공
+        session["user_id"] = user["id"]
+        session["usernum"] = user["usernum"]
+        session["name"] = user["name"]
+        
+        flash("로그인되었습니다.")
         return redirect(url_for("main.index"))
-
-    return render_template("auth/login.html")
-
+    
+    return render_template("auth/signup.html")
 
 # 회원가입 페이지
 @auth.route("/signup", methods=["GET", "POST"])
@@ -49,12 +72,19 @@ def signup():
             return redirect(url_for("auth.signup"))
 
         # 회원가입 DB 저장 로직
-        print(name, usernum, email, password)
+        hashed_password = generate_password_hash(password)
+
+        supabase.table("users").insert({
+            "name": name,
+            "usernum": usernum,
+            "email": email,
+            "password": hashed_password
+        }).execute()
 
         flash("회원가입이 완료되었습니다.")
-        return redirect(url_for("auth.login"))
 
-    return render_template("auth/signup.html")
+    return redirect(url_for("auth.login"))
+
 
 
 # 이메일 인증번호 전송
@@ -88,4 +118,5 @@ def logout():
 
     session.clear()
 
+    flash("로그아웃되었습니다.")
     return redirect(url_for("main.index"))

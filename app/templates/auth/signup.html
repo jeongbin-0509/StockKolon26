@@ -10,7 +10,6 @@
 <body>
     <header>
         <img src="{{ url_for('static', filename='images/stockolon_logo.png')}}" id="logo"/>
-        <button id="signup_btn">회원가입</button>
     </header>
 <main>
     <form action="{{ url_for('auth.signup') }}" method="POST">

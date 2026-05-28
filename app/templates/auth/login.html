@@ -13,7 +13,7 @@
     </header>
     <main>
         <section id="login">
-            <form method="POST" action="/login" id="login_form">
+            <form method="POST" action="{{ url_for('auth.login') }}" id="login_form">
                 <input type="text" name="usernum" id="usernum" placeholder="학번">
                 <div class="sub_text" id="usernum_errormsg">학번을 정확히 입력해주세요</div>
                 <input type="password" name="password" id="password" placeholder="비밀번호">

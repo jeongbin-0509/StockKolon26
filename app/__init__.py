@@ -1,12 +1,16 @@
 # Flask 클래스 가져오기
+import os
+from dotenv import load_dotenv
 from flask import Flask
 
+load_dotenv()
 
 # Flask 앱 생성 함수
 def create_app():
 
-    # Flask 서버 객체 생성
     app = Flask(__name__)
+
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
     # routes/main.py 에서 main Blueprint 가져오기
     from app.routes.main import main
