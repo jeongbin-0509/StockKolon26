@@ -1,5 +1,7 @@
 # STOCKOLON 26
 
+#### 실행할 때 터미널에 python run.py로 하기
+
 ## 개발 방향
 
 - 백엔드: Flask
