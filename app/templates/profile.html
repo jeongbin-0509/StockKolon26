@@ -10,7 +10,9 @@
 <body>
     <header>
         <img src="{{ url_for('static', filename='images/stockolon_logo.png')}}" id="logo"/>
-        <button class="head1">개인프로필</button>
+        <a href="{{ url_for('auth.logout') }}">
+            <button>로그아웃</button>
+        </a>
     </header>
     <main>
 

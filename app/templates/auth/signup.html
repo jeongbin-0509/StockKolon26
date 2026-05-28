@@ -34,6 +34,13 @@
         <button type="submit">회원가입</button>
     </form>
 </main>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
     <footer>
 
     </footer>

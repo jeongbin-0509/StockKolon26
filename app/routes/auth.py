@@ -59,6 +59,11 @@ def signup():
         
         password_check = request.form.get("password_check")
 
+        print("입력 인증번호:", email_code)
+        print("세션 인증번호:", session.get("email_code"))
+        print("입력 이메일:", email)
+        print("세션 이메일:", session.get("email"))
+
         if password != password_check:
             flash("비밀번호가 일치하지 않습니다.")
             return redirect(url_for("auth.signup"))
@@ -84,6 +89,7 @@ def signup():
         flash("회원가입이 완료되었습니다.")
 
         return redirect(url_for("auth.login"))
+    
 
     return render_template("auth/signup.html")
 
