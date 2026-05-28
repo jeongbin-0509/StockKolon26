@@ -95,6 +95,8 @@ def send_code():
     data = request.get_json()
     email = data.get("email")
 
+    print("받은 이메일:", email)
+
     if not email:
         return jsonify({
             "success": False,
@@ -102,6 +104,7 @@ def send_code():
         })
 
     code = generate_code()
+    print("생성된 인증번호:", code)
 
     session["email"] = email
     session["email_code"] = code
