@@ -69,25 +69,34 @@
                     <!-- 차트는 JS/Canvas로 구현 예정 -->
                     <canvas class="main-chart" width="320" height="120" aria-label="세미콜론 차트"></canvas>
                 </div>
-                <div class="trade-actions">
-                    <button class="trade-action-btn buy" type="button">매수</button>
-                    <button class="trade-action-btn sell" type="button">매도</button>
+                <div class="trade-tabs">
+                    <!-- 여기서 매수 매도 모드 변경 -->
+                    <button class="tab-btn active" data-tab="buy">매수</button>
+                    <button class="tab-btn" data-tab="sell">매도</button>
+                </div>
+                <div class="tab-content">
+                    <div class="tab-panel active">
+                        <form class="order-form">
+                            <!-- 위에서 변경한 모드에 따라서 여기 내용 변경 -->
+                            <div class="order-row">
+                                <label for="order-amount" class="head3">주문수량 (주)</label>
+                                <input type="number" id="order-amount" name="order-amount" min="1" value="0" />
+                                <button type="button" class="order-btn plus">+</button>
+                                <button type="button" class="order-btn minus">-</button>
+                            </div>
+                            <div class="order-shortcuts">
+                                <button type="button" class="shortcut-btn">10</button>
+                                <button type="button" class="shortcut-btn">100</button>
+                                <button type="button" class="shortcut-btn">최대</button>
+                            </div>
+                            <button type="submit" class="order-submit" data-buy-text="0주 (0원) 매수 주문하기" data-sell-text="0주 (0원) 매도 주문하기">0주 (0원) 매수 주문하기</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="stock-ownership">
+                    <span class="head3">보유 수량: <span id="owned-amount">9</span> 주</span>
                 </div>
 
-                <form class="order-form">
-                    <div class="order-row">
-                        <label for="order-amount" class="head3">주문수량 (주)</label>
-                        <input type="number" id="order-amount" name="order-amount" min="1" value="0" />
-                        <button type="button" class="order-btn plus">+</button>
-                        <button type="button" class="order-btn minus">-</button>
-                    </div>
-                    <div class="order-shortcuts">
-                        <button type="button" class="shortcut-btn">10</button>
-                        <button type="button" class="shortcut-btn">100</button>
-                        <button type="button" class="shortcut-btn">최대</button>
-                    </div>
-                    <button type="submit" class="buy-btn">0주 (0원) 매수 주문하기</button>
-                </form>
             </article>
             <!-- 다른 종목도 같은 구조로 반복 -->
         </section>
