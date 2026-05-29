@@ -4,21 +4,122 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>STOCKOLON 26</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="../static/css/base.css">
+    <link rel="stylesheet" href="../static/css/header.css">
+    <link rel="stylesheet" href="../static/css/index.css">
 </head>
 <body>
+
+    <!-- 헤더 -->
     <header>
-        <img src="{{ url_for('static', filename='images/stockolon_logo.png')}}" id="logo"/>
-        <button id="ranking_btn">랭킹</button>
-        <button id="profile_btn">프로필</button>
+        <img src="../static/images/stockolon_logo.png" id="logo" alt="STOCKOLON 26 로고">
+        <nav id="header-nav">
+            <button id="ranking_btn">
+                <img src="../static/images/ranking_icon.png" alt="랭킹">
+            </button>
+            <button id="settings_btn">
+                <img src="../static/images/settings_icon.png" alt="설정">
+            </button>
+        </nav>
     </header>
+
     <main>
 
-    </main>
-    <footer>
+        <!-- 프로필 섹션 -->
+        <section id="profile-section">
+            <div id="profile-img-wrap">
+                <img src="../static/images/profile.png" id="profile-img" alt="프로필 이미지">
+            </div>
+            <div id="profile-text">
+                <span class="sub_text">안녕하세요,</span>
+                <span id="username" class="head1">{{ username }} 님👋</span>
+            </div>
+        </section>
 
-    </footer>
-    <script src="{{url_for('static', filename='js/index.js')}}"></script>
+        <!-- 내 포트폴리오 섹션 -->
+        <section id="portfolio-section">
+            <div id="portfolio-header">
+                <span class="sub_text">내 포트폴리오</span>
+                <div id="portfolio-rate-wrap">
+                    <span class="sub_text">오늘 수익률</span>
+                    <span id="today-rate" class="head2 down">{{ today_rate }}%</span>
+                </div>
+            </div>
+            <div id="portfolio-body">
+                <div id="portfolio-assets">
+                    <span class="sub_text">총 자산</span>
+                    <span id="total-assets" class="head1">{{ total_assets }}원</span>
+                </div>
+                <div id="portfolio-chart"></div>
+            </div>
+        </section>
+
+        <!-- 상승/하락 주식 섹션 -->
+        <section id="highlight-section">
+
+            <!-- 최근 가장 많이 상승한 주식 -->
+            <section class="highlight-card" id="top-up-card">
+                <p class="sub_text highlight-label">
+                    최근 5분간 보유 주식중 가장 많이 <span class="up">상승</span>한 주식
+                </p>
+                <div class="highlight-stock-info">
+                    <div class="stock-info">
+                        <img class="stock-logo" src="../static/images/{{ top_up.logo }}" alt="{{ top_up.name }} 로고">
+                        <div class="stock-name-wrap">
+                            <span class="stock-name head3">{{ top_up.name }}</span>
+                            <span class="stock-sub sub_text">{{ top_up.category }}</span>
+                        </div>
+                    </div>
+                    <span class="stock-change head2 up">{{ top_up.change }}% ↗</span>
+                </div>
+                <div class="stock-chart"></div>
+            </section>
+
+            <!-- 최근 가장 많이 하락한 주식 -->
+            <section class="highlight-card" id="top-down-card">
+                <p class="sub_text highlight-label">
+                    최근 5분간 보유 주식중 가장 많이 <span class="down">하락</span>한 주식
+                </p>
+                <div class="highlight-stock-info">
+                    <div class="stock-info">
+                        <img class="stock-logo" src="../static/images/{{ top_down.logo }}" alt="{{ top_down.name }} 로고">
+                        <div class="stock-name-wrap">
+                            <span class="stock-name head3">{{ top_down.name }}</span>
+                            <span class="stock-sub sub_text">{{ top_down.category }}</span>
+                        </div>
+                    </div>
+                    <span class="stock-change head2 down">{{ top_down.change }}% ↘</span>
+                </div>
+                <div class="stock-chart"></div>
+            </section>
+
+        </section>
+
+        <!-- 하단 링크 버튼 섹션 -->
+        <section id="link-section">
+
+            <a href="../templates/buy.html" class="link-card" id="buy-link">
+                <img src="../static/images/buy_icon.png" alt="주식 구매 아이콘">
+                <div class="link-text">
+                    <span class="head2">주식 구매하기</span>
+                    <span class="sub_text">원하는 동아리의 주식을 구매해보세요</span>
+                </div>
+            </a>
+
+            <a href="../templates/news.html" class="link-card" id="news-link">
+                <img src="../static/images/news_icon.png" alt="뉴스 아이콘">
+                <div class="link-text">
+                    <span class="head2">SEMI NEWS!</span>
+                    <span class="sub_text">최신 시장 뉴스와 정보를 확인해보세요</span>
+                </div>
+            </a>
+
+        </section>
+
+    </main>
+
+    <footer></footer>
+
+    <script src="../static/js/index.js"></script>
 </body>
 </html>
