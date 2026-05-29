@@ -9,12 +9,88 @@
 </head>
 <body>
     <header>
-        <img src="{{ url_for('static', filename='images/stockolon_logo.png')}}" id="logo"/>
-        <button id="ranking_btn">매도</button>
-        <button id="setting_btn">매수</button>
-    </header>
-    <main>
+        <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo" alt="STOCKOLON 26 Logo" />
+        
+        <nav id="header-nav">
+            <!-- 유저 정보 -->
+            <div class="user-info">
+                <div class="user-avatar">
+                    <span class="avatar-default-icon">&#9679;</span>
+                </div>
+                <span class="head2 user-name">세미님</span>
+                <span class="user-rank">전체 1위</span>
+            </div>
+            <!-- 버튼 -->
+            <button id="ranking_btn">
+                <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="랭킹">
+            </button>
+            <button id="settings_btn">
+                <img src="{{ url_for('static', filename='images/settings_icon.png') }}" alt="설정">
+            </button>
+        </nav>
 
+        <button id="logout_btn">로그아웃</button>
+    </header>
+
+    <main>
+        <!-- 종목 카테고리 필터 -->
+        <nav class="stock-category-filter">
+            <button class="category-btn active" data-category="all">전체 종목</button>
+            <button class="category-btn" data-category="0">공식</button>
+            <button class="category-btn" data-category="1">수학</button>
+            <button class="category-btn" data-category="2">물리/지구</button>
+            <button class="category-btn" data-category="3">화학</button>
+            <button class="category-btn" data-category="4">생명</button>
+            <button class="category-btn" data-category="5">실험/공학</button>
+            <button class="category-btn" data-category="6">정보</button>
+            <button class="category-btn" data-category="7">문과</button>
+            <button class="category-btn" data-category="8">기타</button>
+        </nav>
+
+        <!-- 종목 리스트 (예시 2개) -->
+        <section class="stock-list">
+            <article class="stock-card">
+                <div class="stock-header">
+                    <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="세미콜론 로고" class="stock-logo" />
+                    <div class="stock-info">
+                        <span class="stock-name head2">세미콜론</span>
+                        <span class="stock-desc head3">정보 동아리</span>
+                    </div>
+                </div>
+                <div class="stock-price-row">
+                    <span class="stock-price head1">12,345원</span>
+                    <span class="stock-change positive head3">+400원 (+4.14%)</span>
+                </div>
+                <div class="stock-extremes">
+                    <span class="stock-high">최고가 42,300</span>
+                    <span class="stock-low">최저가 6,700</span>
+                </div>
+                <div class="stock-chart">
+                    <!-- 차트는 JS/Canvas로 구현 예정 -->
+                    <canvas class="main-chart" width="320" height="120" aria-label="세미콜론 차트"></canvas>
+                </div>
+                <div class="trade-actions">
+                    <button class="trade-action-btn buy" type="button">매수</button>
+                    <button class="trade-action-btn sell" type="button">매도</button>
+                </div>
+
+                <form class="order-form">
+                    <div class="order-row">
+                        <label for="order-amount" class="head3">주문수량 (주)</label>
+                        <input type="number" id="order-amount" name="order-amount" min="1" value="0" />
+                        <button type="button" class="order-btn plus">+</button>
+                        <button type="button" class="order-btn minus">-</button>
+                    </div>
+                    <div class="order-shortcuts">
+                        <button type="button" class="shortcut-btn">10</button>
+                        <button type="button" class="shortcut-btn">100</button>
+                        <button type="button" class="shortcut-btn">최대</button>
+                    </div>
+                    <button type="submit" class="buy-btn">0주 (0원) 매수 주문하기</button>
+                </form>
+            </article>
+            <!-- 다른 종목도 같은 구조로 반복 -->
+        </section>
     </main>
     <footer>
 
