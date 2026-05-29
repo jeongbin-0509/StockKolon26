@@ -3,26 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+
     <title>Login - STOCKOLON 26</title>
 </head>
 <body>
-    <header>
-        <img src="{{ url_for('static', filename='images/stockolon_logo.png')}}" id="logo"/>
-    </header>
-    <main>
-        <section id="login">
-            <form method="POST" action="{{ url_for('auth.login') }}" id="login_form">
-                <input type="text" name="usernum" id="usernum" placeholder="학번">
-                <div class="sub_text" id="usernum_errormsg">학번을 정확히 입력해주세요</div>
-                <input type="password" name="password" id="password" placeholder="비밀번호">
-                <div class="sub_text" id="password_errormsg">비밀번호는 6글자 이상입니다</div>
-                <button type="submit" id="submit_btn">로그인</button>
-                <button id="moveto_signup_btn">회원가입</button>
-            </form>
-        </section>
-    </main>
-    <script src="{{url_for('static', filename='js/login.js')}}"></script>
+
+<header>
+    <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo">
+
+    <div class="logo_text_wrap">
+        <p class="school_text">운정고 동아리 모의주식투자 게임</p>
+        <p class="by_text">by SemiColon26</p>
+    </div>
+</header>
+
+<main>
+    <section id="login">
+
+        <form method="POST"
+              action="{{ url_for('auth.login') }}"
+              id="login_form">
+
+            <!-- 학번 -->
+            <input
+                type="text"
+                name="usernum"
+                id="usernum"
+                placeholder="학번"
+                required>
+
+            <div class="sub_text" id="usernum_errormsg">
+                학번을 올바르게 입력해주세요.
+            </div>
+
+            <!-- 비밀번호 -->
+            <input
+                type="password"
+                name="password"
+                id="password"
+                placeholder="비밀번호"
+                required>
+
+            <div class="sub_text" id="password_errormsg">
+                비밀번호는 4자리 이상입니다.
+            </div>
+
+            <!-- 버튼 -->
+            <button type="submit" id="submit_btn">
+                로그인
+            </button>
+
+            <button type="button" id="moveto_signup_btn">
+                회원가입하러가기
+            </button>
+
+        </form>
+
+    </section>
+</main>
+
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
+
 </body>
 </html>

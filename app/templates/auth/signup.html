@@ -3,47 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Sign Up - STOCKOLON 26</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
 </head>
 <body>
-    <header>
-        <img src="{{ url_for('static', filename='images/stockolon_logo.png')}}" id="logo"/>
-    </header>
+
+<header>
+    <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo">
+
+    <div class="logo_text_wrap">
+        <p class="school_text">운정고 동아리 모의주식투자 게임</p>
+        <p class="by_text">by SemiColon26</p>
+    </div>
+</header>
+
 <main>
-    <form action="{{ url_for('auth.signup') }}" method="POST">
-        <input type="text" name="name" placeholder="이름" required>
+    <form action="{{ url_for('auth.signup') }}" method="POST" id="signup_form">
+        <input type="text" id="name" name="name" placeholder="이름" required>
 
-        <input type="text" name="usernum" placeholder="학번" required>
+        <input type="text" id="usernum" name="usernum" placeholder="학번" required>
 
-        <div>
+        <div class="email_wrap">
             <input type="text" id="email_id" name="email_id" placeholder="학교 계정 입력" required>
-        
-            <span style="color: white;">@goedu.kr</span>
-        
+            <span>@goedu.kr</span>
             <button type="button" id="send_code_btn">이메일 인증</button>
         </div>
 
-        <input type="text" name="email_code" placeholder="인증번호 입력" required>
+        <input type="text" id="email_code" name="email_code" placeholder="인증번호 입력" required>
 
-        <input type="password" name="password" placeholder="비밀번호" required>
+        <input type="password" id="password" name="password" placeholder="비밀번호" required minlength="6">
 
-        <input type="password" name="password_check" placeholder="비밀번호 확인" required>
+        <input type="password" id="password_check" name="password_check" placeholder="비밀번호 확인" required minlength="6">
 
-        <button type="submit">회원가입</button>
+        <button type="submit" id="signup_btn">회원가입</button>
     </form>
 </main>
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for message in messages %}
-                <p>{{ message }}</p>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    <footer>
 
-    </footer>
-    <script src="{{ url_for('static', filename='js/signup.js') }}"></script>
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <p class="flash_msg">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<script src="{{ url_for('static', filename='js/signup.js') }}"></script>
+
 </body>
 </html>
