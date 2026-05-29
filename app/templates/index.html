@@ -4,21 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>STOCKOLON 26</title>
-    <link rel="stylesheet" href="../static/css/base.css">
-    <link rel="stylesheet" href="../static/css/header.css">
-    <link rel="stylesheet" href="../static/css/index.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
 <body>
 
     <!-- 헤더 -->
     <header>
-        <img src="../static/images/stockolon_logo.png" id="logo" alt="STOCKOLON 26 로고">
+        <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo" alt="STOCKOLON 26 로고">
         <nav id="header-nav">
             <button id="ranking_btn">
-                <img src="../static/images/ranking_icon.png" alt="랭킹">
+                <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="랭킹">
             </button>
             <button id="settings_btn">
-                <img src="../static/images/settings_icon.png" alt="설정">
+                <img src="{{ url_for('static', filename='images/settings_icon.png') }}" alt="설정">
             </button>
         </nav>
     </header>
@@ -28,7 +28,7 @@
         <!-- 프로필 섹션 -->
         <section id="profile-section">
             <div id="profile-img-wrap">
-                <img src="../static/images/profile.png" id="profile-img" alt="프로필 이미지">
+                <img src="{{ url_for('static', filename='images/profile.png') }}" id="profile-img" alt="프로필 이미지">
             </div>
             <div id="profile-text">
                 <span class="sub_text">안녕하세요,</span>
@@ -64,7 +64,7 @@
                 </p>
                 <div class="highlight-stock-info">
                     <div class="stock-info">
-                        <img class="stock-logo" src="../static/images/{{ top_up.logo }}" alt="{{ top_up.name }} 로고">
+                        <img class="stock-logo" src="{{ url_for('static', filename='images/' + top_up.logo) }}" alt="{{ top_up.name }} 로고">
                         <div class="stock-name-wrap">
                             <span class="stock-name head3">{{ top_up.name }}</span>
                             <span class="stock-sub sub_text">{{ top_up.category }}</span>
@@ -82,7 +82,7 @@
                 </p>
                 <div class="highlight-stock-info">
                     <div class="stock-info">
-                        <img class="stock-logo" src="../static/images/{{ top_down.logo }}" alt="{{ top_down.name }} 로고">
+                        <img class="stock-logo" src="{{ url_for('static', filename='images/' + top_down.logo) }}" alt="{{ top_down.name }} 로고">
                         <div class="stock-name-wrap">
                             <span class="stock-name head3">{{ top_down.name }}</span>
                             <span class="stock-sub sub_text">{{ top_down.category }}</span>
@@ -98,16 +98,16 @@
         <!-- 하단 링크 버튼 섹션 -->
         <section id="link-section">
 
-            <a href="../templates/buy.html" class="link-card" id="buy-link">
-                <img src="../static/images/buy_icon.png" alt="주식 구매 아이콘">
+            <a href="{{ url_for('templates.buy') }}" class="link-card" id="buy-link">
+                <img src="{{ url_for('static', filename='images/buy_icon.png') }}" alt="주식 구매 아이콘">
                 <div class="link-text">
                     <span class="head2">주식 구매하기</span>
                     <span class="sub_text">원하는 동아리의 주식을 구매해보세요</span>
                 </div>
             </a>
 
-            <a href="../templates/news.html" class="link-card" id="news-link">
-                <img src="../static/images/news_icon.png" alt="뉴스 아이콘">
+            <a href="{{ url_for('templates.news') }}" class="link-card" id="news-link">
+                <img src="{{ url_for('static', filename='images/news_icon.png') }}" alt="뉴스 아이콘">
                 <div class="link-text">
                     <span class="head2">SEMI NEWS!</span>
                     <span class="sub_text">최신 시장 뉴스와 정보를 확인해보세요</span>
@@ -120,6 +120,6 @@
 
     <footer></footer>
 
-    <script src="../static/js/index.js"></script>
+    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
 </body>
 </html>
