@@ -10,10 +10,30 @@
 <body>
     <header>
         <img src="{{ url_for('static', filename='images/stockolon_logo.png')}}" id="logo"/>
-        <div class="head1">랭킹</div>
+        <nav class="ranking-filter" aria-label="랭킹 정렬 옵션">
+            <button class="filter-btn active" type="button">전체 랭킹</button>
+            <button class="filter-btn" type="button">반 랭킹</button>
+        </nav>
     </header>
     <main>
-
+        <section class="ranking-board">
+            <ol class="ranking-list">
+                <li class="ranking-item">    
+                    <div class="user-meta">
+                        <span class="user-number">20921</span>
+                        <span class="user-name">염승띠니</span>
+                        <span class="user-assets">3,141,592</span>
+                    </div>
+                </li>
+                <li class="ranking-item">    
+                    <div class="user-meta">
+                        <span class="user-number">20202</span>
+                        <span class="user-name">세미콜록</span>
+                        <span class="user-assets">2,500,000</span>
+                    </div>
+                </li>
+            </ol>
+        </section>
     </main>
     <footer>
 
