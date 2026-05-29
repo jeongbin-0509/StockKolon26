@@ -16,4 +16,26 @@ def index():
 # 메인에서 프로필로 이동
 @main.route("/profile")
 def profile():
+    # 로그인 안 되어 있으면 로그인 페이지
+    if "user_id" not in session:
+        return redirect(url_for("auth.login"))
+
     return render_template("profile.html")
+
+# 메인에서 뉴스로 이동
+@main.route("/news")
+def news():
+    # 로그인 안 되어 있으면 로그인 페이지
+    if "user_id" not in session:
+        return redirect(url_for("auth.login"))
+
+    return render_template("news.html")
+
+# 메인에서 매도매수로 이동
+@main.route("/buy")
+def buy():
+    # 로그인 안 되어 있으면 로그인 페이지
+    if "user_id" not in session:
+        return redirect(url_for("auth.login"))
+
+    return render_template("buy.html")
