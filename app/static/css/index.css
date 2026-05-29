@@ -24,11 +24,6 @@ main {
     flex: 1;
 }
 
-footer {
-    padding: 1rem;
-}
-
-
 /* header */
 header {
     display: flex;

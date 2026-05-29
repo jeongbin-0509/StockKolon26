@@ -88,10 +88,6 @@ header {
   transition: border-color 0.2s;
 }
 
-#header-nav button:hover {
-  border-color: var(--color-brand-mint);
-}
-
 #header-nav button img {
   width: 1.6rem;
   height: 1.6rem;
@@ -112,11 +108,6 @@ header {
   white-space: nowrap;
   flex-shrink: 0;
   transition: color 0.2s, border-color 0.2s;
-}
-
-#logout_btn:hover {
-  color: var(--text-primary);
-  border-color: var(--text-secondary);
 }
 
 
@@ -149,12 +140,12 @@ main {
 }
 
 .summary-label {
-  font-size: clamp(0.75rem, 1.2vw, 0.9rem);
+  font-size: clamp(0.85rem, 1.4vw, 1rem);
   color: var(--text-secondary) !important;
 }
 
 .summary-value {
-  font-size: clamp(1.3rem, 2.5vw, 2rem);
+  font-size: clamp(1.4rem, 2.5vw, 2.2rem);
 }
 
 .summary-sub {
@@ -165,7 +156,7 @@ main {
 }
 
 .summary-change {
-  font-size: clamp(1.1rem, 2vw, 1.7rem);
+  font-size: clamp(1.2rem, 2.1vw, 1.9rem);
 }
 
 .summary-change-pct {
@@ -180,28 +171,28 @@ main {
 .top-row {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  padding: 0.6rem 0;
+  gap: 0.5rem;
+  padding: 0.7rem 0;
 }
 
 .top-stock {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.8rem;
   flex-wrap: wrap;
 }
 
 .top-stock-name {
-  font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+  font-size: clamp(1.4rem, 2.3vw, 2rem);
 }
 
 .top-stock-info {
-  font-size: clamp(0.7rem, 1.1vw, 0.85rem);
+  font-size: clamp(0.8rem, 1.2vw, 1rem);
   color: var(--text-secondary) !important;
 }
 
 .top-stock-pct {
-  font-size: clamp(1rem, 1.8vw, 1.4rem);
+  font-size: clamp(1.4rem, 2vw, 1.5rem);
   font-weight: 700;
   margin-left: auto;
 }

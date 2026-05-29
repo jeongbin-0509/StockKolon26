@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile - STOCKOLON 26</title>
-    <link rel="stylesheet" href="../static/css/base.css">
-    <link rel="stylesheet" href="../static/css/header.css">
-    <link rel="stylesheet" href="../static/css/profile.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
 </head>
 <body>
 
     <!-- 헤더 -->
     <header>
-        <img src="../static/images/stockolon_logo.png" id="logo" alt="STOCKOLON 26 Logo" />
+        <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo" alt="STOCKOLON 26 Logo" />
 
         <nav id="header-nav">
             <!-- 유저 정보 -->
@@ -24,10 +24,10 @@
             </div>
             <!-- 버튼 -->
             <button id="ranking_btn">
-                <img src="../static/images/ranking_icon.png" alt="랭킹">
+                <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="랭킹">
             </button>
             <button id="settings_btn">
-                <img src="../static/images/settings_icon.png" alt="설정">
+                <img src="{{ url_for('static', filename='images/settings_icon.png') }}" alt="설정">
             </button>
         </nav>
 
@@ -106,7 +106,7 @@
                     <tr class="holding-row">
                         <td class="stock-name-cell">
                             <div class="stock-identity">
-                                <img src="../static/images/default_stock_logo.png" alt="세미콜론 로고" class="stock-logo" />
+                                <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="세미콜론 로고" class="stock-logo" />
                                 <div class="stock-text">
                                     <span class="head2 stock-name">세미콜론</span>
                                     <span class="head3 stock-info">정보</span>
@@ -129,7 +129,7 @@
                     <tr class="holding-row">
                         <td class="stock-name-cell">
                             <div class="stock-identity">
-                                <img src="../static/images/default_stock_logo.png" alt="세미콜론 로고" class="stock-logo" />
+                                <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="세미콜론 로고" class="stock-logo" />
                                 <div class="stock-text">
                                     <span class="head2 stock-name">세미콜론</span>
                                     <span class="head3 stock-info">정보</span>
@@ -152,7 +152,7 @@
                     <tr class="holding-row">
                         <td class="stock-name-cell">
                             <div class="stock-identity">
-                                <img src="../static/images/default_stock_logo.png" alt="세미콜론 로고" class="stock-logo" />
+                                <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="세미콜론 로고" class="stock-logo" />
                                 <div class="stock-text">
                                     <span class="head2 stock-name">세미콜론</span>
                                     <span class="head3 stock-info">정보</span>
@@ -175,7 +175,7 @@
                     <tr class="holding-row">
                         <td class="stock-name-cell">
                             <div class="stock-identity">
-                                <img src="../static/images/default_stock_logo.png" alt="세미콜론 로고" class="stock-logo" />
+                                <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="세미콜론 로고" class="stock-logo" />
                                 <div class="stock-text">
                                     <span class="head2 stock-name">세미콜론</span>
                                     <span class="head3 stock-info">정보</span>
@@ -198,7 +198,7 @@
                     <tr class="holding-row">
                         <td class="stock-name-cell">
                             <div class="stock-identity">
-                                <img src="../static/images/default_stock_logo.png" alt="세미콜론 로고" class="stock-logo" />
+                                <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="세미콜론 로고" class="stock-logo" />
                                 <div class="stock-text">
                                     <span class="head2 stock-name">세미콜론</span>
                                     <span class="head3 stock-info">정보</span>
@@ -224,7 +224,7 @@
 
     </main>
 
-    <script src="../static/js/profile.js"></script>
+    <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
 
 </body>
 </html>
