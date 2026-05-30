@@ -9,7 +9,9 @@
 </head>
 <body>
     <header>
-        <img src="{{ url_for('static', filename='images/stockolon_logo.png')}}" id="logo"/>
+        <a href="{{ url_for('main.index') }}" class="logo-link" aria-label="메인으로 이동">
+            <img src="{{ url_for('static', filename='images/stockolon_logo.png')}}" id="logo"/>
+        </a>
         <nav class="ranking-filter" aria-label="랭킹 정렬 옵션">
             <button class="filter-btn active" type="button">전체 랭킹</button>
             <button class="filter-btn" type="button">학급 랭킹</button>
