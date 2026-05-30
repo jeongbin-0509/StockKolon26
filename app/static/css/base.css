@@ -1,75 +1,34 @@
-/* base.css : 기본 디자인을 구성하는 파일 */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap');
 
 :root {
-  /* 시스템 배경 및 레이아웃 컬러 */
-  --bg-main: #111111;         /* 전체 화면 배경 */
-  --bg-card: #1a1a1a;         /* 컴포넌트(카드) 배경 */
-  --border-card: #2a2a2a;     /* 카드 테두리 선 */
+    --bg-main: #111111;
+    --bg-card: #1a1a1a;
+    --border-card: #2a2a2a;
 
-  /* 타이포그래피 컬러 */
-  --text-primary: #ffffff;    /* 메인 글자색 (흰색) */
-  --text-secondary: #7a7a7a;  /* 서브 설명 글자색 (회색) */
+    --text-primary: #ffffff;
+    --text-secondary: #7a7a7a;
 
-  /* 상태 및 포인트 컬러 (주식 변동 및 브랜드) */
-  --color-stock-up: #ff3b30;     /* 상승 (레드) */
-  --color-stock-down: #007aff;   /* 하락 (블루) */
-  --color-brand-mint: #00ff99;   /* 로고에 쓰인 시그니처 민트 (포인트용) */
+    --color-stock-up: #ff3b30;
+    --color-stock-down: #007aff;
+    --color-brand-mint: #00ff99;
 }
 
-html { margin: 0; }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    overflow-y: scroll;
+}
+
 body {
-  background-color: var(--bg-main);
+    background: var(--bg-main);
+    color: var(--text-primary);
+    font-family: "Noto Sans KR", sans-serif;
 }
 
-.head1 { /* 제목1 size */
-  font-family: "Noto Sans KR", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 700;
-  font-style: normal;
-  color: var(--text-primary);
-}
-.head2 { /* 제목2 size */
-  font-family: "Noto Sans KR", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 600;
-  font-style: normal;
-  color: var(--text-primary);
-}
-.head3 { /* 제목3 size */
-  font-family: "Noto Sans KR", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 500;
-  font-style: normal;
-  color: var(--text-primary);
-}
-.main_text { /* maintext size 일반 글씨 */
-  font-family: "Noto Sans KR", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal;
-  color: var(--text-primary);
-}
-.sub_text { /* subtext size 흐린 글씨*/
-  font-family: "Noto Sans KR", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 300;
-  font-style: normal;
-  color: var(--text-secondary);
-}
-
-/* Base */
-
-
-/* Mobile */
-
-
-/* Tablet */
-@media screen and (min-width: 768px) {
-
-}
-
-/* Desktop */
-@media screen and (min-width: 1024px) {
-
+.sub_text {
+    color: var(--text-secondary);
 }

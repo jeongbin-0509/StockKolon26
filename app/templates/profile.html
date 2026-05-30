@@ -6,19 +6,226 @@
     <title>Profile - STOCKOLON 26</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
 </head>
 <body>
+
+    <!-- 헤더 -->
     <header>
-        <img src="{{ url_for('static', filename='images/stockolon_logo.png')}}" id="logo"/>
-        <a href="{{ url_for('auth.logout') }}">
-            <button>로그아웃</button>
-        </a>
+        <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo" alt="STOCKOLON 26 Logo" />
+
+        <nav id="header-nav">
+            <!-- 유저 정보 -->
+            <div class="user-info">
+                <div class="user-avatar">
+                    <span class="avatar-default-icon">&#9679;</span>
+                </div>
+                <span class="head2 user-name">세미님</span>
+                <span class="user-rank">전체 1위</span>
+            </div>
+            <!-- 버튼 -->
+            <button id="ranking_btn">
+                <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="랭킹">
+            </button>
+            <button id="settings_btn">
+                <img src="{{ url_for('static', filename='images/settings_icon.png') }}" alt="설정">
+            </button>
+        </nav>
+
+        <button id="logout_btn">로그아웃</button>
     </header>
+
     <main>
 
-    </main>
-    <footer>
+        <!-- 자산 요약 섹션 -->
+        <section id="summary">
 
-    </footer>
+            <!-- 총 자산 -->
+            <article class="summary-card" id="card-total-assets">
+                <div class="summary-label head3">총 자산</div>
+                <div class="summary-value head1">12,300,000원</div>
+                <div class="summary-sub">
+                    <span class="summary-label head3">전일 대비</span>
+                    <div class="summary-change negative head1">-10,123,000원</div>
+                    <div class="summary-change-pct negative head3">(-123.2%)</div>
+                </div>
+            </article>
+
+            <!-- 매입금액 & 보유 현금 -->
+            <article class="summary-card" id="card-purchase">
+                <div class="summary-label head3">총 매입금액</div>
+                <div class="summary-value head1">12,100,000원</div>
+                <div class="summary-sub">
+                    <span class="summary-label head3">보유 현금</span>
+                    <div class="summary-value head1">200,000원</div>
+                </div>
+            </article>
+
+            <!-- 5분 TOP 등락 -->
+            <article class="summary-card" id="card-top">
+                <div class="top-row">
+                    <span class="summary-label head3">5분 상승 TOP</span>
+                    <div class="top-stock">
+                        <span class="top-stock-name head2">세미콜론</span>
+                        <span class="top-stock-info head3">정보</span>
+                        <span class="top-stock-pct positive head1">+4.14%</span>
+                        <span class="arrow-up">&#8599;</span>
+                    </div>
+                </div>
+                <hr class="divider" />
+                <div class="top-row">
+                    <span class="summary-label head3">5분 하락 TOP</span>
+                    <div class="top-stock">
+                        <span class="top-stock-name head2">세미콜론</span>
+                        <span class="top-stock-info head3">정보</span>
+                        <span class="top-stock-pct negative head1">-4.14%</span>
+                        <span class="arrow-down">&#8600;</span>
+                    </div>
+                </div>
+            </article>
+
+        </section>
+
+
+        <!-- 보유 주식 섹션 -->
+        <section id="holdings">
+            <span class="head1 section-title">보유 주식</span>
+
+            <table id="holdings-table">
+                <thead>
+                    <tr>
+                        <th class="head3">종목명</th>
+                        <th class="head3">보유 수량</th>
+                        <th class="head3">현재가</th>
+                        <th class="head3">평가손익</th>
+                        <th class="head3">수익률</th>
+                        <th class="head3">차트(30분간)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 1행 -->
+                    <tr class="holding-row">
+                        <td class="stock-name-cell">
+                            <div class="stock-identity">
+                                <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="세미콜론 로고" class="stock-logo" />
+                                <div class="stock-text">
+                                    <span class="head2 stock-name">세미콜론</span>
+                                    <span class="head3 stock-info">정보</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="head2">10주</td>
+                        <td class="head2">32,100 원</td>
+                        <td class="head2 positive">+152,700원</td>
+                        <td class="head2 positive">+201.23%</td>
+                        <td class="chart-cell">
+                            <canvas class="mini-chart" id="chart-1"
+                                data-values="[100,105,103,110,115,112,120,118,125,130]"
+                                data-positive="true"
+                                width="120" height="50"
+                                aria-label="세미콜론 30분 차트"></canvas>
+                        </td>
+                    </tr>
+                    <!-- 2행 -->
+                    <tr class="holding-row">
+                        <td class="stock-name-cell">
+                            <div class="stock-identity">
+                                <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="세미콜론 로고" class="stock-logo" />
+                                <div class="stock-text">
+                                    <span class="head2 stock-name">세미콜론</span>
+                                    <span class="head3 stock-info">정보</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="head2">10주</td>
+                        <td class="head2">5,100 원</td>
+                        <td class="head2 negative">-89,000원</td>
+                        <td class="head2 negative">-50.43%</td>
+                        <td class="chart-cell">
+                            <canvas class="mini-chart" id="chart-2"
+                                data-values="[130,125,120,115,110,108,105,100,95,90]"
+                                data-positive="false"
+                                width="120" height="50"
+                                aria-label="세미콜론 30분 차트"></canvas>
+                        </td>
+                    </tr>
+                    <!-- 3행 -->
+                    <tr class="holding-row">
+                        <td class="stock-name-cell">
+                            <div class="stock-identity">
+                                <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="세미콜론 로고" class="stock-logo" />
+                                <div class="stock-text">
+                                    <span class="head2 stock-name">세미콜론</span>
+                                    <span class="head3 stock-info">정보</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="head2">10주</td>
+                        <td class="head2">32,100 원</td>
+                        <td class="head2 positive">+152,700원</td>
+                        <td class="head2 positive">+201.23%</td>
+                        <td class="chart-cell">
+                            <canvas class="mini-chart" id="chart-3"
+                                data-values="[100,102,101,105,104,108,107,110,112,115]"
+                                data-positive="true"
+                                width="120" height="50"
+                                aria-label="세미콜론 30분 차트"></canvas>
+                        </td>
+                    </tr>
+                    <!-- 4행 -->
+                    <tr class="holding-row">
+                        <td class="stock-name-cell">
+                            <div class="stock-identity">
+                                <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="세미콜론 로고" class="stock-logo" />
+                                <div class="stock-text">
+                                    <span class="head2 stock-name">세미콜론</span>
+                                    <span class="head3 stock-info">정보</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="head2">10주</td>
+                        <td class="head2">32,100 원</td>
+                        <td class="head2 positive">+152,700원</td>
+                        <td class="head2 positive">+201.23%</td>
+                        <td class="chart-cell">
+                            <canvas class="mini-chart" id="chart-4"
+                                data-values="[100,98,102,100,105,103,108,106,110,112]"
+                                data-positive="true"
+                                width="120" height="50"
+                                aria-label="세미콜론 30분 차트"></canvas>
+                        </td>
+                    </tr>
+                    <!-- 5행 -->
+                    <tr class="holding-row">
+                        <td class="stock-name-cell">
+                            <div class="stock-identity">
+                                <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="세미콜론 로고" class="stock-logo" />
+                                <div class="stock-text">
+                                    <span class="head2 stock-name">세미콜론</span>
+                                    <span class="head3 stock-info">정보</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="head2">10주</td>
+                        <td class="head2">32,100 원</td>
+                        <td class="head2 positive">+152,700원</td>
+                        <td class="head2 positive">+201.23%</td>
+                        <td class="chart-cell">
+                            <canvas class="mini-chart" id="chart-5"
+                                data-values="[100,103,101,104,102,106,104,107,105,108]"
+                                data-positive="true"
+                                width="120" height="50"
+                                aria-label="세미콜론 30분 차트"></canvas>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </section>
+
+    </main>
+
+    <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+
 </body>
 </html>
