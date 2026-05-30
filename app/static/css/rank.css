@@ -1,0 +1,189 @@
+/* ==========================================
+   랭킹 페이지 전용 스타일 (rank.css)
+============================================ */
+.rank-page {
+    width: min(1200px, calc(100% - 2rem)); 
+    margin: 0 auto 5rem;
+    box-sizing: border-box;
+}
+
+/* 섹션 타이틀 및 필터 탭 */
+.rank-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: clamp(2rem, 4vw, 3.5rem);
+    margin-bottom: 1.2rem;
+}
+
+.rank-page h2 {
+    color: var(--text-secondary, #8b8b8b);
+    font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+    font-weight: 700;
+    margin: 0;
+}
+
+/* 필터 버튼 (buy.css UI 완벽 동일) */
+.rank-filters {
+    display: flex;
+    gap: 0.55rem;
+}
+
+.rank-filter-btn {
+    border: 1px solid #303030;
+    border-radius: 0.65rem;
+    background: #171717;
+    color: var(--text-primary, #ffffff);
+    font: inherit;
+    font-size: clamp(0.85rem, 1.2vw, 1rem);
+    font-weight: 700;
+    padding: 0.55rem 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.rank-filter-btn:hover,
+.rank-filter-btn.active {
+    background: var(--border-card, #2a2a2a);
+    border-color: #505050;
+    color: #ffffff;
+}
+
+
+/* ==========================================
+   [재수정] 랭킹 리스트 카드 (Grid 적용으로 완벽한 한 줄)
+============================================ */
+.rank-card {
+    display: grid;
+    /* [핵심] 등수(80px), 이름(1.5fr), 자산(1.5fr), 변동률(1fr) 비율로 한 줄 고정 */
+    grid-template-columns: 80px 1.5fr 1.5fr 1fr;
+    align-items: center;
+    
+    /* 위아래 패딩을 확 줄여서 슬림하게 밀착 */
+    padding: 0.4rem 1.8rem; 
+    border: 2px solid #303030;
+    border-radius: 1.2rem; 
+    background: linear-gradient(145deg, #1a1a1a, #141414);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.03), 0 8px 20px rgba(0, 0, 0, 0.3);
+    margin-bottom: 0.8rem;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease;
+}
+
+.rank-card:hover {
+    border-color: #454545;
+}
+
+/* 1. 등수 영역 */
+.rank-number-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.rank-number {
+    font-size: clamp(1.3rem, 1.8vw, 1.8rem);
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.rank-card.trend-up .rank-number { color: var(--color-stock-up, #ff3b30); }
+.rank-card.trend-down .rank-number { color: var(--color-stock-down, #007aff); }
+
+.rank-arrow {
+    font-size: 0.65em;
+    font-weight: 700;
+}
+
+/* 2. 프로필 및 이름 영역 */
+.rank-user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    min-width: 0;
+}
+
+.rank-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #2d2d2d;
+    border: 2px solid #454545;
+    flex-shrink: 0;
+}
+
+.rank-name {
+    font-size: clamp(1.1rem, 1.5vw, 1.4rem);
+    font-weight: 700;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 3. 총 자산 영역 & 4. 변동률 영역 공통 */
+.rank-data-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* 디자인처럼 왼쪽 정렬 */
+    white-space: nowrap;
+}
+
+.rank-label {
+    color: var(--text-secondary, #666666);
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 0.1rem;
+}
+
+.rank-value {
+    font-size: clamp(1.1rem, 1.6vw, 1.6rem);
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.1;
+}
+
+.rank-value span {
+    font-size: 0.65em;
+    font-weight: 700;
+    margin-left: 0.1rem;
+}
+
+/* 변동률 전용 컬러 */
+.rank-value.up { color: var(--color-stock-up, #ff3b30); }
+.rank-value.down { color: var(--color-stock-down, #007aff); }
+
+
+/* ==========================================
+   [반응형] 모바일 환경 최적화
+============================================ */
+@media screen and (max-width: 767px) {
+    .rank-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.8rem;
+    }
+
+    .rank-filters {
+        width: 100%;
+    }
+
+    /* 모바일에서도 절대 깨지지 않게 그리드 폭 최적화 */
+    .rank-card {
+        grid-template-columns: 55px 1.2fr 1.2fr 0.9fr;
+        padding: 0.4rem 0.8rem;
+        gap: 4px;
+    }
+
+    .rank-avatar {
+        display: none; /* 모바일 공간 확보를 위해 프로필 이미지 숨김 */
+    }
+
+    .rank-label {
+        font-size: 0.65rem; /* 라벨 텍스트 축소 */
+    }
+
+    .rank-value {
+        font-size: 0.95rem; /* 금액/퍼센트 텍스트 축소 */
+    }
+}
