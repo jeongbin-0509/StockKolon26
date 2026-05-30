@@ -16,12 +16,12 @@
             <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo" alt="STOCKOLON 26 로고">
         </a>
         <nav id="header-nav">
-            <button id="ranking_btn">
+            <a href="{{ url_for('main.rank') }}" id="ranking_btn" aria-label="랭킹 페이지로 이동">
                 <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="랭킹">
-            </button>
-            <button id="settings_btn">
+            </a>
+            <a href="{{ url_for('main.settings') }}" id="settings_btn" aria-label="설정 페이지로 이동">
                 <img src="{{ url_for('static', filename='images/settings_icon.png') }}" alt="설정">
-            </button>
+            </a>
         </nav>
     </header>
 

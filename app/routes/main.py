@@ -39,3 +39,17 @@ def buy():
         return redirect(url_for("auth.login"))
 
     return render_template("buy.html")
+
+@main.route("/rank")
+def rank():
+    if "user_id" not in session:
+        return redirect(url_for("auth.login"))
+
+    return render_template("rank.html")
+
+@main.route("/settings")
+def settings():
+    if "user_id" not in session:
+        return redirect(url_for("auth.login"))
+
+    return render_template("settings.html")

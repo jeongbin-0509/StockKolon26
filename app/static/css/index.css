@@ -50,6 +50,7 @@ header {
     border-radius: 0.75rem;
     padding: 0.5rem;
     cursor: pointer;
+    text-decoration: none;
 }
 
 #ranking_btn img,
