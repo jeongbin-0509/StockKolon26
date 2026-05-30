@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, session, redirect, url_for
+from flask import Blueprint, render_template, session, redirect, url_for, jsonify
+from app.services.supabase_client import supabase
 
 main = Blueprint("main", __name__)
 
@@ -53,3 +54,39 @@ def settings():
         return redirect(url_for("auth.login"))
 
     return render_template("settings.html")
+
+@main.route("/api/index-data")
+def index_data():
+    if "user_id" not in session:
+        return jsonify({"success": False, "message": "로그인이 필요합니다."}), 401
+
+    user_id = session["user_id"]
+
+    result = supabase.table("users").select("*").eq("id", user_id).single().execute()
+    user = result.data
+
+    data = {
+        "success": True,
+        "profile": {
+            "username": user["name"],
+            "profileImg": "/static/images/profile.png"
+        },
+        "portfolio": {
+            "assets": f"{user.get('cash', 0):,}원",
+            "rate": "+0.0%"
+        },
+        "topUpStock": {
+            "name": "데이터 없음",
+            "sub": "보유 주식",
+            "change": "0.0",
+            "logo": "/static/images/default_stock_logo.png"
+        },
+        "topDownStock": {
+            "name": "데이터 없음",
+            "sub": "보유 주식",
+            "change": "0.0",
+            "logo": "/static/images/default_stock_logo.png"
+        }
+    }
+
+    return jsonify(data)

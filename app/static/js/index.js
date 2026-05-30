@@ -1,10 +1,11 @@
 // 프로필창으로 이동하는 기능
 const moveBtn = document.getElementById("profile_btn");
 
-moveBtn.addEventListener("click", () => {
-    location.href = "/profile";
-});
-
+if (moveBtn) {
+    moveBtn.addEventListener("click", () => {
+        location.href = "/profile";
+    });
+}
 // ==========================================
 // 1. 프로필 섹션 (Profile Section)
 // ==========================================
@@ -71,7 +72,7 @@ class PortfolioSection {
             if (parseFloat(data.rate) >= 0) {
                 this.todayRate.className = "head2 up";
             } else {
-                this.className = "head2 down";
+                this.todayRate.className = "head2 down";
             }
         }
         // 필요 시 차트 업데이트 로직 처리 (예: data.chartData)
@@ -121,30 +122,18 @@ function updateAllPageData(mockData) {
     topDownCard.update(mockData.topDownStock);
 }
 
+// DB랑 연결한 코드
+async function loadIndexData() {
+    const response = await fetch("/api/index-data");
+    const data = await response.json();
 
-// [3] 예시 데이터 (서버에서 받은 JSON 데이터 형태)
-const incomingData = {
-    profile: {
-        username: "세미",
-        profileImg: "/static/images/61.png"
-    },
-    portfolio: {
-        assets: "15,450,000원",
-        rate: "+12.5%"
-    },
-    topUpStock: {
-        name: "세미콜론",
-        sub: "정보",
-        change: "+4.14",
-        logo: "/static/images/61.png"
-    },
-    topDownStock: {
-        name: "세미콜론",
-        sub: "정보",
-        change: "-4.14",
-        logo: "/static/images/61.png"
+    if (!data.success) {
+        alert(data.message);
+        location.href = "/auth/login";
+        return;
     }
-};
 
-// [4] 실행! (이 코드가 실행되면 화면 전체가 한 번에 바뀝니다)
-updateAllPageData(incomingData);
+    updateAllPageData(data);
+}
+
+loadIndexData();
