@@ -24,6 +24,13 @@ header {
   display: block;
 }
 
+.logo-link {
+  display: block;
+  flex-shrink: 0;
+  line-height: 0;
+  cursor: pointer;
+}
+
 #header-nav {
   display: flex;
   align-items: center;

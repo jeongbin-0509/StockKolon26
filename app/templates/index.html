@@ -12,14 +12,16 @@
 
     <!-- 헤더 -->
     <header>
-        <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo" alt="STOCKOLON 26 로고">
+        <a href="{{ url_for('main.index') }}" class="logo-link" aria-label="메인으로 이동">
+            <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo" alt="STOCKOLON 26 로고">
+        </a>
         <nav id="header-nav">
-            <button id="ranking_btn">
+            <a href="{{ url_for('main.rank') }}" id="ranking_btn" aria-label="랭킹 페이지로 이동">
                 <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="랭킹">
-            </button>
-            <button id="settings_btn">
+            </a>
+            <a href="{{ url_for('main.settings') }}" id="settings_btn" aria-label="설정 페이지로 이동">
                 <img src="{{ url_for('static', filename='images/settings_icon.png') }}" alt="설정">
-            </button>
+            </a>
         </nav>
     </header>
 
@@ -37,7 +39,7 @@
         </section>
 
         <!-- 내 포트폴리오 섹션 -->
-        <section id="portfolio-section">
+        <a href="{{ url_for('main.profile') }}" id="portfolio-section" aria-label="내 포트폴리오 페이지로 이동">
             <div id="portfolio-header">
                 <span class="sub_text">내 포트폴리오</span>
                 <div id="portfolio-rate-wrap">
@@ -52,7 +54,7 @@
                 </div>
                 <div id="portfolio-chart"></div>
             </div>
-        </section>
+        </a>
 
         <!-- 상승/하락 주식 섹션 -->
         <section id="highlight-section">
@@ -98,7 +100,7 @@
         <!-- 하단 링크 버튼 섹션 -->
         <section id="link-section">
 
-            <a href="/buy" class="link-card" id="buy-link">
+            <a href="{{ url_for('main.buy') }}" class="link-card" id="buy-link">
                 <img src="{{ url_for('static', filename='images/buy_icon.png') }}" alt="주식 구매 아이콘">
                 <div class="link-text">
                     <span class="head2">주식 구매하기</span>
@@ -106,7 +108,7 @@
                 </div>
             </a>
 
-            <a href="/news" class="link-card" id="news-link">
+            <a href="{{ url_for('main.news') }}" class="link-card" id="news-link">
                 <img src="{{ url_for('static', filename='images/news_icon.png') }}" alt="뉴스 아이콘">
                 <div class="link-text">
                     <span class="head2">SEMI NEWS!</span>

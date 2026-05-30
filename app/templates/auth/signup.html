@@ -13,7 +13,9 @@
 <body>
 
 <header>
-    <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo">
+    <a href="{{ url_for('main.index') }}" class="logo-link" aria-label="메인으로 이동">
+        <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo">
+    </a>
 
     <div class="logo_text_wrap">
         <p class="school_text">운정고 동아리 모의주식투자 게임</p>

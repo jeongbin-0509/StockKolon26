@@ -9,27 +9,56 @@
 </head>
 <body>
     <header>
-        <img src="{{ url_for('static', filename='images/stockolon_logo.png')}}" id="logo"/>
+        <a href="{{ url_for('main.index') }}" class="logo-link" aria-label="메인으로 이동">
+            <img src="{{ url_for('static', filename='images/stockolon_logo.png')}}" id="logo"/>
+        </a>
         <nav class="ranking-filter" aria-label="랭킹 정렬 옵션">
             <button class="filter-btn active" type="button">전체 랭킹</button>
-            <button class="filter-btn" type="button">반 랭킹</button>
+            <button class="filter-btn" type="button">학급 랭킹</button>
+            <button class="filter-btn" type="button">동아리 랭킹</button>
         </nav>
     </header>
     <main>
+        <section class="my-rank">
+            <div class="section-head">
+                <span class="section-label">내 랭킹</span>
+            </div>
+            <article class="my-rank-card">
+                <div class="my-rank-left">
+                    <span class="rank-label">전체 4위</span>
+                    <span class="user-name">세미</span>
+                </div>
+                <div class="my-rank-right">
+                    <span class="asset-label">총 자산</span>
+                    <strong class="asset-value">12,300,000원</strong>
+                    <span class="asset-change">+15.5%</span>
+                </div>
+            </article>
+        </section>
         <section class="ranking-board">
+            <div class="section-head">
+                <span class="section-label">전체 랭킹</span>
+            </div>
             <ol class="ranking-list">
                 <li class="ranking-item">    
                     <div class="user-meta">
-                        <span class="user-number">20921</span>
-                        <span class="user-name">염승띠니</span>
-                        <span class="user-assets">3,141,592</span>
+                        <span class="user-name">상혁</span>
+                        <span class="user-assets">12,300,006원</span>
+                        <span class="asset-change">+15.5%</span>
                     </div>
                 </li>
                 <li class="ranking-item">    
                     <div class="user-meta">
-                        <span class="user-number">20202</span>
-                        <span class="user-name">세미콜록</span>
-                        <span class="user-assets">2,500,000</span>
+                        <span class="user-name">세미2</span>
+                        <span class="user-assets">12,300,005원</span>
+                        <span class="asset-change">+15.5%</span>
+                    </div>
+                </li>
+                <li class="ranking-item">    
+                    <div class="user-meta">
+                        <span class="user-name">세미3</span>
+                        <span class="user-assets">12,300,004원</span>
+                        <span class="asset-change">+15.5%</span>
                     </div>
                 </li>
             </ol>

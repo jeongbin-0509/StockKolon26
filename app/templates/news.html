@@ -9,7 +9,9 @@
 </head>
 <body>
     <header>
-        <img src="{{ url_for('static', filename='images/stockolon_logo.png')}}" id="logo"/>
+        <a href="{{ url_for('main.index') }}" class="logo-link" aria-label="메인으로 이동">
+            <img src="{{ url_for('static', filename='images/stockolon_logo.png')}}" id="logo"/>
+        </a>
         <button id="ranking_btn">호재</button>
         <button id="setting_btn">악재</button>
     </header>

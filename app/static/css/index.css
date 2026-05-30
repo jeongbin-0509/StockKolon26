@@ -50,6 +50,7 @@ header {
     border-radius: 0.75rem;
     padding: 0.5rem;
     cursor: pointer;
+    text-decoration: none;
 }
 
 #ranking_btn img,
@@ -110,6 +111,14 @@ header {
     border: 1px solid var(--border-card);
     border-radius: 1.25rem;
     padding: 1.25rem 1.5rem;
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#portfolio-section:hover {
+    background-color: var(--border-card);
 }
 
 #portfolio-header {
