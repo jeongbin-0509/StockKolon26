@@ -1,11 +1,10 @@
 // 프로필창으로 이동하는 기능
 const moveBtn = document.getElementById("profile_btn");
 
-if (moveBtn) {
-    moveBtn.addEventListener("click", () => {
-        location.href = "/profile";
-    });
-}
+moveBtn.addEventListener("click", () => {
+    location.href = "/profile";
+});
+
 // ==========================================
 // 1. 프로필 섹션 (Profile Section)
 // ==========================================
@@ -75,7 +74,8 @@ class PortfolioSection {
                 this.todayRate.className = "head2 down";
             }
         }
-        // 필요 시 차트 업데이트 로직 처리 (예: data.chartData)
+
+        renderLineChart(this.chart, parseFloat(data.rate) >= 0 ? "up" : "down", data.seed || 3);
     }
 }
 
@@ -101,6 +101,7 @@ class StockCard {
             const isUp = parseFloat(data.change) >= 0;
             this.change.textContent = `${data.change}% ${isUp ? '↗' : '↘'}`;
             this.change.className = `stock-change head2 ${isUp ? 'up' : 'down'}`;
+            renderLineChart(this.chart, isUp ? "up" : "down", data.seed || (isUp ? 8 : 14));
         }
     }
 }
@@ -122,18 +123,30 @@ function updateAllPageData(mockData) {
     topDownCard.update(mockData.topDownStock);
 }
 
-// DB랑 연결한 코드
-async function loadIndexData() {
-    const response = await fetch("/api/index-data");
-    const data = await response.json();
 
-    if (!data.success) {
-        alert(data.message);
-        location.href = "/auth/login";
-        return;
+// [3] 예시 데이터 (서버에서 받은 JSON 데이터 형태)
+const incomingData = {
+    profile: {
+        username: "세미",
+        profileImg: "/static/images/61.png"
+    },
+    portfolio: {
+        assets: "15,450,000원",
+        rate: "+12.5%"
+    },
+    topUpStock: {
+        name: "세미콜론",
+        sub: "정보",
+        change: "+4.14",
+        logo: "/static/images/61.png"
+    },
+    topDownStock: {
+        name: "세미콜론",
+        sub: "정보",
+        change: "-4.14",
+        logo: "/static/images/61.png"
     }
+};
 
-    updateAllPageData(data);
-}
-
-loadIndexData();
+// [4] 실행! (이 코드가 실행되면 화면 전체가 한 번에 바뀝니다)
+updateAllPageData(incomingData);

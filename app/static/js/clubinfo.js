@@ -34,3 +34,5 @@ const clubList = [
   { index: 34, club_num: 42, club_name: "하람" },
   { index: 35, club_num: 55, club_name: "Vortex" }
 ];
+
+window.clubList = clubList;
