@@ -12,7 +12,9 @@
 
     <!-- 헤더 -->
     <header>
-        <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo" alt="STOCKOLON 26 로고">
+        <a href="{{ url_for('main.index') }}" class="logo-link" aria-label="메인으로 이동">
+            <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo" alt="STOCKOLON 26 로고">
+        </a>
         <nav id="header-nav">
             <button id="ranking_btn">
                 <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="랭킹">

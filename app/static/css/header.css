@@ -21,6 +21,12 @@ header {
     );
 }
 
+.logo-link {
+    display: block;
+    line-height: 0;
+    cursor: pointer;
+}
+
 .logo_text_wrap {
     width: 760px;
     max-width: 84vw;
