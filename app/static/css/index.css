@@ -111,6 +111,7 @@ header {
     border: 1px solid var(--border-card);
     border-radius: 1.25rem;
     padding: 1.25rem 1.5rem;
+    cursor: pointer;
 }
 
 #portfolio-header {
