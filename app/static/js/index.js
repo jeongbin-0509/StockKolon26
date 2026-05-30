@@ -1,39 +1,9 @@
 // 프로필창으로 이동하는 기능
 const moveBtn = document.getElementById("profile_btn");
 
-if (moveBtn) {
-    moveBtn.addEventListener("click", () => {
-        location.href = "/profile";
-    });
-}
-
-function makeChartPoints(seed, trend, width = 420, height = 150) {
-    const points = [];
-    const count = 13;
-
-    for (let i = 0; i < count; i += 1) {
-        const x = 10 + (i * (width - 20)) / (count - 1);
-        const wave = Math.sin((seed + i) * 1.8) * 34;
-        const noise = Math.cos((seed + i) * 0.9) * 22;
-        const trendDrift = trend === "up" ? (count - i) * 4 : i * 4;
-        const y = Math.max(18, Math.min(height - 18, height / 2 + wave + noise + trendDrift));
-        points.push(`${Math.round(x)},${Math.round(y)}`);
-    }
-
-    return points.join(" ");
-}
-
-function renderLineChart(container, trend = "up", seed = 1) {
-    if (!container) return;
-
-    container.classList.toggle("up-chart", trend === "up");
-    container.classList.toggle("down-chart", trend === "down");
-    container.innerHTML = `
-        <svg viewBox="0 0 420 150" aria-hidden="true">
-            <polyline points="${makeChartPoints(seed, trend)}"></polyline>
-        </svg>
-    `;
-}
+moveBtn.addEventListener("click", () => {
+    location.href = "/profile";
+});
 
 // ==========================================
 // 1. 프로필 섹션 (Profile Section)
@@ -162,22 +132,19 @@ const incomingData = {
     },
     portfolio: {
         assets: "15,450,000원",
-        rate: "+12.5%",
-        seed: 4
+        rate: "+12.5%"
     },
     topUpStock: {
         name: "세미콜론",
         sub: "정보",
         change: "+4.14",
-        logo: "/static/images/61.jpg",
-        seed: 9
+        logo: "/static/images/61.png"
     },
     topDownStock: {
         name: "세미콜론",
         sub: "정보",
         change: "-4.14",
-        logo: "/static/images/61.jpg",
-        seed: 15
+        logo: "/static/images/61.png"
     }
 };
 
