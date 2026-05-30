@@ -29,13 +29,15 @@
 
         <!-- 프로필 섹션 -->
         <section id="profile-section">
-            <div id="profile-img-wrap">
-                <img src="{{ url_for('static', filename='images/profile.png') }}" id="profile-img" alt="프로필 이미지">
-            </div>
-            <div id="profile-text">
-                <span class="sub_text">안녕하세요,</span>
-                <span id="username" class="head1">세미 님👋</span>
-            </div>
+            <a href="{{ url_for('main.profile') }}" id="profile-link" aria-label="프로필 페이지로 이동">
+                <div id="profile-img-wrap">
+                    <img src="{{ url_for('static', filename='images/profile.png') }}" id="profile-img" alt="프로필 이미지">
+                </div>
+                <div id="profile-text">
+                    <span class="sub_text">안녕하세요,</span>
+                    <span id="username" class="head1">세미 님👋</span>
+                </div>
+            </a>
         </section>
 
         <!-- 내 포트폴리오 섹션 -->
@@ -100,7 +102,7 @@
         <!-- 하단 링크 버튼 섹션 -->
         <section id="link-section">
 
-            <a href="/buy" class="link-card" id="buy-link">
+            <a href="{{ url_for('main.buy') }}" class="link-card" id="buy-link">
                 <img src="{{ url_for('static', filename='images/buy_icon.png') }}" alt="주식 구매 아이콘">
                 <div class="link-text">
                     <span class="head2">주식 구매하기</span>
@@ -108,7 +110,7 @@
                 </div>
             </a>
 
-            <a href="/news" class="link-card" id="news-link">
+            <a href="{{ url_for('main.news') }}" class="link-card" id="news-link">
                 <img src="{{ url_for('static', filename='images/news_icon.png') }}" alt="뉴스 아이콘">
                 <div class="link-text">
                     <span class="head2">SEMI NEWS!</span>
