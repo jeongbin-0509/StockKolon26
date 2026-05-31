@@ -1,14 +1,15 @@
 /* ==========================================
-   랭킹 페이지 전용 스타일 (rank.css)
-============================================ */
+   rank.css
+========================================== */
+
 .rank-page {
-    width: min(1200px, calc(100% - 2rem)); 
+    width: min(1200px, calc(100% - 2rem));
     margin: 0 auto 5rem;
     box-sizing: border-box;
 }
 
-/* 섹션 타이틀 및 필터 탭 */
-.rank-section-header {
+/* 상단 */
+.rank-top-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -16,174 +17,411 @@
     margin-bottom: 1.2rem;
 }
 
-.rank-page h2 {
-    color: var(--text-secondary, #8b8b8b);
+.rank-section-title {
+    color: #777;
     font-size: clamp(1.1rem, 1.8vw, 1.5rem);
-    font-weight: 700;
+    font-weight: 800;
     margin: 0;
 }
 
-/* 필터 버튼 (buy.css UI 완벽 동일) */
-.rank-filters {
+.rank-section-title.spacer {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.rank-category-filter {
     display: flex;
     gap: 0.55rem;
 }
 
 .rank-filter-btn {
-    border: 1px solid #303030;
-    border-radius: 0.65rem;
-    background: #171717;
-    color: var(--text-primary, #ffffff);
+    border: 2px solid #353535;
+    border-radius: 999px;
+    background: linear-gradient(145deg, #181818, #101010);
+    color: #fff;
     font: inherit;
-    font-size: clamp(0.85rem, 1.2vw, 1rem);
-    font-weight: 700;
-    padding: 0.55rem 0.85rem;
+    font-size: 0.95rem;
+    font-weight: 800;
+    padding: 0.45rem 1.2rem;
     cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
+    transition: 0.2s;
 }
 
 .rank-filter-btn:hover,
 .rank-filter-btn.active {
-    background: var(--border-card, #2a2a2a);
-    border-color: #505050;
-    color: #ffffff;
+    color: #00e676;
+    border-color: #00c853;
+    background: linear-gradient(145deg, #063b1f, #071b11);
+    box-shadow:
+        0 0 12px rgba(0, 255, 120, 0.35),
+        inset 0 0 10px rgba(0, 255, 120, 0.15);
 }
 
 
-/* ==========================================
-   [재수정] 랭킹 리스트 카드 (Grid 적용으로 완벽한 한 줄)
-============================================ */
+/* 리스트 */
+
+.rank-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
 .rank-card {
+    position: relative;
     display: grid;
-    /* [핵심] 등수(80px), 이름(1.5fr), 자산(1.5fr), 변동률(1fr) 비율로 한 줄 고정 */
-    grid-template-columns: 80px 1.5fr 1.5fr 1fr;
+    grid-template-columns:
+        minmax(300px, 1.4fr)
+        minmax(430px, 1.8fr);
     align-items: center;
-    
-    /* 위아래 패딩을 확 줄여서 슬림하게 밀착 */
-    padding: 0.4rem 1.8rem; 
+    gap: 1.4rem;
+
+    min-height: 95px;
+    padding: 0.75rem 1.8rem;
+
     border: 2px solid #303030;
-    border-radius: 1.2rem; 
-    background: linear-gradient(145deg, #1a1a1a, #141414);
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.03), 0 8px 20px rgba(0, 0, 0, 0.3);
-    margin-bottom: 0.8rem;
-    box-sizing: border-box;
-    transition: border-color 0.2s ease;
+    border-radius: 1.3rem;
+
+    background:
+        radial-gradient(circle at left center, rgba(255, 255, 255, 0.04), transparent 35%),
+        linear-gradient(145deg, #1a1a1a, #101010);
+
+    box-shadow:
+        inset 0 0 10px rgba(255, 255, 255, 0.04),
+        0 8px 18px rgba(0, 0, 0, 0.45);
+
+    transition: 0.2s ease;
 }
 
 .rank-card:hover {
-    border-color: #454545;
+    transform: translateY(-2px);
+    border-color: #505050;
 }
 
-/* 1. 등수 영역 */
-.rank-number-wrap {
-    display: flex;
+/* 내 랭킹 카드 */
+
+.my-rank-card {
+    border-color: #17d94e;
+    background:
+        radial-gradient(circle at left center, rgba(0, 255, 100, 0.25), transparent 38%),
+        linear-gradient(145deg, #102618, #101010);
+
+    box-shadow:
+        0 0 16px rgba(0, 255, 100, 0.45),
+        inset 0 0 18px rgba(0, 255, 100, 0.14);
+}
+
+.my-rank-card .rank-number,
+.my-rank-card .rank-name {
+    color: #5dff67;
+}
+
+
+/* 왼쪽 */
+
+.rank-card-left {
+    display: grid;
+    grid-template-columns: 65px 58px minmax(0, 1fr);
     align-items: center;
-    gap: 4px;
-}
-
-.rank-number {
-    font-size: clamp(1.3rem, 1.8vw, 1.8rem);
-    font-weight: 800;
-    color: #ffffff;
-}
-
-.rank-card.trend-up .rank-number { color: var(--color-stock-up, #ff3b30); }
-.rank-card.trend-down .rank-number { color: var(--color-stock-down, #007aff); }
-
-.rank-arrow {
-    font-size: 0.65em;
-    font-weight: 700;
-}
-
-/* 2. 프로필 및 이름 영역 */
-.rank-user-info {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
+    gap: 0.9rem;
     min-width: 0;
 }
 
+.rank-number {
+    font-size: clamp(2.4rem, 4vw, 3.8rem);
+    font-weight: 900;
+    line-height: 1;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.12rem;
+}
+
+.rank-number.up {
+    color: #ff3b30;
+}
+
+.rank-number.down {
+    color: #007aff;
+}
+
+.arrow-icon {
+    font-style: normal;
+    font-size: 0.38em;
+    margin-bottom: 0.2em;
+}
+
 .rank-avatar {
-    width: 38px;
-    height: 38px;
+    width: 58px;
+    height: 58px;
     border-radius: 50%;
-    background: #2d2d2d;
-    border: 2px solid #454545;
+    background: #262626;
+    border: 3px solid #3d3d3d;
     flex-shrink: 0;
 }
 
 .rank-name {
-    font-size: clamp(1.1rem, 1.5vw, 1.4rem);
-    font-weight: 700;
-    color: #ffffff;
-    white-space: nowrap;
+    font-size: clamp(1.7rem, 3vw, 2.4rem);
+    font-weight: 900;
+    color: #fff;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-/* 3. 총 자산 영역 & 4. 변동률 영역 공통 */
-.rank-data-group {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start; /* 디자인처럼 왼쪽 정렬 */
     white-space: nowrap;
 }
 
-.rank-label {
-    color: var(--text-secondary, #666666);
-    font-size: 0.8rem;
-    font-weight: 700;
-    margin-bottom: 0.1rem;
+
+/* 오른쪽 */
+
+.rank-card-right {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 1.2rem;
 }
 
-.rank-value {
-    font-size: clamp(1.1rem, 1.6vw, 1.6rem);
+.rank-info-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.rank-info-group.text-right {
+    align-items: flex-end;
+}
+
+.rank-info-label {
+    color: #777;
+    font-size: 0.85rem;
     font-weight: 800;
-    color: #ffffff;
-    line-height: 1.1;
+    margin-bottom: 0.15rem;
 }
 
-.rank-value span {
-    font-size: 0.65em;
-    font-weight: 700;
-    margin-left: 0.1rem;
+.rank-info-value {
+    font-size: clamp(1.8rem, 3vw, 2.7rem);
+    font-weight: 900;
+    line-height: 1.05;
+    color: #fff;
 }
 
-/* 변동률 전용 컬러 */
-.rank-value.up { color: var(--color-stock-up, #ff3b30); }
-.rank-value.down { color: var(--color-stock-down, #007aff); }
+.rank-info-value span {
+    font-size: 0.45em;
+}
+
+.rank-info-value.up {
+    color: #ff3b30;
+}
+
+.rank-info-value.down {
+    color: #007aff;
+}
 
 
 /* ==========================================
-   [반응형] 모바일 환경 최적화
-============================================ */
+   TOP 3 카드 금 / 은 / 동
+========================================== */
+
+.total-rank-section .rank-card:nth-child(-n + 3) {
+    overflow: visible;
+}
+
+/* 1등 카드 */
+.total-rank-section .rank-card:nth-child(1) {
+    border-color: #ffcc33;
+    background:
+        radial-gradient(circle at left center, rgba(255, 200, 40, 0.25), transparent 34%),
+        linear-gradient(145deg, #2b2109, #101010);
+
+    box-shadow:
+        0 0 18px rgba(255, 200, 40, 0.45),
+        inset 0 0 16px rgba(255, 200, 40, 0.12);
+}
+
+/* 2등 카드 */
+.total-rank-section .rank-card:nth-child(2) {
+    border-color: #d5d5d5;
+    background:
+        radial-gradient(circle at left center, rgba(220, 220, 220, 0.18), transparent 34%),
+        linear-gradient(145deg, #252525, #101010);
+
+    box-shadow:
+        0 0 16px rgba(255, 255, 255, 0.28),
+        inset 0 0 16px rgba(255, 255, 255, 0.08);
+}
+
+/* 3등 카드 */
+.total-rank-section .rank-card:nth-child(3) {
+    border-color: #cd7f32;
+    background:
+        radial-gradient(circle at left center, rgba(205, 127, 50, 0.22), transparent 34%),
+        linear-gradient(145deg, #2b170b, #101010);
+
+    box-shadow:
+        0 0 16px rgba(205, 127, 50, 0.35),
+        inset 0 0 16px rgba(205, 127, 50, 0.1);
+}
+
+
+/* ==========================================
+   TOP3 숫자 숨기고 트로피만 표시
+========================================== */
+
+.total-rank-section .rank-card:nth-child(-n + 3) .rank-number {
+    font-size: 0;
+    width: 65px;
+    height: 65px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.total-rank-section .rank-card:nth-child(-n + 3) .rank-number .arrow-icon {
+    display: none;
+}
+
+.total-rank-section .rank-card:nth-child(-n + 3) .rank-number::before {
+    content: "🏆";
+    font-size: 4rem;
+    line-height: 1;
+}
+
+/* 1등 트로피 */
+.total-rank-section .rank-card:nth-child(1) .rank-number::before {
+    filter:
+        drop-shadow(0 0 12px rgba(255, 210, 40, 0.9));
+}
+
+/* 2등 트로피 */
+.total-rank-section .rank-card:nth-child(2) .rank-number::before {
+    filter:
+        grayscale(1)
+        brightness(1.75)
+        drop-shadow(0 0 10px rgba(255, 255, 255, 0.75));
+}
+
+/* 3등 트로피 */
+.total-rank-section .rank-card:nth-child(3) .rank-number::before {
+    filter:
+        sepia(1)
+        saturate(2)
+        hue-rotate(340deg)
+        drop-shadow(0 0 10px rgba(205, 127, 50, 0.8));
+}
+
+
+/* ==========================================
+   전체 랭킹 속 내 랭킹
+========================================== */
+
+.total-rank-section .rank-card:nth-child(4) {
+    border-color: #17d94e;
+
+    background:
+        radial-gradient(circle at left center, rgba(0, 255, 100, 0.23), transparent 35%),
+        linear-gradient(145deg, #102618, #101010);
+
+    box-shadow:
+        0 0 14px rgba(0, 255, 90, 0.42),
+        inset 0 0 14px rgba(0, 255, 90, 0.12);
+}
+
+.total-rank-section .rank-card:nth-child(4) .rank-number,
+.total-rank-section .rank-card:nth-child(4) .rank-name {
+    color: #5dff67;
+}
+
+.total-rank-section .rank-card:nth-child(4)::after {
+    content: "나의 랭킹";
+    position: absolute;
+    top: -0.75rem;
+    right: 1rem;
+
+    padding: 0.28rem 0.7rem;
+    border-radius: 0.5rem;
+
+    background: #46ff3a;
+    color: #071107;
+    font-size: 0.8rem;
+    font-weight: 900;
+
+    transform: rotate(5deg);
+
+    box-shadow:
+        0 0 10px rgba(0, 255, 80, 0.6);
+}
+
+
+/* ==========================================
+   모바일
+========================================== */
+
 @media screen and (max-width: 767px) {
-    .rank-section-header {
+    .rank-top-bar {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.8rem;
     }
 
-    .rank-filters {
+    .rank-category-filter {
         width: 100%;
+        overflow-x: auto;
+        padding-bottom: 0.25rem;
     }
 
-    /* 모바일에서도 절대 깨지지 않게 그리드 폭 최적화 */
+    .rank-filter-btn {
+        flex-shrink: 0;
+        padding: 0.35rem 0.9rem;
+    }
+
     .rank-card {
-        grid-template-columns: 55px 1.2fr 1.2fr 0.9fr;
-        padding: 0.4rem 0.8rem;
-        gap: 4px;
+        grid-template-columns: 1fr;
+        padding: 0.9rem;
+        gap: 0.6rem;
+    }
+
+    .rank-card-left {
+        grid-template-columns: 45px 42px minmax(0, 1fr);
+        gap: 0.6rem;
     }
 
     .rank-avatar {
-        display: none; /* 모바일 공간 확보를 위해 프로필 이미지 숨김 */
+        width: 42px;
+        height: 42px;
+        border-width: 2px;
     }
 
-    .rank-label {
-        font-size: 0.65rem; /* 라벨 텍스트 축소 */
+    .rank-number {
+        font-size: 2.1rem;
     }
 
-    .rank-value {
-        font-size: 0.95rem; /* 금액/퍼센트 텍스트 축소 */
+    .rank-name {
+        font-size: 1.45rem;
+    }
+
+    .rank-card-right {
+        grid-template-columns: 1fr 1fr;
+        padding-left: 45px;
+    }
+
+    .rank-info-label {
+        font-size: 0.7rem;
+    }
+
+    .rank-info-value {
+        font-size: 1.1rem;
+    }
+
+    .total-rank-section .rank-card:nth-child(-n + 3) .rank-number {
+        width: 45px;
+        height: 45px;
+    }
+
+    .total-rank-section .rank-card:nth-child(-n + 3) .rank-number::before {
+        font-size: 2.4rem;
+    }
+
+    .total-rank-section .rank-card:nth-child(4)::after {
+        top: -0.6rem;
+        right: 0.7rem;
+        font-size: 0.68rem;
     }
 }
