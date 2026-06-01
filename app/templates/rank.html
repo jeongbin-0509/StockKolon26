@@ -4,155 +4,190 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ranking - STOCKOLON 26</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/rank.css') }}">
 </head>
+
 <body>
-    <header class="buy-header">
-        <a href="{{ url_for('main.index') }}" class="logo-link" aria-label="메인으로 이동">
-            <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo" alt="STOCKOLON 26 Logo">
+
+<header class="buy-header">
+    <a href="{{ url_for('main.index') }}" class="logo-link">
+        <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}"
+             id="logo"
+             alt="STOCKOLON 26 Logo">
+    </a>
+
+    <nav id="header-nav">
+        <a href="{{ url_for('main.profile') }}" class="user-pill">
+            <span class="user-avatar"></span>
+            <span class="user-name">세미님</span>
         </a>
 
-        <nav id="header-nav" aria-label="상단 메뉴">
-            <a href="{{ url_for('main.profile') }}" class="user-pill" aria-label="내 포트폴리오로 이동">
-                <span class="user-avatar" aria-hidden="true"></span>
-                <span class="user-name">세미님</span>
-            </a>
-            <a href="{{ url_for('main.rank') }}" class="nav-icon active" aria-label="랭킹 페이지로 이동">
-                <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="랭킹">
-            </a>
-            <a href="{{ url_for('main.settings') }}" class="nav-icon" aria-label="설정 페이지로 이동">
-                <img src="{{ url_for('static', filename='images/settings_icon.png') }}" alt="설정">
-            </a>
-        </nav>
-    </header>
+        <a href="{{ url_for('main.rank') }}" class="nav-icon active">
+            <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="랭킹">
+        </a>
 
-    <main class="rank-page">
-        <div class="rank-top-bar">
-            <h2 class="rank-section-title">내 랭킹</h2>
-            <nav class="rank-category-filter" aria-label="랭킹 범위">
-                <button class="rank-filter-btn active" type="button">전교 랭킹</button>
-                <button class="rank-filter-btn" type="button">학급 랭킹</button>
-                <button class="rank-filter-btn" type="button">동아리 랭킹</button>
-            </nav>
+        <a href="{{ url_for('main.settings') }}" class="nav-icon">
+            <img src="{{ url_for('static', filename='images/settings_icon.png') }}" alt="설정">
+        </a>
+    </nav>
+</header>
+
+
+<main class="rank-page">
+
+    <!-- 상단 -->
+    <div class="rank-top-bar">
+        <h2 class="rank-section-title">내 랭킹</h2>
+
+        <nav class="rank-category-filter">
+            <button class="rank-filter-btn active">전교 랭킹</button>
+            <button class="rank-filter-btn">학급 랭킹</button>
+            <button class="rank-filter-btn">동아리 랭킹</button>
+        </nav>
+    </div>
+
+
+    <!-- 내 랭킹 -->
+    <section class="my-rank-section">
+        <article class="rank-card my-rank-card">
+
+            <div class="rank-card-left">
+                <span class="rank-number">4</span>
+                <span class="rank-avatar"></span>
+                <span class="rank-name">세미</span>
+            </div>
+
+            <div class="rank-card-right">
+                <div class="rank-info-group">
+                    <span class="rank-info-label">총 자산</span>
+                    <strong class="rank-info-value">
+                        12,300,000<span>원</span>
+                    </strong>
+                </div>
+
+                <div class="rank-info-group text-right">
+                    <span class="rank-info-label">5분전 대비</span>
+                    <strong class="rank-info-value up">
+                        +15.5%
+                    </strong>
+                </div>
+            </div>
+
+        </article>
+    </section>
+
+
+    <h2 class="rank-section-title spacer">전체 랭킹</h2>
+
+
+    <section class="total-rank-section">
+
+        <!-- =========================
+             1~3등 시상대
+        ========================== -->
+        <div class="podium-section">
+
+            <!-- 2등 -->
+            <article class="podium-card silver">
+                <div class="podium-trophy">🏆</div>
+                <div class="podium-rank">2등</div>
+                <span class="rank-avatar"></span>
+                <div class="podium-name">세미2</div>
+                <div class="podium-money">12,300,005원</div>
+                <div class="podium-change up">+15.5%</div>
+            </article>
+
+            <!-- 1등 -->
+            <article class="podium-card gold">
+                <div class="podium-trophy">🏆</div>
+                <div class="podium-rank">1등</div>
+                <span class="rank-avatar"></span>
+                <div class="podium-name">상혁</div>
+                <div class="podium-money">12,300,006원</div>
+                <div class="podium-change up">+15.5%</div>
+            </article>
+
+            <!-- 3등 -->
+            <article class="podium-card bronze">
+                <div class="podium-trophy">🏆</div>
+                <div class="podium-rank">3등</div>
+                <span class="rank-avatar"></span>
+                <div class="podium-name">세미3</div>
+                <div class="podium-money">12,300,004원</div>
+                <div class="podium-change up">+15.5%</div>
+            </article>
+
         </div>
 
-        <section class="my-rank-section" aria-label="내 랭킹 요약">
-            <article class="rank-card my-rank-card">
-                <div class="rank-card-left">
-                    <span class="rank-number">4</span>
-                    <span class="rank-avatar"></span>
-                    <span class="rank-name">세미</span>
-                </div>
-                <div class="rank-card-right">
-                    <div class="rank-info-group">
-                        <span class="rank-info-label">총 자산</span>
-                        <strong class="rank-info-value">12,300,000<span>원</span></strong>
-                    </div>
-                    <div class="rank-info-group text-right">
-                        <span class="rank-info-label">5분전 대비</span>
-                        <strong class="rank-info-value up">+15.5%</strong>
-                    </div>
-                </div>
-            </article>
-        </section>
 
-        <h2 class="rank-section-title spacer">전체 랭킹</h2>
+        <!-- =========================
+             4~100등 스크롤
+        ========================== -->
+        <div class="rank-scroll-box">
 
-        <section class="total-rank-section" aria-label="전체 랭킹 목록">
             <div class="rank-list">
-                <article class="rank-card">
-                    <div class="rank-card-left">
-                        <span class="rank-number up">1<i class="arrow-icon">↗</i></span>
-                        <span class="rank-avatar"></span>
-                        <span class="rank-name">상혁</span>
-                    </div>
-                    <div class="rank-card-right">
-                        <div class="rank-info-group">
-                            <span class="rank-info-label">총 자산</span>
-                            <strong class="rank-info-value">12,300,006<span>원</span></strong>
-                        </div>
-                        <div class="rank-info-group text-right">
-                            <span class="rank-info-label">5분전 대비</span>
-                            <strong class="rank-info-value up">+15.5%</strong>
-                        </div>
-                    </div>
-                </article>
 
-                <article class="rank-card">
-                    <div class="rank-card-left">
-                        <span class="rank-number down">2<i class="arrow-icon">↘</i></span>
-                        <span class="rank-avatar"></span>
-                        <span class="rank-name">세미2</span>
-                    </div>
-                    <div class="rank-card-right">
-                        <div class="rank-info-group">
-                            <span class="rank-info-label">총 자산</span>
-                            <strong class="rank-info-value">12,300,005<span>원</span></strong>
-                        </div>
-                        <div class="rank-info-group text-right">
-                            <span class="rank-info-label">5분전 대비</span>
-                            <strong class="rank-info-value up">+15.5%</strong>
-                        </div>
-                    </div>
-                </article>
+                <!-- 4등 -->
+                <article class="rank-card my-rank-in-list">
 
-                <article class="rank-card">
-                    <div class="rank-card-left">
-                        <span class="rank-number">3</span>
-                        <span class="rank-avatar"></span>
-                        <span class="rank-name">세미3</span>
-                    </div>
-                    <div class="rank-card-right">
-                        <div class="rank-info-group">
-                            <span class="rank-info-label">총 자산</span>
-                            <strong class="rank-info-value">12,300,004<span>원</span></strong>
-                        </div>
-                        <div class="rank-info-group text-right">
-                            <span class="rank-info-label">5분전 대비</span>
-                            <strong class="rank-info-value up">+15.5%</strong>
-                        </div>
-                    </div>
-                </article>
-
-                <article class="rank-card">
                     <div class="rank-card-left">
                         <span class="rank-number">4</span>
                         <span class="rank-avatar"></span>
                         <span class="rank-name">세미</span>
                     </div>
+
                     <div class="rank-card-right">
                         <div class="rank-info-group">
                             <span class="rank-info-label">총 자산</span>
-                            <strong class="rank-info-value">12,300,003<span>원</span></strong>
+                            <strong class="rank-info-value">
+                                12,300,003<span>원</span>
+                            </strong>
                         </div>
+
                         <div class="rank-info-group text-right">
                             <span class="rank-info-label">5분전 대비</span>
-                            <strong class="rank-info-value up">+15.5%</strong>
+                            <strong class="rank-info-value up">
+                                +15.5%
+                            </strong>
+                        </div>
+                    </div>
+
+                </article>
+
+                <!-- 5등 -->
+                <article class="rank-card">
+                    <div class="rank-card-left">
+                        <span class="rank-number">5</span>
+                        <span class="rank-avatar"></span>
+                        <span class="rank-name">세미5</span>
+                    </div>
+
+                    <div class="rank-card-right">
+                        <div class="rank-info-group">
+                            <span class="rank-info-label">총 자산</span>
+                            <strong class="rank-info-value">
+                                12,300,002<span>원</span>
+                            </strong>
+                        </div>
+
+                        <div class="rank-info-group text-right">
+                            <span class="rank-info-label">5분전 대비</span>
+                            <strong class="rank-info-value up">
+                                +15.5%
+                            </strong>
                         </div>
                     </div>
                 </article>
 
-                <article class="rank-card">
-                    <div class="rank-card-left">
-                        <span class="rank-number up">5<i class="arrow-icon">↗</i></span>
-                        <span class="rank-avatar"></span>
-                        <span class="rank-name">세미5</span>
-                    </div>
-                    <div class="rank-card-right">
-                        <div class="rank-info-group">
-                            <span class="rank-info-label">총 자산</span>
-                            <strong class="rank-info-value">12,300,002<span>원</span></strong>
-                        </div>
-                        <div class="rank-info-group text-right">
-                            <span class="rank-info-label">5분전 대비</span>
-                            <strong class="rank-info-value up">+15.5%</strong>
-                        </div>
-                    </div>
-                </article>
             </div>
-        </section>
-    </main>
+        </div>
+
+    </section>
+
+</main>
+
 </body>
 </html>
