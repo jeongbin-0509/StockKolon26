@@ -26,3 +26,21 @@ sendCodeBtn.addEventListener("click", async () => {
         alert(result.message);
     }
 });
+
+const clubCards = document.querySelectorAll(".club_card");
+const clubInput = document.getElementById("club_id");
+
+clubCards.forEach(card => {
+
+    card.addEventListener("click", () => {
+
+        clubCards.forEach(c =>
+            c.classList.remove("selected")
+        );
+
+        card.classList.add("selected");
+
+        clubInput.value = card.dataset.id;
+    });
+
+});

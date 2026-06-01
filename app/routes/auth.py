@@ -59,6 +59,8 @@ def signup():
         
         password_check = request.form.get("password_check")
 
+        club_id = request.form.get("club_id")
+
         print("입력 인증번호:", email_code)
         print("세션 인증번호:", session.get("email_code"))
         print("입력 이메일:", email)
@@ -83,7 +85,8 @@ def signup():
             "name": name,
             "usernum": usernum,
             "email": email,
-            "password": hashed_password
+            "password": hashed_password,
+            "club_id": club_id
         }).execute()
 
         flash("회원가입이 완료되었습니다.")

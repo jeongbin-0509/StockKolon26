@@ -41,6 +41,20 @@
 
         <input type="password" id="password_check" name="password_check" placeholder="비밀번호 확인" required minlength="6">
 
+        <div class="club_select_wrap">
+            <p class="club_select_title">동아리 선택</p>
+
+            <select id="club_id" name="club_id" required>
+                <option value="">동아리를 선택하세요</option>
+
+                {% for club in clubs %}
+                    <option value="{{ club.id }}">
+                        {{ club.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
         <button type="submit" id="signup_btn">회원가입</button>
     </form>
 </main>
