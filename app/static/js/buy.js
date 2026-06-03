@@ -242,7 +242,8 @@ document.querySelectorAll(".amount-btn").forEach((button) => {
 
 document.querySelectorAll(".shortcut-btn").forEach((button) => {
     button.addEventListener("click", () => {
-        amountInput.value = button.dataset.value === "max" ? 16 : button.dataset.value;
+        const shortcutAmount = button.dataset.value === "max" ? 16 : Number(button.dataset.value) || 0;
+        amountInput.value = Math.max(0, (Number(amountInput.value) || 0) + shortcutAmount);
         updateSubmit();
     });
 });
