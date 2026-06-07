@@ -250,6 +250,27 @@ body {
     filter: drop-shadow(0 0 7px rgba(0, 122, 255, 0.55));
 }
 
+.chart-grid-line {
+    stroke: rgba(255, 255, 255, 0.12);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+}
+
+.chart-grid-line-minor {
+    stroke: rgba(255, 255, 255, 0.055);
+}
+
+.chart-price-label {
+    fill: #929292;
+    font-size: 11px;
+    font-weight: 700;
+    dominant-baseline: middle;
+}
+
+.modal-chart .chart-price-label {
+    font-size: 18px;
+}
+
 .trade-overlay {
     position: fixed;
     inset: 0;
@@ -390,6 +411,11 @@ body {
     border: 2px solid #3a3a3a;
     border-radius: 1.5rem;
     background: #1a1a1a;
+}
+
+.stock-chart,
+.modal-chart {
+    background-color: #181818;
 }
 
 @media (max-height: 820px) {

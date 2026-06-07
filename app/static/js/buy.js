@@ -82,19 +82,74 @@ function setClubImage(img, clubNum) {
     img.src = fileName ? `${imageBase}${fileName}` : defaultLogo;
 }
 
-function chartPoints(seed, trend, width = 420, height = 150) {
-    const points = [];
+function chartPrices(stock, seedOffset = 0) {
+    const prices = [];
     const count = 13;
+    const startPrice = stock.trend === "up"
+        ? stock.price - stock.changeWon
+        : stock.price + stock.changeWon;
+    const volatility = Math.max(stock.price * 0.08, 1000);
 
     for (let i = 0; i < count; i += 1) {
-        const x = 10 + (i * (width - 20)) / (count - 1);
-        const drift = trend === "up" ? (count - i) * 5 : i * 5;
-        const noise = seededValue(seed + i, 16, height - 38);
-        const y = Math.max(18, Math.min(height - 18, noise + drift));
-        points.push(`${Math.round(x)},${Math.round(y)}`);
+        const progress = i / (count - 1);
+        const basePrice = startPrice + (stock.price - startPrice) * progress;
+        const noiseRatio = (seededValue(stock.club_num + seedOffset + i * 7, 0, 2000) - 1000) / 1000;
+        const noise = noiseRatio * volatility * Math.sin(Math.PI * progress);
+        prices.push(Math.max(100, Math.round(basePrice + noise)));
     }
 
-    return points.join(" ");
+    prices[prices.length - 1] = stock.price;
+    return prices;
+}
+
+function nicePriceStep(value) {
+    const power = 10 ** Math.floor(Math.log10(Math.max(1, value)));
+    const fraction = value / power;
+    const multiplier = fraction <= 1 ? 1 : fraction <= 2 ? 2 : fraction <= 5 ? 5 : 10;
+    return multiplier * power;
+}
+
+function chartMarkup(stock, width = 420, height = 150, seedOffset = 0) {
+    const prices = chartPrices(stock, seedOffset);
+    const rawMin = Math.min(...prices);
+    const rawMax = Math.max(...prices);
+    const padding = Math.max((rawMax - rawMin) * 0.15, stock.price * 0.02, 100);
+    const step = nicePriceStep((rawMax - rawMin + padding * 2) / 4);
+    const scaleMin = Math.max(0, Math.floor((rawMin - padding) / step) * step);
+    const scaleMax = Math.ceil((rawMax + padding) / step) * step;
+    const scaleRange = scaleMax - scaleMin || step;
+    const left = 10;
+    const top = 10;
+    const bottom = height - 10;
+    const plotRight = width - (width <= 500 ? 70 : 105);
+    const plotWidth = plotRight - left;
+    const plotHeight = bottom - top;
+
+    const priceToY = (price) => bottom - ((price - scaleMin) / scaleRange) * plotHeight;
+
+    const horizontalGrid = [];
+    for (let price = scaleMin; price <= scaleMax; price += step) {
+        const y = priceToY(price);
+        horizontalGrid.push(`
+            <line class="chart-grid-line" x1="${left}" y1="${y}" x2="${plotRight}" y2="${y}" />
+            <text class="chart-price-label" x="${plotRight + 7}" y="${y}">${price.toLocaleString("ko-KR")}원</text>
+        `);
+    }
+
+    const verticalGrid = Array.from({ length: 7 }, (_, index) => {
+        const x = left + (index / 6) * plotWidth;
+        return `<line class="chart-grid-line chart-grid-line-minor" x1="${x}" y1="${top}" x2="${x}" y2="${bottom}" />`;
+    }).join("");
+
+    const points = prices.map((price, index) => {
+        const x = left + (index / (prices.length - 1)) * plotWidth;
+        return `${Math.round(x)},${Math.round(priceToY(price))}`;
+    }).join(" ");
+
+    return `
+        <g class="chart-grid">${verticalGrid}${horizontalGrid.join("")}</g>
+        <polyline points="${points}" />
+    `;
 }
 
 function createStockCard(rawClub) {
@@ -118,7 +173,7 @@ function createStockCard(rawClub) {
             <span>${stock.changeRate > 0 ? "+" : ""}${stock.changeRate.toFixed(2)}% ${stock.trend === "up" ? "↗" : "↘"}</span>
         </div>
         <svg class="stock-chart ${stock.trend}-chart" viewBox="0 0 420 150" aria-hidden="true">
-            <polyline points="${chartPoints(stock.club_num, stock.trend)}" />
+            ${chartMarkup(stock)}
         </svg>
     `;
 
@@ -178,7 +233,7 @@ function openModal(card) {
     modalChange.classList.toggle("down", stock.trend === "down");
     modalChart.classList.toggle("up-chart", stock.trend === "up");
     modalChart.classList.toggle("down-chart", stock.trend === "down");
-    modalChart.querySelector("polyline").setAttribute("points", chartPoints(stock.club_num + 20, stock.trend, 820, 260));
+    modalChart.innerHTML = chartMarkup(stock, 820, 260, 20);
     setClubImage(modalLogo, stock.club_num);
 
     modalStats[0].textContent = stock.owned;
