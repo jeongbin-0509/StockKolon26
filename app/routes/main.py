@@ -90,3 +90,41 @@ def index_data():
     }
 
     return jsonify(data)
+
+@main.route("/api/profile-data")
+def profile_data():
+    if "user_id" not in session:
+        return jsonify({"success": False, "message": "로그인이 필요합니다."}), 401
+
+    user_id = session["user_id"]
+
+    result = supabase.table("users").select("*").eq("id", user_id).single().execute()
+    user = result.data
+
+    cash = user.get("cash", 0)
+
+    return jsonify({
+        "success": True,
+        "user": {
+            "name": user["name"],
+            "cash": cash,
+            "total_assets": cash,
+            "rank": "전체 순위 준비중"
+        },
+        "summary": {
+            "total_assets": f"{cash:,}원",
+            "daily_change": "0원",
+            "daily_rate": "(0.0%)",
+            "purchase_amount": "0원",
+            "cash": f"{cash:,}원"
+        },
+        "top": {
+            "up_name": "데이터 없음",
+            "up_info": "-",
+            "up_rate": "0.0%",
+            "down_name": "데이터 없음",
+            "down_info": "-",
+            "down_rate": "0.0%"
+        },
+        "holdings": []
+    })
