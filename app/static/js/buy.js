@@ -3,25 +3,30 @@ const categoryFilter = document.querySelector(".stock-category-filter");
 const imageBase = stockGrid?.dataset.imageBase || "/static/images/";
 const defaultLogo = `${imageBase}default_stock_logo.png`;
 const clubImageFiles = {
-    1: "1.jpg",
-    2: "2.jpg",
-    12: "12.jpg",
+    1: "1.png",
+    2: "2.png",
+    12: "12.png",
     13: "13.png",
     14: "14.png",
     21: "21.png",
     31: "31.png",
-    32: "32.jpg",
+    32: "32.png",
     41: "41.png",
-    43: "43.jpg",
-    54: "54.jpg",
-    61: "61.jpg",
-    71: "71.jpg",
-    72: "72.jpg",
+    42: "42.png",
+    43: "43.png",
+    44: "44.png",
+    45: "45.png",
+    52: "52.png",
+    54: "54.png",
+    61: "61.png",
+    62: "62.png",
+    71: "71.png",
+    72: "72.png",
     73: "73.png",
-    75: "75.jpg",
-    76: "76.jpg",
+    75: "75.png",
+    76: "76.png",
     83: "83.png",
-    84: "84.jpg"
+    84: "84.png"
 };
 
 const categoryNames = {
