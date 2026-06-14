@@ -25,6 +25,12 @@ main {
 }
 
 /* header */
+#logo {
+    width: clamp(200px, 30vw, 420px);
+    height: auto;
+    object-fit: contain;
+}
+
 header {
     display: flex;
     align-items: center;

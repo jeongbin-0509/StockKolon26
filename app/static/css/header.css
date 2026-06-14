@@ -1,29 +1,29 @@
 /* ==========================================
    상단 헤더 영역 공통 스타일 (header.css)
 ============================================ */
-.buy-header {
+header {
     width: 100%;
-    height: 320px;
+    height: 280px;
     display: flex;
-    flex-direction: column; /* 원래 원하셨던 중앙 세로 배치 구조 복원 */
-    align-items: center;
-    padding-top: 55px;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-top: 50px;
+    padding-left: 55px;
     box-sizing: border-box;
     position: relative;
     z-index: 10;
     background: var(--bg-main, #121212);
 }
 
-/* 원래 사용하시던 거대하고 예쁜 로고 세팅 그대로 유지 */
-.buy-header #logo {
-    width: 760px;
+#logo {
+    width: 620px;
     max-width: 84vw;
     height: auto;
     display: block;
     filter: drop-shadow(0 8px 12px rgba(0,0,0,.55));
 }
 
-.buy-header .logo-link {
+.logo-link {
     display: block;
     line-height: 0;
     cursor: pointer;
@@ -31,7 +31,7 @@
 
 /* 로고 밑 텍스트 정렬 */
 .logo_text_wrap {
-    width: 760px;
+    width: 620px;
     max-width: 84vw;
     display: flex;
     justify-content: space-between;
@@ -54,14 +54,14 @@
 /* ==========================================
    [우측 상단 고정] 유저 정보 및 메뉴 네비게이션
 ============================================ */
-.buy-header #header-nav {
+header #header-nav {
     position: absolute;
-    top: 35px;   /* 상단 여백 조절 */
-    right: 40px;  /* 우측 여백 조절 */
+    top: 35px;
+    right: 40px;
     display: flex;
     align-items: center;
     gap: 12px;
-    flex-wrap: nowrap; /* 절대 줄바꿈 금지 */
+    flex-wrap: nowrap;
 }
 
 .user-pill,
@@ -75,12 +75,11 @@
     background: linear-gradient(145deg, #1b1b1b, #121212);
     color: var(--text-primary, #ffffff);
     text-decoration: none;
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.08), 0 12px 24px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 0 12px rgba(255,255,255,0.08), 0 12px 24px rgba(0,0,0,0.35);
     flex-shrink: 0;
     box-sizing: border-box;
 }
 
-/* 유저 캡슐 스타일 */
 .user-pill {
     gap: 10px;
     padding: 0 16px;
@@ -99,12 +98,11 @@
 }
 
 .user-name {
-    font-size: 18px; 
+    font-size: 18px;
     font-weight: 700;
     white-space: nowrap;
 }
 
-/* 아이콘 버튼 스타일 (랭킹, 설정) */
 .nav-icon {
     width: 52px;
     padding: 8px;
@@ -116,44 +114,63 @@
     object-fit: contain;
 }
 
+#header-nav a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    min-height: 52px;
+    border: 2px solid #303030;
+    border-radius: 1.1rem;
+    background: linear-gradient(145deg, #1b1b1b, #121212);
+    box-shadow: 0 0 12px rgba(255,255,255,0.08), 0 12px 24px rgba(0,0,0,0.35);
+    text-decoration: none;
+}
+
+#header-nav a img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
 
 /* ==========================================
    [반응형] 모바일 환경 최적화
 ============================================ */
 @media screen and (max-width: 767px) {
-    .buy-header {
+    header {
         height: auto;
         padding-top: 25px;
+        padding-left: 8vw;
         padding-bottom: 20px;
         gap: 20px;
-    }
-
-    #logo,
-    .logo_text_wrap {
-        width: 84vw;
     }
 
     .school_text { font-size: 14px; }
     .by_text { font-size: 13px; }
 
-    /* 모바일에서는 거대한 로고 밑으로 메뉴가 자연스럽게 내려오도록 조정 */
-    .buy-header #header-nav {
-        position: static; /* absolute 해제 */
+    header #header-nav {
+        position: static;
         margin-top: 10px;
         width: 84vw;
-        justify-content: center; /* 가운데 정렬 */
+        justify-content: flex-start;
     }
 
     .user-pill,
     .nav-icon {
         min-height: 46px;
     }
-    
+
     .nav-icon {
         width: 46px;
     }
 
     .user-name {
         font-size: 14px;
+    }
+
+    #header-nav a {
+        width: 46px;
+        min-height: 46px;
     }
 }
