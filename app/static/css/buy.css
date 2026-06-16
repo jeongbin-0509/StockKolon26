@@ -317,10 +317,18 @@ body {
     font-size: clamp(1.25rem, 2.1vw, 1.85rem);
     font-weight: 800;
     cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.trade-tab:hover {
+    border-color: #0cbf67;
 }
 
 .trade-tab.active {
-    background: #1b1b1b;
+    background: #0bd16f;
+    border-color: #0cbf67;
+    color: #ffffff;
+    box-shadow: 0 0 18px rgba(11, 209, 111, 0.4);
 }
 
 .modal-close {
@@ -416,6 +424,101 @@ body {
 .stock-chart,
 .modal-chart {
     background-color: #181818;
+}
+
+.order-form {
+    display: grid;
+    grid-template-columns: 1.2fr 86px 86px 1fr;
+    grid-template-areas:
+        "input plus minus submit"
+        "short short short submit";
+    gap: 1rem;
+}
+
+.order-input-wrap {
+    grid-area: input;
+    display: flex;
+    align-items: center;
+    min-height: 68px;
+    border: 2px solid #3a3a3a;
+    border-radius: 1.3rem;
+    background: #333333;
+    color: #9a9a9a;
+    padding: 0 1.4rem;
+}
+
+.order-input-wrap span {
+    font-size: clamp(1rem, 1.7vw, 1.55rem);
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.order-input-wrap input {
+    width: 100%;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 1.8rem;
+    font-weight: 800;
+    text-align: right;
+    outline: none;
+}
+
+.amount-btn,
+.shortcut-btn,
+.order-submit {
+    border: 2px solid #3a3a3a;
+    border-radius: 1.3rem;
+    font: inherit;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.amount-btn {
+    min-height: 68px;
+    background: #171717;
+    color: var(--text-primary);
+    font-size: 3rem;
+    line-height: 1;
+}
+
+.shortcut-row {
+    grid-area: short;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.shortcut-btn {
+    min-height: 50px;
+    background: #191919;
+    color: #8d8d8d;
+    font-size: clamp(1rem, 1.55vw, 1.45rem);
+}
+
+.order-submit {
+    grid-area: submit;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    border-color: #0cbf67;
+    background: #0bd16f;
+    color: #ffffff;
+    font-size: clamp(1.25rem, 2.15vw, 2rem);
+    line-height: 1.05;
+}
+
+.order-submit small {
+    font-size: 0.55em;
+}
+
+.order-submit.sell-mode {
+    border-color: #0cbf67;
+    background: #0bd16f;
 }
 
 @media (max-height: 820px) {
@@ -519,101 +622,6 @@ body {
     }
 }
 
-.order-form {
-    display: grid;
-    grid-template-columns: 1.2fr 86px 86px 1fr;
-    grid-template-areas:
-        "input plus minus submit"
-        "short short short submit";
-    gap: 1rem;
-}
-
-.order-input-wrap {
-    grid-area: input;
-    display: flex;
-    align-items: center;
-    min-height: 68px;
-    border: 2px solid #3a3a3a;
-    border-radius: 1.3rem;
-    background: #333333;
-    color: #9a9a9a;
-    padding: 0 1.4rem;
-}
-
-.order-input-wrap span {
-    font-size: clamp(1rem, 1.7vw, 1.55rem);
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-.order-input-wrap input {
-    width: 100%;
-    min-width: 0;
-    border: none;
-    background: transparent;
-    color: var(--text-primary);
-    font: inherit;
-    font-size: 1.8rem;
-    font-weight: 800;
-    text-align: right;
-    outline: none;
-}
-
-.amount-btn,
-.shortcut-btn,
-.order-submit {
-    border: 2px solid #3a3a3a;
-    border-radius: 1.3rem;
-    font: inherit;
-    font-weight: 900;
-    cursor: pointer;
-}
-
-.amount-btn {
-    min-height: 68px;
-    background: #171717;
-    color: var(--text-primary);
-    font-size: 3rem;
-    line-height: 1;
-}
-
-.shortcut-row {
-    grid-area: short;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-}
-
-.shortcut-btn {
-    min-height: 50px;
-    background: #191919;
-    color: #8d8d8d;
-    font-size: clamp(1rem, 1.55vw, 1.45rem);
-}
-
-.order-submit {
-    grid-area: submit;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-    border-color: #0cbf67;
-    background: #0bd16f;
-    color: #ffffff;
-    font-size: clamp(1.25rem, 2.15vw, 2rem);
-    line-height: 1.05;
-}
-
-.order-submit small {
-    font-size: 0.55em;
-}
-
-.order-submit.sell-mode {
-    border-color: #d8322b;
-    background: var(--color-stock-up);
-}
-
 @media (max-width: 900px) {
     .buy-header {
         align-items: flex-start;
@@ -666,6 +674,7 @@ body {
     .trade-tabs {
         position: static;
         margin-bottom: 1rem;
+        padding-right: 0;
     }
 
     .trade-tab {
