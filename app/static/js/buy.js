@@ -231,7 +231,7 @@ function updateSubmit() {
     const amount = Math.max(0, Number(amountInput.value) || 0);
     submitCount.textContent = `${amount}주`;
     submitTotal.textContent = `(${formatWon(amount * currentPrice)})`;
-    submitLabel.textContent = currentMode === "buy" ? "매수 주문하기" : "매도 주문하기";
+    submitLabel.textContent = currentMode === "buy" ? "매수하기" : "매도하기";
     submitButton.classList.toggle("sell-mode", currentMode === "sell");
 }
 
