@@ -91,7 +91,7 @@
 .podium-card {
     width: 350px;
     border-radius: 2rem;
-    padding: 1.8rem 1.3rem;
+    padding: 1.8rem 1.3rem 2.4rem;
     text-align: center;
     border: 2px solid #333;
     background: #151515;
@@ -125,7 +125,7 @@
 }
 
 .podium-card.bronze {
-    height: 305px;
+    height: 335px;
     order: 3;
     border-color: #cd7f32;
     background:
@@ -176,9 +176,11 @@
 }
 
 .podium-change {
-    margin-top: .25rem;
+    margin-top: .5rem;
+    margin-bottom: .8rem;
     font-size: 1.22rem;
     font-weight: 900;
+    line-height: 1;
 }
 
 .podium-change.up {
@@ -194,7 +196,9 @@
 .rank-scroll-box {
     max-height: 650px;
     overflow-y: auto;
-    padding-right: .45rem;
+    overflow-x: visible;
+    padding: 1rem .45rem .45rem 0;
+    margin-top: 20px;
 }
 
 .rank-scroll-box::-webkit-scrollbar {
@@ -218,7 +222,8 @@
 .rank-list {
     display: flex;
     flex-direction: column;
-    gap: .9rem;
+    gap: 1.2rem;
+    padding-top: .5rem;
 }
 
 /* 기본 랭킹 카드 */
@@ -336,16 +341,17 @@
 .my-rank-in-list::after {
     content: "나의 랭킹";
     position: absolute;
-    top: -.75rem;
-    right: 1rem;
-    padding: .28rem .7rem;
-    border-radius: .5rem;
-    background: #46ff3a;
-    color: #071107;
-    font-size: .8rem;
+    top: -14px;
+    right: 18px;
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #63ff63, #28d928);
+    color: #061206;
+    font-size: .82rem;
     font-weight: 900;
-    transform: rotate(5deg);
-    box-shadow: 0 0 10px rgba(0,255,80,.6);
+    transform: rotate(4deg);
+    box-shadow: 0 0 15px rgba(0,255,70,.55);
+    z-index: 10;
 }
 
 /* 모바일 */
@@ -375,7 +381,7 @@
 
     .podium-card {
         width: 33.33%;
-        padding: .75rem .4rem;
+        padding: .75rem .4rem 1.4rem;
         border-radius: 1.1rem;
     }
 
@@ -388,7 +394,7 @@
     }
 
     .podium-card.bronze {
-        height: 210px;
+        height: 225px;
     }
 
     .podium-trophy {
@@ -414,8 +420,22 @@
         font-size: .72rem;
     }
 
+    .podium-change {
+        margin-top: .35rem;
+        margin-bottom: .45rem;
+    }
+
     .rank-scroll-box {
         max-height: 560px;
+        overflow-y: auto;
+        overflow-x: visible;
+        padding: .9rem .35rem .35rem 0;
+        margin-top: 14px;
+    }
+
+    .rank-list {
+        gap: 1rem;
+        padding-top: .4rem;
     }
 
     .rank-card {
@@ -457,8 +477,9 @@
     }
 
     .my-rank-in-list::after {
-        top: -.6rem;
-        right: .7rem;
+        top: -12px;
+        right: 10px;
+        padding: 5px 12px;
         font-size: .68rem;
     }
 }
