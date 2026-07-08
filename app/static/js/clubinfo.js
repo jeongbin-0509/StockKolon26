@@ -19,7 +19,7 @@ const clubList = [
   { index: 19, club_num: 76, club_name: "아리솔" },
   { index: 20, club_num: 43, club_name: "아스클레피오스" },
   { index: 21, club_num: 2, club_name: "아페토" },
-  { index: 22, club_num: 82, club_name: "에스쿱" },
+  // { index: 22, club_num: 82, club_name: "에스쿱" },
   { index: 23, club_num: 52, club_name: "에어로테크" },
   { index: 24, club_num: 81, club_name: "엘리제" },
   { index: 25, club_num: 12, club_name: "엡실론" },
