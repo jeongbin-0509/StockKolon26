@@ -12,10 +12,32 @@
         <a href="{{ url_for('main.index') }}" class="logo-link" aria-label="메인으로 이동">
             <img src="{{ url_for('static', filename='images/stockolon_logo.png')}}" id="logo"/>
         </a>
-        <button id="ranking_btn">호재</button>
-        <button id="setting_btn">악재</button>
     </header>
     <main>
+        <section id="latest-news">
+            <div id="latest-good">
+                <div id="latest-good-header">
+                    <span class="head1">최근 호재</span>
+                </div>
+                <div id="latest-good-body">
+                    <span class="head3">아싸리 반도체 업계가 레전드 돈을 벌고 있습니다.</span>
+                </div>
+            </div>
+
+            <div id="latest-bad">
+                <div id="latest-bad-header">
+                    <span class="head1">최근 악재</span>
+                </div>
+                <div id="latest-bad-body">
+                    <span class="head3">아싸리 반도체 업계의 거품이 무너지고 있습니다.</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="news-list">
+            <span class="head1">과거 뉴스 목록</span>
+            
+        </section>
 
     </main>
     <footer>
