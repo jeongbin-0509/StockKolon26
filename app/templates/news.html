@@ -8,11 +8,30 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
 </head>
 <body>
+
+    <!-- 헤더 -->
     <header>
         <a href="{{ url_for('main.index') }}" class="logo-link" aria-label="메인으로 이동">
-            <img src="{{ url_for('static', filename='images/stockolon_logo.png')}}" id="logo"/>
+            <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo" alt="STOCKOLON 26 Logo" />
         </a>
+
+        <nav id="header-nav">
+            <!-- 유저 정보 -->
+            <div class="user-info">
+                <div class="user-avatar">
+                    <span class="avatar-default-icon">&#9679;</span>
+                </div>
+                <span class="head2 user-name">세미님</span>
+                <span class="user-rank">전체 1위</span>
+            </div>
+            <!-- 버튼 -->
+            <a id="ranking_btn" href="{{ url_for('main.rank') }}">
+                <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="랭킹">
+            </a>
+            <button id="logout_btn">로그아웃</button>
+        </nav>
     </header>
+    
     <main>
         <section id="latest-news">
             <div id="latest-good">
