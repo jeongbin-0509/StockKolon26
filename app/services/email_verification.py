@@ -4,6 +4,7 @@ import hmac
 import re
 import secrets
 import time
+from datetime import datetime, timedelta, timezone
 
 
 class EmailRateLimit(ValueError):
@@ -41,9 +42,15 @@ class EmailVerification:
         if not self.secret:
             raise ValueError('인증 서비스를 설정해주세요.')
         now = int(self.clock())
+        kst = timezone(timedelta(hours=9))
+        day_start = int(datetime.fromtimestamp(now, kst).replace(hour=0, minute=0, second=0, microsecond=0).timestamp())
         ip_hash = hmac.new(self.secret.encode(), address.encode(), hashlib.sha256).hexdigest()
         with self.market.connection(write=True) as db:
             db.execute('DELETE FROM email_verifications WHERE created_at<?', (now - 86400,))
+            daily = db.execute("SELECT COUNT(*) FROM email_verifications WHERE email=? AND created_at>=? "
+                               "AND status!='failed'", (email, day_start)).fetchone()[0]
+            if daily >= 5:
+                raise EmailRateLimit('하루 인증 메일 요청 횟수 5회를 초과했습니다. 내일 다시 시도해주세요.')
             recent = db.execute('SELECT COUNT(*), MAX(created_at) FROM email_verifications WHERE email=? AND created_at>?',
                                 (email, now - 900)).fetchone()
             if recent[0] >= 3 or (recent[1] is not None and recent[1] > now - 60):

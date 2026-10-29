@@ -2,6 +2,7 @@ import tempfile
 import re
 import time
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -85,6 +86,29 @@ class EmailTests(unittest.TestCase):
         now[0] += 61
         with self.assertRaises(EmailRateLimit):
             self.verification.prepare('student@goedu.kr', 'local-test-ip', '444444')
+
+    def test_daily_email_limit_resets_at_korean_midnight(self):
+        kst = timezone(timedelta(hours=9))
+        now = [int(datetime(2026, 11, 1, 22, 0, tzinfo=kst).timestamp())]
+        self.verification.clock = lambda: now[0]
+        for _ in range(5):
+            challenge = self.verification.prepare('student@goedu.kr', 'test-ip', '123456')
+            self.verification.activate(challenge)
+            now[0] += 901
+        with self.assertRaisesRegex(EmailRateLimit, '5회'):
+            self.verification.prepare('STUDENT@goedu.kr', 'test-ip', '123456')
+        now[0] = int(datetime(2026, 11, 2, 0, 0, tzinfo=kst).timestamp())
+        self.assertTrue(self.verification.prepare('student@goedu.kr', 'test-ip', '123456'))
+
+    def test_failed_delivery_does_not_use_daily_allowance(self):
+        kst = timezone(timedelta(hours=9))
+        now = [int(datetime(2026, 11, 1, 10, 0, tzinfo=kst).timestamp())]
+        self.verification.clock = lambda: now[0]
+        for _ in range(5):
+            challenge = self.verification.prepare('student@goedu.kr', 'test-ip', '123456')
+            self.verification.fail(challenge)
+            now[0] += 901
+        self.assertTrue(self.verification.prepare('student@goedu.kr', 'test-ip', '123456'))
 
     def test_signup_requires_verified_code_and_consumes_once(self):
         self.issue()
