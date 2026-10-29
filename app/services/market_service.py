@@ -169,6 +169,32 @@ class MarketService:
                 "catchingUp": timestamp < target, "stocks": stocks,
             }
 
+    def five_minute_movers(self):
+        """전체 종목의 정확히 5분 전 가격과 현재 가격을 비교한다."""
+        target = int(self.clock()) // TICK_SECONDS * TICK_SECONDS
+        with self.connection(write=True) as db:
+            timestamp = self._advance(db, target)
+            points = {}
+            for row in db.execute(
+                "SELECT club_num, timestamp, price FROM market_ticks "
+                "WHERE timestamp>=? AND timestamp<=? ORDER BY club_num, timestamp",
+                (timestamp - 300, timestamp),
+            ):
+                points.setdefault(row['club_num'], []).append(row)
+            movers = []
+            for club, series in points.items():
+                if series[0]['timestamp'] != timestamp - 300 or series[-1]['timestamp'] != timestamp:
+                    continue
+                first, last = series[0]['price'], series[-1]['price']
+                movers.append({'club_num': club, 'name': CLUBS[club],
+                               'category': CATEGORIES[club // 10], 'price': last,
+                               'change': (last / first - 1) * 100,
+                               'prices': [point['price'] for point in series]})
+            rising = [stock for stock in movers if stock['change'] > 0]
+            falling = [stock for stock in movers if stock['change'] < 0]
+            return {'up': max(rising, key=lambda stock: stock['change'], default=None),
+                    'down': min(falling, key=lambda stock: stock['change'], default=None)}
+
     def _event_time(self, db, timestamp):
         now = self.clock()
         stamp = now if timestamp is None else timestamp

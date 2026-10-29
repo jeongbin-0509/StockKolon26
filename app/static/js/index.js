@@ -66,13 +66,33 @@ class StockCard {
         if (data.name) this.name.textContent = data.name;
         if (data.sub) this.sub.textContent = data.sub;
 
-        if (data.change !== undefined && data.change !== null) {
-            const isUp = parseFloat(data.change) >= 0;
+        this.change.textContent = '—';
+        this.change.className = 'stock-change head2';
+        this.chart.replaceChildren();
+        if (data.change === undefined || data.change === null) return;
 
-            this.change.textContent = `${data.change}% ${isUp ? "↗" : "↘"}`;
-            this.change.className = `stock-change head2 ${isUp ? "up" : "down"}`;
+        const isUp = data.change > 0;
+        this.change.textContent = `${isUp ? '+' : ''}${Number(data.change).toFixed(2)}% ${isUp ? '↗' : '↘'}`;
+        this.change.classList.add(isUp ? 'up' : 'down');
+        if (!Array.isArray(data.prices) || data.prices.length < 2) return;
 
-        }
+        const min = Math.min(...data.prices);
+        const range = Math.max(...data.prices) - min;
+        const points = data.prices.map((price, index) => {
+            const x = 10 + index * 980 / (data.prices.length - 1);
+            const y = range ? 95 - (price - min) / range * 90 : 50;
+            return `${x},${y}`;
+        }).join(' ');
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', '0 0 1000 100');
+        svg.setAttribute('preserveAspectRatio', 'none');
+        svg.setAttribute('aria-label', '최근 5분 주가 그래프');
+        svg.setAttribute('role', 'img');
+        svg.classList.add(isUp ? 'up-chart' : 'down-chart');
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+        line.setAttribute('points', points);
+        svg.append(line);
+        this.chart.append(svg);
     }
 }
 
@@ -108,3 +128,4 @@ async function loadIndexData() {
 }
 
 loadIndexData();
+setInterval(loadIndexData, 30000);

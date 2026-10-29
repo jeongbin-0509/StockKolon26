@@ -95,6 +95,24 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(len(self.stock(data)['candles']), 1)
         self.assertEqual(self.stock(data)['changeRate'], 0)
 
+    def test_five_minute_movers_cover_all_stocks_and_require_full_history(self):
+        self.assertEqual(self.service.five_minute_movers(), {'up': None, 'down': None})
+        self.now += 300
+        movers = self.service.five_minute_movers()
+        with self.service.connection() as db:
+            rows = list(db.execute('SELECT club_num, timestamp, price FROM market_ticks '
+                                   'WHERE timestamp IN (?, ?) ORDER BY club_num, timestamp',
+                                   (self.now - 300, self.now)))
+        prices = {}
+        for row in rows:
+            prices.setdefault(row['club_num'], []).append(row['price'])
+        changes = {club: (values[-1] / values[0] - 1) * 100 for club, values in prices.items()}
+        self.assertEqual(movers['up']['club_num'], max(changes, key=changes.get))
+        self.assertEqual(movers['down']['club_num'], min(changes, key=changes.get))
+        self.assertEqual(len(movers['up']['prices']), 11)
+        self.assertGreater(movers['up']['change'], 0)
+        self.assertLess(movers['down']['change'], 0)
+
     def test_same_tick_and_restart_are_idempotent(self):
         self.now += 300
         data = self.service.snapshot()

@@ -94,6 +94,19 @@ def index_data():
     portfolio = trading.portfolio(user_id, None if trading.market.store.postgres else user.get('cash', 0))
     rate = (portfolio['profit'] / portfolio['cost'] * 100) if portfolio['cost'] else 0
 
+    movers = current_app.extensions['market'].five_minute_movers()
+
+    def stock_card(stock):
+        if stock is None:
+            return {'name': '데이터 없음', 'sub': '최근 5분 기준', 'change': None, 'prices': [],
+                    'logo': url_for('static', filename='images/default_stock_logo.png')}
+        filename = f"images/{stock['club_num']}.png"
+        if not (Path(current_app.static_folder) / filename).is_file():
+            filename = 'images/default_stock_logo.png'
+        return {'name': stock['name'], 'sub': f"{stock['price']:,.0f}원 · {stock['category']}",
+                'change': stock['change'], 'prices': stock['prices'],
+                'logo': url_for('static', filename=filename)}
+
     data = {
         "success": True,
         "profile": {
@@ -105,18 +118,8 @@ def index_data():
             "assets": f"{portfolio['total']:,}원",
             "rate": f"{rate:+.2f}%"
         },
-        "topUpStock": {
-            "name": "데이터 없음",
-            "sub": "보유 주식",
-            "change": None,
-            "logo": "/static/images/default_stock_logo.png"
-        },
-        "topDownStock": {
-            "name": "데이터 없음",
-            "sub": "보유 주식",
-            "change": None,
-            "logo": "/static/images/default_stock_logo.png"
-        }
+        "topUpStock": stock_card(movers['up']),
+        "topDownStock": stock_card(movers['down'])
     }
 
     response = jsonify(data)
