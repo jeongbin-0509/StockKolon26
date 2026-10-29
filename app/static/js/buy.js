@@ -9,6 +9,12 @@ const amountInput = document.querySelector("#order-amount");
 const submitButton = document.querySelector(".order-submit");
 const orderForm = document.querySelector('.order-form');
 const orderStatus = document.querySelector('#order-status');
+const confirmDialog = document.querySelector('#order-confirm');
+const confirmCancel = document.querySelector('#confirm-cancel');
+const confirmSubmit = document.querySelector('#confirm-submit');
+const executionToast = document.querySelector('#execution-toast');
+let confirmedOrder = null;
+let toastTimer;
 let portfolio = null;
 let submitting = false;
 let pendingOrder = null;
@@ -223,6 +229,7 @@ closeButton.addEventListener("click", closeModal);
 modal.addEventListener("click", (event) => { if (event.target === modal) closeModal(); });
 document.addEventListener("keydown", (event) => {
     if (modal.hidden) return;
+    if (confirmDialog.open) return;
     if (event.key === "Escape") closeModal();
     if (event.key === "Tab") {
         const focusable = [...modal.querySelectorAll("button:not(:disabled), input:not(:disabled)")];
@@ -267,15 +274,42 @@ async function loadPortfolio() {
         updateSubmit();
     }
 }
-orderForm.addEventListener('submit', async event => {
+orderForm.addEventListener('submit', event => {
     event.preventDefault();
-    if (submitting || submitButton.disabled) return;
+    if (submitting || submitButton.disabled || confirmDialog.open) return;
     const quantity = Number(amountInput.value);
     if (pendingOrder && (pendingOrder.clubNum !== selectedClub || pendingOrder.side !== currentMode || pendingOrder.quantity !== quantity)) {
         orderStatus.textContent = `이전 주문 결과를 먼저 확인해주세요. 종목 ${pendingOrder.clubNum}, ${pendingOrder.side === 'buy' ? '매수' : '매도'} ${pendingOrder.quantity}주로 다시 요청하세요.`;
         return;
     }
     const order = pendingOrder || {orderId: crypto.randomUUID(), clubNum: selectedClub, side: currentMode, quantity, quotedPrice: currentPrice};
+    const stock = stocks.find(item => item.club_num === order.clubNum);
+    if (!stock) return;
+    confirmedOrder = order;
+    const sideText = order.side === 'buy' ? '매수' : '매도';
+    document.querySelector('#confirm-title').textContent = pendingOrder ? '이전 주문 결과를 확인할까요?' : `${sideText} 주문을 체결하시겠습니까?`;
+    document.querySelector('#confirm-details').textContent = pendingOrder
+        ? '결과를 확인하지 못한 이전 주문을 같은 번호로 다시 확인합니다.'
+        : '아래 주문 내용을 확인해주세요.';
+    document.querySelector('#confirm-stock').textContent = stock.club_name;
+    document.querySelector('#confirm-side').textContent = sideText;
+    document.querySelector('#confirm-quantity').textContent = `${order.quantity.toLocaleString('ko-KR')}주`;
+    document.querySelector('#confirm-price').textContent = formatWon(order.quotedPrice);
+    document.querySelector('#confirm-total').textContent = formatWon(order.quotedPrice * order.quantity);
+    confirmSubmit.textContent = pendingOrder ? '결과 확인' : `${sideText}하기`;
+    confirmDialog.showModal();
+    confirmCancel.focus();
+});
+confirmCancel.addEventListener('click', () => confirmDialog.close());
+confirmDialog.addEventListener('close', () => { confirmedOrder = null; });
+document.querySelector('#execution-close').addEventListener('click', () => {
+    clearTimeout(toastTimer);
+    executionToast.hidden = true;
+});
+confirmSubmit.addEventListener('click', async () => {
+    if (submitting || !confirmedOrder) return;
+    const order = confirmedOrder;
+    confirmDialog.close();
     pendingOrder = order;
     sessionStorage.setItem('stockolon-pending-order', JSON.stringify(order));
     submitting = true;
@@ -299,6 +333,11 @@ orderForm.addEventListener('submit', async event => {
             await loadMarket();
         } else {
             orderStatus.textContent = `${result.order.club_name} ${result.order.quantity}주 ${result.order.side === 'buy' ? '매수' : '매도'} 완료 · ${formatWon(result.order.price)}에 체결`;
+            document.querySelector('#execution-title').textContent = result.replayed ? '이전 체결 확인' : `${result.order.side === 'buy' ? '매수' : '매도'} 체결 완료`;
+            document.querySelector('#execution-detail').textContent = `${result.order.club_name} ${result.order.quantity.toLocaleString('ko-KR')}주 · ${formatWon(result.order.price)} · 총 ${formatWon(result.order.total)}`;
+            executionToast.hidden = false;
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => { executionToast.hidden = true; }, 9000);
             await Promise.all([loadPortfolio(), loadMarket()]);
         }
     } catch (_) {

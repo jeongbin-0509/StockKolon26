@@ -135,6 +135,33 @@
         </section>
     </div>
 
+    <dialog id="order-confirm" class="order-confirm" aria-labelledby="confirm-title" aria-describedby="confirm-details">
+        <div class="order-confirm-body">
+            <p class="order-confirm-eyebrow">주문 확인</p>
+            <h2 id="confirm-title">체결하시겠습니까?</h2>
+            <p id="confirm-details" class="order-confirm-description"></p>
+            <dl class="order-confirm-summary">
+                <div><dt>종목</dt><dd id="confirm-stock"></dd></div>
+                <div><dt>주문 종류</dt><dd id="confirm-side"></dd></div>
+                <div><dt>수량</dt><dd id="confirm-quantity"></dd></div>
+                <div><dt>주당 가격</dt><dd id="confirm-price"></dd></div>
+                <div class="order-confirm-total"><dt>예상 금액</dt><dd id="confirm-total"></dd></div>
+            </dl>
+            <p class="order-confirm-hint">가격이 변경되면 체결하지 않고 다시 확인을 요청합니다.</p>
+            <div class="order-confirm-actions">
+                <button type="button" id="confirm-cancel">취소</button>
+                <button type="button" id="confirm-submit">체결하기</button>
+            </div>
+        </div>
+    </dialog>
+    <div id="execution-toast" class="execution-toast" role="status" aria-live="polite" hidden>
+        <div>
+            <strong id="execution-title"></strong>
+            <p id="execution-detail"></p>
+        </div>
+        <button type="button" id="execution-close" aria-label="체결 알림 닫기">×</button>
+    </div>
+
     <script src="{{ url_for('static', filename='js/header-profile.js') }}" data-autoload="true"></script>
     <script src="{{ url_for('static', filename='js/buy.js') }}"></script>
 </body>

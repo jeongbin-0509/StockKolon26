@@ -460,6 +460,53 @@ body {
     background: #0bd16f;
 }
 
+.order-confirm {
+    width: min(440px, calc(100% - 2rem));
+    max-height: calc(100dvh - 2rem);
+    margin: auto;
+    padding: 0;
+    color: var(--text-primary);
+    background: #202020;
+    border: 1px solid #454545;
+    border-radius: 1.4rem;
+    box-shadow: 0 20px 70px rgba(0, 0, 0, .6);
+}
+.order-confirm::backdrop { background: rgba(0, 0, 0, .72); }
+.order-confirm-body { padding: 1.6rem; }
+.order-confirm-eyebrow { color: #0bd16f; font-size: .85rem; font-weight: 700; margin-bottom: .4rem; }
+.order-confirm h2 { font-size: 1.45rem; margin: 0 0 .5rem; }
+.order-confirm-description, .order-confirm-hint { color: var(--text-secondary); font-size: .9rem; }
+.order-confirm-summary { margin: 1.25rem 0; }
+.order-confirm-summary div { display: flex; justify-content: space-between; gap: 1rem; padding: .55rem 0; }
+.order-confirm-summary dt { color: var(--text-secondary); }
+.order-confirm-summary dd { margin: 0; font-weight: 700; text-align: right; }
+.order-confirm-summary .order-confirm-total { border-top: 1px solid #454545; margin-top: .4rem; padding-top: .85rem; font-size: 1.1rem; }
+.order-confirm-actions { display: flex; gap: .7rem; margin-top: 1.3rem; }
+.order-confirm-actions button { flex: 1; min-height: 48px; border: 1px solid #555; border-radius: .7rem; background: #333; color: white; font: inherit; font-weight: 700; cursor: pointer; }
+.order-confirm-actions #confirm-submit { background: #0cbf67; border-color: #0cbf67; }
+.order-confirm-actions button:focus-visible, .execution-toast button:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+.execution-toast {
+    position: fixed;
+    z-index: 200;
+    top: 1.25rem;
+    right: 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    width: min(380px, calc(100% - 2.5rem));
+    padding: 1rem 1.1rem;
+    color: white;
+    background: #202a24;
+    border: 1px solid #0cbf67;
+    border-radius: 1rem;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, .4);
+}
+.execution-toast[hidden] { display: none; }
+.execution-toast strong { color: #5beaa2; }
+.execution-toast p { margin: .35rem 0 0; font-size: .9rem; }
+.execution-toast button { border: 0; background: transparent; color: white; font-size: 1.4rem; cursor: pointer; }
+
 @media (max-height: 820px) {
     .trade-overlay {
         align-items: start;
