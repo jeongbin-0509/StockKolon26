@@ -22,8 +22,8 @@
                 <div class="user-avatar">
                     <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="기본 프로필 이미지">
                 </div>
-                <span class="head2 user-name">세미님</span>
-                <span class="user-rank">전체 1위</span>
+                <span class="head2 user-name">회원</span>
+                <span class="user-rank">순위 준비 중</span>
             </div>
             <!-- 버튼 -->
             <a id="ranking_btn" href="{{ url_for('main.rank') }}">
@@ -42,7 +42,7 @@
             </div>
             <div id="profile-text">
                 <span class="sub_text">안녕하세요,</span>
-                <span id="username" class="head1">세미 님👋</span>
+                <span id="username" class="head1">회원님</span>
             </div>
         </section>
 
@@ -51,14 +51,14 @@
             <div id="portfolio-header">
                 <span class="sub_text">내 포트폴리오</span>
                 <div id="portfolio-rate-wrap">
-                    <span class="sub_text">오늘 수익률</span>
-                    <span id="today-rate" class="head2 down">-123.2%</span>
+                    <span class="sub_text">보유 종목 수익률</span>
+                    <span id="today-rate" class="head2">—</span>
                 </div>
             </div>
             <div id="portfolio-body">
                 <div id="portfolio-assets">
                     <span class="sub_text">총 자산</span>
-                    <span id="total-assets" class="head1">12,300,000원</span>
+                    <span id="total-assets" class="head1">—</span>
                 </div>
                 <div id="portfolio-chart"></div>
             </div>
@@ -74,13 +74,13 @@
                 </p>
                 <div class="highlight-stock-info">
                     <div class="stock-info">
-                        <img class="stock-logo" src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="세미콜론 로고">
+                        <img class="stock-logo" src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="종목 로고">
                         <div class="stock-name-wrap">
-                            <span class="stock-name head3">세미콜론</span>
-                            <span class="stock-sub sub_text">정보</span>
+                            <span class="stock-name head3">데이터 없음</span>
+                            <span class="stock-sub sub_text">—</span>
                         </div>
                     </div>
-                    <span class="stock-change head2 up">+4.14% ↗</span>
+                    <span class="stock-change head2">—</span>
                 </div>
                 <div class="stock-chart"></div>
             </section>
@@ -92,13 +92,13 @@
                 </p>
                 <div class="highlight-stock-info">
                     <div class="stock-info">
-                        <img class="stock-logo" src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="세미콜론 로고">
+                        <img class="stock-logo" src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="종목 로고">
                         <div class="stock-name-wrap">
-                            <span class="stock-name head3">세미콜론</span>
-                            <span class="stock-sub sub_text">정보</span>
+                            <span class="stock-name head3">데이터 없음</span>
+                            <span class="stock-sub sub_text">—</span>
                         </div>
                     </div>
-                    <span class="stock-change head2 down">-4.14% ↘</span>
+                    <span class="stock-change head2">—</span>
                 </div>
                 <div class="stock-chart"></div>
             </section>

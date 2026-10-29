@@ -52,6 +52,7 @@ def create_app(test_config=None):
     from app.routes.market import market
     from app.services.market_service import MarketService
     from app.services.admin_service import AdminService
+    from app.services.trading_service import TradingService
     from app.services.email_verification import EmailVerification
     from app.services.database import DatabaseError
     import sqlite3
@@ -63,6 +64,9 @@ def create_app(test_config=None):
     service = MarketService(app.config["DATABASE_URL"] or app.config["MARKET_DATABASE"], schema=app.config["DATABASE_SCHEMA"])
     service.initialize()
     app.extensions["market"] = service
+    trading = TradingService(service)
+    trading.initialize()
+    app.extensions["trading"] = trading
     admin_service = AdminService(service)
     admin_service.initialize()
     app.extensions["admin"] = admin_service

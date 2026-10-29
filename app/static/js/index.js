@@ -43,13 +43,6 @@ class PortfolioSection {
             }
         }
 
-        if (typeof renderLineChart === "function") {
-            renderLineChart(
-                this.chart,
-                parseFloat(data.rate) >= 0 ? "up" : "down",
-                data.seed || 3
-            );
-        }
     }
 }
 
@@ -73,19 +66,12 @@ class StockCard {
         if (data.name) this.name.textContent = data.name;
         if (data.sub) this.sub.textContent = data.sub;
 
-        if (data.change !== undefined) {
+        if (data.change !== undefined && data.change !== null) {
             const isUp = parseFloat(data.change) >= 0;
 
             this.change.textContent = `${data.change}% ${isUp ? "↗" : "↘"}`;
             this.change.className = `stock-change head2 ${isUp ? "up" : "down"}`;
 
-            if (typeof renderLineChart === "function") {
-                renderLineChart(
-                    this.chart,
-                    isUp ? "up" : "down",
-                    data.seed || (isUp ? 8 : 14)
-                );
-            }
         }
     }
 }
@@ -106,8 +92,6 @@ async function loadIndexData() {
     try {
         const response = await fetch("/api/index-data");
         const data = await response.json();
-
-        console.log("받은 데이터:", data);
 
         if (!data.success) {
             alert(data.message);

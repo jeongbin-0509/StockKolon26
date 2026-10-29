@@ -6,10 +6,17 @@ import math
 import random
 import secrets
 import time
+from decimal import Decimal, ROUND_HALF_UP
 
 from app.logics.logic import CANDLE_SECONDS, NEWS_TICKS, TICK_SECONDS, news_return, next_tick
 from app.market_catalog import CATEGORIES, CLUBS
 from app.services.database import Database
+
+
+def trade_quotes(price):
+    mid = Decimal(str(price))
+    return tuple(max(1, int((mid * factor).quantize(Decimal('1'), rounding=ROUND_HALF_UP)))
+                 for factor in (Decimal('1.0025'), Decimal('0.9975')))
 
 
 class MarketService:
@@ -150,6 +157,7 @@ class MarketService:
                     "club_num": club_num, "club_name": CLUBS[club_num],
                     "categoryKey": club_num // 10, "category": CATEGORIES[club_num // 10],
                     "price": round(price, 2), "changeRate": (price / baseline - 1) * 100,
+                    "buyPrice": trade_quotes(price)[0], "sellPrice": trade_quotes(price)[1],
                     "changeWon": round(price - baseline, 2),
                     "high": round(stats["day_high"] if stats else price, 2),
                     "low": round(stats["day_low"] if stats else price, 2),

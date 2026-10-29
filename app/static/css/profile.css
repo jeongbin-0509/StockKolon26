@@ -325,3 +325,14 @@ main {
   width: clamp(80px, 10vw, 130px);
   height: auto;
 }
+
+.trade-history-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: .35rem 1rem;
+  padding: .8rem 0;
+  border-bottom: 1px solid var(--border-card);
+}
+.trade-history-row:last-child { border-bottom: 0; }
+.trade-history-row span { color: var(--text-secondary); }

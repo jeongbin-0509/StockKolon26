@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, session, redirect, url_for, jsonify, current_app
 from app.services.supabase_client import supabase
 from app.market_catalog import CLUBS
+from app.routes.admin import csrf_token
 from postgrest.exceptions import APIError
 import httpx
 from pathlib import Path
@@ -63,7 +64,7 @@ def buy():
     if "user_id" not in session:
         return redirect(url_for("auth.login"))
 
-    return render_template("buy.html")
+    return render_template("buy.html", csrf_token=csrf_token)
 
 @main.route("/rank")
 def rank():
@@ -89,6 +90,9 @@ def index_data():
     result = supabase.table("users").select("*").eq("id", user_id).single().execute()
     user = result.data
     profile_image, club_name = club_profile(user)
+    trading = current_app.extensions['trading']
+    portfolio = trading.portfolio(user_id, None if trading.market.store.postgres else user.get('cash', 0))
+    rate = (portfolio['profit'] / portfolio['cost'] * 100) if portfolio['cost'] else 0
 
     data = {
         "success": True,
@@ -98,24 +102,26 @@ def index_data():
             "clubName": club_name
         },
         "portfolio": {
-            "assets": f"{user.get('cash', 0):,}원",
-            "rate": "+0.0%"
+            "assets": f"{portfolio['total']:,}원",
+            "rate": f"{rate:+.2f}%"
         },
         "topUpStock": {
             "name": "데이터 없음",
             "sub": "보유 주식",
-            "change": "0.0",
+            "change": None,
             "logo": "/static/images/default_stock_logo.png"
         },
         "topDownStock": {
             "name": "데이터 없음",
             "sub": "보유 주식",
-            "change": "0.0",
+            "change": None,
             "logo": "/static/images/default_stock_logo.png"
         }
     }
 
-    return jsonify(data)
+    response = jsonify(data)
+    response.headers['Cache-Control'] = 'no-store'
+    return response
 
 @main.route("/api/profile-data")
 def profile_data():
@@ -127,24 +133,26 @@ def profile_data():
     result = supabase.table("users").select("*").eq("id", user_id).single().execute()
     user = result.data
     profile_image, club_name = club_profile(user)
+    trading = current_app.extensions['trading']
+    portfolio = trading.portfolio(user_id, None if trading.market.store.postgres else user.get('cash', 0))
+    cash = portfolio['cash']
+    rate = (portfolio['profit'] / portfolio['cost'] * 100) if portfolio['cost'] else 0
 
-    cash = user.get("cash", 0)
-
-    return jsonify({
+    response = jsonify({
         "success": True,
         "user": {
             "name": user["name"],
             "profileImg": profile_image,
             "clubName": club_name,
             "cash": cash,
-            "total_assets": cash,
+            "total_assets": portfolio['total'],
             "rank": "전체 순위 준비중"
         },
         "summary": {
-            "total_assets": f"{cash:,}원",
-            "daily_change": "0원",
-            "daily_rate": "(0.0%)",
-            "purchase_amount": "0원",
+            "total_assets": f"{portfolio['total']:,}원",
+            "daily_change": f"{portfolio['profit']:+,}원",
+            "daily_rate": f"({rate:+.2f}%)",
+            "purchase_amount": f"{portfolio['cost']:,}원",
             "cash": f"{cash:,}원"
         },
         "top": {
@@ -155,5 +163,8 @@ def profile_data():
             "down_info": "-",
             "down_rate": "0.0%"
         },
-        "holdings": []
+        "holdings": portfolio['holdings'],
+        "orders": trading.history(user_id)
     })
+    response.headers['Cache-Control'] = 'no-store'
+    return response

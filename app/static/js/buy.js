@@ -7,6 +7,12 @@ const closeButton = document.querySelector(".modal-close");
 const tabs = document.querySelectorAll(".trade-tab");
 const amountInput = document.querySelector("#order-amount");
 const submitButton = document.querySelector(".order-submit");
+const orderForm = document.querySelector('.order-form');
+const orderStatus = document.querySelector('#order-status');
+let portfolio = null;
+let submitting = false;
+let pendingOrder = null;
+try { pendingOrder = JSON.parse(sessionStorage.getItem('stockolon-pending-order') || 'null'); } catch (_) {}
 let stocks = [];
 let selectedCategory = "all";
 let selectedClub = null;
@@ -103,16 +109,22 @@ function renderStockCards() {
 }
 
 function updateSubmit() {
-    const amount = Math.max(0, Math.floor(Number(amountInput.value) || 0));
+    const amount = Number(amountInput.value);
+    const stock = stocks.find(item => item.club_num === selectedClub);
+    currentPrice = stock ? (currentMode === 'buy' ? stock.buyPrice : stock.sellPrice) : 0;
+    const valid = Number.isInteger(amount) && amount >= 1 && amount <= 1000;
     document.querySelector("#submit-count").textContent = `${amount}주`;
-    document.querySelector("#submit-total").textContent = `(${formatWon(amount * currentPrice)})`;
-    document.querySelector("#submit-label").textContent = currentMode === "buy" ? "매수 준비 중" : "매도 준비 중";
+    document.querySelector("#submit-total").textContent = `(${formatWon(valid ? amount * currentPrice : 0)})`;
+    document.querySelector("#submit-label").textContent = currentMode === "buy" ? "매수 주문하기" : "매도 주문하기";
     submitButton.classList.toggle("sell-mode", currentMode === "sell");
+    submitButton.disabled = submitting || !valid || !currentPrice || !portfolio;
+    const held = portfolio?.holdings.find(item => item.club_num === selectedClub)?.quantity || 0;
+    document.querySelector('.modal-stats dd').textContent = `${held.toLocaleString('ko-KR')}주`;
+    if (portfolio) document.querySelector('#order-balance').textContent = `보유 현금 ${formatWon(portfolio.user.cash)} · ${currentMode === 'buy' ? '매수가' : '매도가'} ${formatWon(currentPrice)}`;
 }
 
 function updateModal(stock) {
     const trend = trendOf(stock);
-    currentPrice = stock.price;
     document.querySelector("#modal-stock-name").textContent = stock.club_name;
     document.querySelector(".modal-stock p").textContent = stock.category;
     document.querySelector("#modal-price").textContent = formatWon(stock.price);
@@ -126,7 +138,6 @@ function updateModal(stock) {
     chart.innerHTML = chartMarkup(stock, 820, 260);
     setClubImage(document.querySelector(".modal-logo"), stock.club_num);
     const stats = document.querySelectorAll(".modal-stats dd");
-    stats[0].textContent = "—";
     stats[1].textContent = formatWon(stock.high);
     stats[2].textContent = formatWon(stock.low);
     updateSubmit();
@@ -136,7 +147,8 @@ function openModal(card) {
     const stock = stocks.find((item) => item.club_num === Number(card.dataset.club));
     if (!stock) return;
     selectedClub = stock.club_num;
-    amountInput.value = 0;
+    amountInput.value = 1;
+    orderStatus.textContent = pendingOrder ? '이전에 결과를 확인하지 못한 주문이 있습니다. 같은 종목·방향·수량으로 다시 요청하면 중복 체결 없이 결과를 확인합니다.' : '';
     updateModal(stock);
     modal.hidden = false;
     closeButton.focus();
@@ -228,11 +240,74 @@ tabs.forEach((tab) => tab.addEventListener("click", () => {
 }));
 document.querySelectorAll(".amount-btn, .shortcut-btn:not(:disabled)").forEach((button) => {
     button.addEventListener("click", () => {
-        amountInput.value = Math.max(0, Math.floor(Number(amountInput.value) || 0) + Number(button.dataset.step || button.dataset.value));
+        if (button.dataset.value === 'max') {
+            const held = portfolio?.holdings.find(item => item.club_num === selectedClub)?.quantity || 0;
+            amountInput.value = Math.min(1000, currentMode === 'buy' ? Math.floor((portfolio?.user.cash || 0) / currentPrice) : held);
+        } else {
+            amountInput.value = Math.min(1000, Math.max(1, Math.floor(Number(amountInput.value) || 0) + Number(button.dataset.step || button.dataset.value)));
+        }
         updateSubmit();
     });
 });
 amountInput.addEventListener("input", updateSubmit);
-document.querySelector(".order-form").addEventListener("submit", (event) => event.preventDefault());
+async function loadPortfolio() {
+    try {
+        const response = await fetch('/api/profile-data', {cache: 'no-store'});
+        if (!response.ok) throw new Error();
+        const data = await response.json();
+        if (!data.success) throw new Error();
+        portfolio = data;
+        document.querySelector('#asset-total').textContent = data.summary.total_assets;
+        document.querySelector('#asset-cost').textContent = data.summary.purchase_amount;
+        document.querySelector('#asset-cash').textContent = data.summary.cash;
+        updateSubmit();
+    } catch (_) {
+        portfolio = null;
+        document.querySelector('#order-balance').textContent = '잔액을 불러오지 못했습니다. 새로고침해주세요.';
+        updateSubmit();
+    }
+}
+orderForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (submitting || submitButton.disabled) return;
+    const quantity = Number(amountInput.value);
+    if (pendingOrder && (pendingOrder.clubNum !== selectedClub || pendingOrder.side !== currentMode || pendingOrder.quantity !== quantity)) {
+        orderStatus.textContent = `이전 주문 결과를 먼저 확인해주세요. 종목 ${pendingOrder.clubNum}, ${pendingOrder.side === 'buy' ? '매수' : '매도'} ${pendingOrder.quantity}주로 다시 요청하세요.`;
+        return;
+    }
+    const order = pendingOrder || {orderId: crypto.randomUUID(), clubNum: selectedClub, side: currentMode, quantity, quotedPrice: currentPrice};
+    pendingOrder = order;
+    sessionStorage.setItem('stockolon-pending-order', JSON.stringify(order));
+    submitting = true;
+    orderStatus.textContent = '주문을 처리하고 있습니다…';
+    updateSubmit();
+    try {
+        const response = await fetch('/api/orders', {
+            method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRF-Token': orderForm.dataset.csrf},
+            body: JSON.stringify(order), signal: AbortSignal.timeout(30000)
+        });
+        const result = await response.json();
+        if (response.status >= 500) throw new Error();
+        if (response.status === 401 || response.status === 403) {
+            orderStatus.textContent = '로그인 상태를 확인한 뒤 같은 종목·방향·수량으로 다시 요청해주세요.';
+            return;
+        }
+        pendingOrder = null;
+        sessionStorage.removeItem('stockolon-pending-order');
+        if (!response.ok || !result.success) {
+            orderStatus.textContent = result.message || '주문을 처리하지 못했습니다.';
+            await loadMarket();
+        } else {
+            orderStatus.textContent = `${result.order.club_name} ${result.order.quantity}주 ${result.order.side === 'buy' ? '매수' : '매도'} 완료 · ${formatWon(result.order.price)}에 체결`;
+            await Promise.all([loadPortfolio(), loadMarket()]);
+        }
+    } catch (_) {
+        orderStatus.textContent = '주문 결과를 확인하지 못했습니다. 같은 종목·방향·수량으로 다시 요청하면 중복 체결 없이 결과를 확인합니다.';
+    } finally {
+        submitting = false;
+        updateSubmit();
+    }
+});
 document.addEventListener("visibilitychange", () => { if (!document.hidden) loadMarket(); });
 loadMarket();
+loadPortfolio();

@@ -37,15 +37,15 @@
         <section class="asset-summary" aria-label="자산 요약">
             <article class="summary-card">
                 <span class="summary-label">총 자산</span>
-                <strong>—</strong>
+                <strong id="asset-total">—</strong>
             </article>
             <article class="summary-card">
                 <span class="summary-label">총 매입금액</span>
-                <strong>—</strong>
+                <strong id="asset-cost">—</strong>
             </article>
             <article class="summary-card">
                 <span class="summary-label">보유 현금</span>
-                <strong>—</strong>
+                <strong id="asset-cash">—</strong>
             </article>
         </section>
 
@@ -109,10 +109,11 @@
                 <polyline points="18,230 60,190 92,220 128,160 160,190 198,135 224,205 270,170 318,100 348,145 382,95 420,210 452,150 486,178 530,130 572,190 616,160 650,115 690,170 720,120 752,170 782,95 806,60" />
             </svg>
 
-            <form class="order-form">
+            <p class="market-caption" id="order-balance">보유 현금 확인 중…</p>
+            <form class="order-form" data-csrf="{{ csrf_token() }}">
                 <label class="order-input-wrap">
                     <span>주문수량 (주)</span>
-                    <input type="number" id="order-amount" min="0" value="0">
+                    <input type="number" id="order-amount" min="1" max="1000" step="1" value="1">
                 </label>
                 <button type="button" class="amount-btn" data-step="1">+</button>
                 <button type="button" class="amount-btn" data-step="-1">−</button>
@@ -120,7 +121,7 @@
                 <div class="shortcut-row">
                     <button type="button" class="shortcut-btn" data-value="10">10</button>
                     <button type="button" class="shortcut-btn" data-value="100">100</button>
-                    <button type="button" class="shortcut-btn" data-value="max" disabled title="보유 자산 연동 후 제공됩니다">최대</button>
+                    <button type="button" class="shortcut-btn" data-value="max">최대</button>
                 </div>
 
                 <button type="submit" class="order-submit" disabled>
@@ -129,7 +130,8 @@
                     <strong id="submit-label">매수 주문하기</strong>
                 </button>
             </form>
-            <p class="market-caption">현재 주가 조회만 가능합니다. 주문·보유 자산 연동은 준비 중입니다.</p>
+            <p class="market-caption">표시된 가격으로 즉시 체결됩니다. 매수가는 기준가보다 0.25% 높고 매도가는 0.25% 낮으며 1원 단위로 반올림합니다. 가격이 바뀌면 다시 확인해주세요. 한 번에 최대 1,000주까지 주문할 수 있습니다.</p>
+            <p class="market-caption" id="order-status" role="status" aria-live="polite"></p>
         </section>
     </div>
 
