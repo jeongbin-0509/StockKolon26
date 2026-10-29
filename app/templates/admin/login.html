@@ -1,0 +1,16 @@
+{% extends 'admin/base.html' %}
+{% block title %}관리자 로그인{% endblock %}
+{% block shell_class %}narrow{% endblock %}
+{% block content %}
+<section class="panel">
+    <p class="eyebrow">운영자 전용</p><h1>관리자 로그인</h1>
+    <p class="muted">일반 회원 계정과 별도로 발급된 관리자 계정을 사용하세요.</p>
+    {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+    <form method="post" class="stack">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label>관리자 아이디<input name="username" autocomplete="username" required maxlength="32" value="{{ request.form.get('username', '') }}" autofocus></label>
+        <label>비밀번호<input name="password" type="password" autocomplete="current-password" required maxlength="128"></label>
+        <button>관리자로 로그인</button>
+    </form>
+</section>
+{% endblock %}

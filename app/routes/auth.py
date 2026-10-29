@@ -32,6 +32,7 @@ def login():
             return redirect(url_for("auth.login"))
         
         # 로그인 성공
+        session.clear()
         session["user_id"] = user["id"]
         session["usernum"] = user["usernum"]
         session["name"] = user["name"]

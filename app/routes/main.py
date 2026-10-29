@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session, redirect, url_for, jsonify
+from flask import Blueprint, render_template, session, redirect, url_for, jsonify, current_app
 from app.services.supabase_client import supabase
 
 main = Blueprint("main", __name__)
@@ -30,7 +30,7 @@ def news():
     if "user_id" not in session:
         return redirect(url_for("auth.login"))
 
-    return render_template("news.html")
+    return render_template("news.html", articles=current_app.extensions["admin"].articles())
 
 # 메인에서 매도매수로 이동
 @main.route("/buy")

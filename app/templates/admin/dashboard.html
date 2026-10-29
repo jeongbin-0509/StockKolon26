@@ -1,0 +1,36 @@
+{% extends 'admin/base.html' %}
+{% block title %}운영 관리{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">STOCKOLON 26</p><h1>운영 관리</h1><p class="muted">시장 흐름을 확인하고 동아리 뉴스를 발행하세요.</p></div>
+<nav class="section-links" aria-label="관리 영역"><a href="#market">시장</a><a href="#news">뉴스</a>{% if g.admin.role == 'owner' %}<a href="#accounts">관리자</a>{% endif %}<a href="#audit">작업 기록</a></nav></div>
+<section class="panel" id="market">
+    <div class="section-heading"><h2>시장 현황 <span class="badge">{{ market.stocks|length }}개 종목</span></h2><p class="muted" id="market-updated">{{ market.timestamp|kst_time }} 갱신{% if market.catchingUp %} · 이력 복구 중{% endif %}</p></div>
+    <div class="table-wrap"><table><thead><tr><th>동아리</th><th>분야</th><th>현재가</th><th>오늘 등락</th><th>오늘 최고</th><th>오늘 최저</th></tr></thead><tbody>
+    {% for stock in market.stocks %}<tr data-club="{{ stock.club_num }}"><th>{{ stock.club_name }}</th><td>{{ stock.category }}</td><td data-price>{{ '{:,.0f}'.format(stock.price) }}원</td><td data-rate class="{{ 'up' if stock.changeRate >= 0 else 'down' }}">{{ '%+.2f'|format(stock.changeRate) }}%</td><td data-high>{{ '{:,.0f}'.format(stock.high) }}원</td><td data-low>{{ '{:,.0f}'.format(stock.low) }}원</td></tr>{% endfor %}
+    </tbody></table></div>
+</section>
+<section class="panel" id="news">
+    <h2>뉴스 발행</h2><p class="muted">발행 즉시 뉴스 목록에 공개되고, 다음 30초 가격 틱부터 영향을 반영합니다.</p>
+    <form class="stack" method="post" action="{{ url_for('admin.publish_news') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="article_id" value="{{ article_id }}">
+        <label>제목<input name="title" required maxlength="120" placeholder="뉴스 제목을 입력하세요"></label>
+        <label>내용<textarea name="body" required maxlength="3000" rows="4" placeholder="이 사건이 동아리에 어떤 영향을 주는지 설명하세요"></textarea></label>
+        <div class="form-row"><label>영향 대상<select name="target" required><optgroup label="분야 전체">{% for number, name in categories.items() %}<option value="sector:{{ number }}">{{ name }} 분야 전체</option>{% endfor %}</optgroup><optgroup label="개별 동아리">{% for number, name in clubs.items() %}<option value="club:{{ number }}">{{ name }}</option>{% endfor %}</optgroup></select></label>
+        <label>영향 크기 (%)<input name="impact" type="number" required min="-15" max="15" step="0.1" value="1"><small>양수: 호재 · 음수: 악재 · 0 제외</small></label></div>
+        <p class="muted">입력한 수치는 뉴스 영향의 예산입니다. 시장·거래 요인과 틱 제한 때문에 실제 등락률과 다를 수 있습니다. 발행 후에는 기록과 가격 영향을 되돌리지 않습니다.</p>
+        <button>뉴스 발행</button>
+    </form>
+    <h3>최근 발행 뉴스</h3>
+    {% for article in articles %}<article class="news-entry"><div><span class="badge {{ 'up' if article.impact > 0 else 'down' }}">{{ article.sentiment }}</span> <span class="muted">{{ article.target_name }} · {{ article.published_at|kst_time }}</span></div><h3>{{ article.title }}</h3><p class="news-body">{{ article.body }}</p></article>{% else %}<p class="empty">아직 발행된 뉴스가 없습니다.</p>{% endfor %}
+</section>
+{% if g.admin.role == 'owner' %}
+<section class="panel" id="accounts"><h2>관리자 계정</h2><p class="muted">최고관리자는 계정 생성·비활성화가 가능합니다. 운영관리자는 시장 조회와 뉴스 발행을 담당합니다.</p>
+<div class="table-wrap"><table><thead><tr><th>아이디</th><th>권한</th><th>상태</th><th>관리</th></tr></thead><tbody>{% for account in accounts %}<tr><th>{{ account.username }}</th><td>{{ role_names[account.role] }}</td><td>{{ '활성' if account.active else '비활성' }}{% if account.must_change_password and account.active %} · 초기 비밀번호{% endif %}</td><td>{% if account.active and account.id != g.admin.id %}<form method="post" action="{{ url_for('admin.disable_account', account_id=account.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="secondary">비활성화</button></form>{% else %}—{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+<h3>관리자 추가</h3><form class="stack" method="post" action="{{ url_for('admin.create_account') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="form-row"><label>아이디<input name="username" required minlength="3" maxlength="32" pattern="[a-z0-9][a-z0-9_.-]{2,31}" autocomplete="off"></label><label>권한<select name="role"><option value="editor">운영관리자</option><option value="owner">최고관리자</option></select></label></div>
+<div class="form-row"><label>임시 비밀번호<input name="temporary_password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label><label>임시 비밀번호 확인<input name="confirm_password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label></div>
+<button>관리자 생성</button></form></section>
+{% endif %}
+<section class="panel" id="audit"><h2>최근 작업 기록</h2><div class="table-wrap"><table><thead><tr><th>시각 (한국시간)</th><th>수행자</th><th>작업</th><th>내용</th></tr></thead><tbody>{% for event in audit %}<tr><td>{{ event.created_at|kst_time }}</td><td>{{ event.username or '서버 / 로그인 시도' }}</td><td>{{ event.action }}</td><td class="audit-detail">{{ event.detail }}</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/admin.js') }}"></script>{% endblock %}

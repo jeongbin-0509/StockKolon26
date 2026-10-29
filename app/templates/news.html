@@ -6,11 +6,12 @@
     <title>News - STOCKOLON 26</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/news.css') }}">
 </head>
 <body>
 
     <!-- 헤더 -->
-    <header>
+    <header class="news-header">
         <a href="{{ url_for('main.index') }}" class="logo-link" aria-label="메인으로 이동">
             <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo" alt="STOCKOLON 26 Logo" />
         </a>
@@ -32,32 +33,17 @@
         </nav>
     </header>
     
-    <main>
-        <section id="latest-news">
-            <div id="latest-good">
-                <div id="latest-good-header">
-                    <span class="head1">최근 호재</span>
-                </div>
-                <div id="latest-good-body">
-                    <span class="head3">아싸리 반도체 업계가 레전드 돈을 벌고 있습니다.</span>
-                </div>
-            </div>
-
-            <div id="latest-bad">
-                <div id="latest-bad-header">
-                    <span class="head1">최근 악재</span>
-                </div>
-                <div id="latest-bad-body">
-                    <span class="head3">아싸리 반도체 업계의 거품이 무너지고 있습니다.</span>
-                </div>
-            </div>
-        </section>
-
-        <section id="news-list">
-            <span class="head1">과거 뉴스 목록</span>
-            
-        </section>
-
+    <main class="news-page">
+        <p class="news-kicker">SEMI NEWS</p>
+        <h1>동아리 시장 뉴스</h1>
+        <p class="news-description">새로운 소식과 동아리 시장의 흐름을 확인하세요.</p>
+        {% for article in articles %}
+        <article class="news-card">
+            <div class="news-meta"><span class="news-tag {{ 'up' if article.impact > 0 else 'down' }}">{{ article.sentiment }}</span><span>{{ article.target_name }}</span><time>{{ article.published_at|kst_time }}</time></div>
+            <h2>{{ article.title }}</h2>
+            <p class="news-body">{{ article.body }}</p>
+        </article>
+        {% else %}<section class="news-empty"><h2>아직 새로운 소식이 없어요</h2><p>뉴스가 발행되면 이곳에서 확인할 수 있어요.</p></section>{% endfor %}
     </main>
     <footer>
 

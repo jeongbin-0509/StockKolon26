@@ -166,20 +166,24 @@ class MarketService:
             raise ValueError("안정적인 event_id가 필요합니다.")
 
     def add_news(self, event_id, target_kind, target, impact, timestamp=None):
-        """향후 뉴스 발행 서버에서 호출. 공개 HTTP 쓰기 API는 제공하지 않는다."""
+        """뉴스 발행 서버에서 호출하는 내부 인터페이스."""
+        with self.connection(write=True) as db:
+            return self._add_news(db, event_id, target_kind, target, impact, timestamp)
+
+    def _add_news(self, db, event_id, target_kind, target, impact, timestamp=None):
+        """기사·감사 기록과 가격 이벤트를 하나의 트랜잭션에 저장할 수 있게 분리한다."""
         self._event_id(event_id)
         valid = CLUBS if target_kind == "club" else CATEGORIES if target_kind == "sector" else {}
         if type(target) is not int or target not in valid or type(impact) not in (int, float) or not math.isfinite(impact) or not -0.15 <= impact <= 0.15:
             raise ValueError("뉴스 대상과 영향(-0.15~0.15)을 확인하세요.")
-        with self.connection(write=True) as db:
-            previous = db.execute("SELECT * FROM market_news WHERE event_id=?", (event_id,)).fetchone()
-            if previous:
-                if (previous["target_kind"], previous["target"], previous["impact"]) != (target_kind, target, impact):
-                    raise ValueError("이미 사용된 event_id의 내용을 바꿀 수 없습니다.")
-                return False
-            effective = self._event_time(db, timestamp)
-            db.execute("INSERT INTO market_news VALUES (?, ?, ?, ?, ?)",
-                       (event_id, target_kind, target, impact, effective))
+        previous = db.execute("SELECT * FROM market_news WHERE event_id=?", (event_id,)).fetchone()
+        if previous:
+            if (previous["target_kind"], previous["target"], previous["impact"]) != (target_kind, target, impact):
+                raise ValueError("이미 사용된 event_id의 내용을 바꿀 수 없습니다.")
+            return False
+        effective = self._event_time(db, timestamp)
+        db.execute("INSERT INTO market_news VALUES (?, ?, ?, ?, ?)",
+                   (event_id, target_kind, target, impact, effective))
         return True
 
     def record_flow(self, event_id, club_num, signed_quantity, timestamp=None):

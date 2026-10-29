@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}관리자{% endblock %} · STOCKOLON 26</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+<header class="admin-header">
+    <a class="brand" href="{{ url_for('admin.dashboard') }}">STOCKOLON <span>ADMIN</span></a>
+    {% if g.admin %}
+    <nav aria-label="관리자 메뉴">
+        <span>{{ g.admin.username }} · {{ role_names[g.admin.role] }}</span>
+        <a href="{{ url_for('admin.password') }}">비밀번호 변경</a>
+        <form method="post" action="{{ url_for('admin.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="secondary">로그아웃</button></form>
+    </nav>
+    {% else %}<a href="{{ url_for('auth.login') }}">일반 회원 로그인</a>{% endif %}
+</header>
+<main class="admin-shell {% block shell_class %}{% endblock %}">
+    {% for message in get_flashed_messages() %}<p class="notice" role="status">{{ message }}</p>{% endfor %}
+    {% block content %}{% endblock %}
+</main>
+{% block scripts %}{% endblock %}
+</body>
+</html>

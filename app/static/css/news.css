@@ -1,0 +1,14 @@
+.news-page { width: min(850px, calc(100% - 2.4rem)); margin: 3rem auto 5rem; }
+.news-kicker { color: var(--color-brand-mint); font-size: .75rem; font-weight: 800; letter-spacing: .12em; margin-bottom: .7rem; }
+.news-description, .news-meta, .news-empty p { color: var(--text-secondary); }
+.news-description { margin: .8rem 0 2rem; }
+.news-card, .news-empty { padding: 1.6rem; margin-top: 1rem; border: 1px solid var(--border-card); border-radius: 1rem; background: var(--bg-card); }
+.news-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; font-size: .8rem; }
+.news-tag { font-weight: 800; }
+.up { color: var(--color-stock-up); }
+.down { color: var(--color-stock-down); }
+.news-card h2 { font-size: 1.25rem; margin: 1rem 0; overflow-wrap: anywhere; }
+.news-body { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; }
+.news-empty { text-align: center; padding-block: 3rem; }
+.news-empty h2 { font-size: 1.1rem; margin-bottom: .8rem; }
+@media(max-width: 767px) { .news-header { align-items: flex-start; flex-direction: column; } .news-header #header-nav { width: 100%; flex-wrap: wrap; } }
