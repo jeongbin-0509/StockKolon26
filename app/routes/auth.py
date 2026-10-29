@@ -143,6 +143,10 @@ def reset_password():
             verified = current_app.extensions['email_verification'].consume(
                 challenge, reset['email'], request.form.get('email_code', ''))
             if not verified or not reset['user_id']:
+                with current_app.extensions['email_verification'].market.connection() as db:
+                    status = db.execute('SELECT status FROM email_verifications WHERE id=?', (challenge,)).fetchone()
+                if status and status['status'] == 'used':
+                    raise ValueError('이미 사용된 인증번호입니다. 변경한 비밀번호로 로그인하거나 새 인증번호를 요청해주세요.')
                 raise ValueError('인증번호가 올바르지 않거나 만료되었습니다. 다시 확인해주세요.')
             session.pop('password_reset', None)
             result = (supabase.table('users').update({'password': generate_password_hash(password)})

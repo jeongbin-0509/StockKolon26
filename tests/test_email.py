@@ -117,10 +117,15 @@ class EmailTests(unittest.TestCase):
             self.client.post('/auth/reset-password', data=form)
             table.update.assert_not_called()
             form['email_code'] = '123456'
+            old_cookie = self.client.get_cookie('session').value
             result = self.client.post('/auth/reset-password', data=form)
             self.assertTrue(result.location.endswith('/auth/login'))
             self.assertTrue(check_password_hash(table.update.call_args.args[0]['password'], 'new-password'))
             self.client.post('/auth/reset-password', data=form)
+            self.assertEqual(table.update.call_count, 1)
+            self.client.set_cookie('session', old_cookie)
+            replay = self.client.post('/auth/reset-password', data=form, follow_redirects=True)
+            self.assertIn('이미 사용된 인증번호', replay.get_data(as_text=True))
             self.assertEqual(table.update.call_count, 1)
 
     def test_unknown_account_never_receives_reset_code(self):
