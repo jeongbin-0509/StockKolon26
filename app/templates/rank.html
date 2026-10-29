@@ -21,7 +21,7 @@
 
     <nav id="header-nav">
         <a href="{{ url_for('main.profile') }}" class="user-pill">
-            <span class="user-avatar"></span>
+            <span class="user-avatar"><img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="기본 프로필 이미지"></span>
             <span class="user-name">세미님</span>
         </a>
 
@@ -185,5 +185,6 @@
 
 </main>
 
+<script src="{{ url_for('static', filename='js/header-profile.js') }}" data-autoload="true"></script>
 </body>
 </html>

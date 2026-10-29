@@ -1,7 +1,31 @@
 from flask import Blueprint, render_template, session, redirect, url_for, jsonify, current_app
 from app.services.supabase_client import supabase
+from app.market_catalog import CLUBS
+from postgrest.exceptions import APIError
+import httpx
+from pathlib import Path
 
 main = Blueprint("main", __name__)
+
+
+def club_profile(user):
+    default = url_for('static', filename='images/default_stock_logo.png')
+    club_id = user.get('club_id')
+    if not club_id:
+        return default, None
+    try:
+        result = supabase.table('clubs').select('name').eq('id', club_id).limit(1).execute()
+        club_name = result.data[0]['name'] if result.data else None
+    except (APIError, httpx.HTTPError, RuntimeError):
+        current_app.logger.warning('동아리 프로필을 불러오지 못했습니다.')
+        return default, None
+    number = next((number for number, name in CLUBS.items() if name == club_name), None)
+    if number is None:
+        return default, club_name
+    filename = f'images/{number}.png'
+    if not (Path(current_app.static_folder) / filename).is_file():
+        return default, club_name
+    return url_for('static', filename=filename), club_name
 
 
 @main.route("/")
@@ -64,12 +88,14 @@ def index_data():
 
     result = supabase.table("users").select("*").eq("id", user_id).single().execute()
     user = result.data
+    profile_image, club_name = club_profile(user)
 
     data = {
         "success": True,
         "profile": {
             "username": user["name"],
-            "profileImg": "/static/images/profile.png"
+            "profileImg": profile_image,
+            "clubName": club_name
         },
         "portfolio": {
             "assets": f"{user.get('cash', 0):,}원",
@@ -100,6 +126,7 @@ def profile_data():
 
     result = supabase.table("users").select("*").eq("id", user_id).single().execute()
     user = result.data
+    profile_image, club_name = club_profile(user)
 
     cash = user.get("cash", 0)
 
@@ -107,6 +134,8 @@ def profile_data():
         "success": True,
         "user": {
             "name": user["name"],
+            "profileImg": profile_image,
+            "clubName": club_name,
             "cash": cash,
             "total_assets": cash,
             "rank": "전체 순위 준비중"

@@ -20,7 +20,7 @@
             <!-- 유저 정보 -->
             <div class="user-info">
                 <div class="user-avatar">
-                    <span class="avatar-default-icon">&#9679;</span>
+                    <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="기본 프로필 이미지">
                 </div>
                 <span class="head2 user-name">세미님</span>
                 <span class="user-rank">전체 1위</span>
@@ -133,6 +133,7 @@
         </section>
     </div>
 
+    <script src="{{ url_for('static', filename='js/header-profile.js') }}" data-autoload="true"></script>
     <script src="{{ url_for('static', filename='js/buy.js') }}"></script>
 </body>
 </html>

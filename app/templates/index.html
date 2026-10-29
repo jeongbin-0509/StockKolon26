@@ -20,7 +20,7 @@
             <!-- 유저 정보 -->
             <div class="user-info">
                 <div class="user-avatar">
-                    <span class="avatar-default-icon">&#9679;</span>
+                    <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="기본 프로필 이미지">
                 </div>
                 <span class="head2 user-name">세미님</span>
                 <span class="user-rank">전체 1위</span>
@@ -38,7 +38,7 @@
         <!-- 프로필 섹션 -->
         <section id="profile-section">
             <div id="profile-img-wrap">
-                <img src="{{ url_for('static', filename='images/profile.png') }}" id="profile-img" alt="프로필 이미지">
+                <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" id="profile-img" alt="기본 프로필 이미지">
             </div>
             <div id="profile-text">
                 <span class="sub_text">안녕하세요,</span>
@@ -128,6 +128,7 @@
 
     </main>
 
+    <script src="{{ url_for('static', filename='js/header-profile.js') }}"></script>
     <script src="{{ url_for('static', filename='js/index.js') }}"></script>
 </body>
 </html>

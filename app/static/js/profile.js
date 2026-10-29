@@ -9,6 +9,7 @@ async function loadProfileData() {
     }
 
     document.querySelector(".user-name").textContent = `${data.user.name}님`;
+    updateHeaderProfile(data.user);
     document.querySelector(".user-rank").textContent = data.user.rank;
 
     document.querySelector("#card-total-assets .summary-value").textContent =
