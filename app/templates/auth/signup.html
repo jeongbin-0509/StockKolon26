@@ -21,8 +21,8 @@
         <div class="form-field"><label for="email_code">인증번호</label><input type="text" id="email_code" name="email_code" placeholder="메일로 받은 인증번호 6자리" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" aria-describedby="email_code_errormsg"><p class="field-error" id="email_code_errormsg" hidden>인증번호 6자리를 숫자로 입력해주세요.</p></div>
     </section>
     <section class="form-section" aria-labelledby="password-info-title"><h2 id="password-info-title">비밀번호 설정</h2>
-        <div class="field-row"><div class="form-field"><label for="password">비밀번호</label><input type="password" id="password" name="password" placeholder="6자 이상 입력하세요" autocomplete="new-password" required minlength="6" aria-describedby="password_errormsg"><p class="field-error" id="password_errormsg" hidden>비밀번호를 6자 이상 입력해주세요.</p></div>
-        <div class="form-field"><label for="password_check">비밀번호 확인</label><input type="password" id="password_check" name="password_check" placeholder="한 번 더 입력하세요" autocomplete="new-password" required minlength="6" aria-describedby="password_check_errormsg"><p class="field-error" id="password_check_errormsg" hidden>입력한 비밀번호와 일치하지 않습니다.</p></div></div>
+        <div class="field-row"><div class="form-field"><label for="password">비밀번호</label><input type="password" id="password" name="password" placeholder="6자 이상 입력하세요" autocomplete="new-password" required minlength="6" maxlength="128" aria-describedby="password_errormsg"><p class="field-error" id="password_errormsg" hidden>비밀번호를 6자 이상 입력해주세요.</p></div>
+        <div class="form-field"><label for="password_check">비밀번호 확인</label><input type="password" id="password_check" name="password_check" placeholder="한 번 더 입력하세요" autocomplete="new-password" required minlength="6" maxlength="128" aria-describedby="password_check_errormsg"><p class="field-error" id="password_check_errormsg" hidden>입력한 비밀번호와 일치하지 않습니다.</p></div></div>
     </section>
     <div class="form-field"><label for="club_id">소속 동아리</label><div class="select-wrap"><select id="club_id" name="club_id" required aria-describedby="club_hint club_id_errormsg">
                 <option value="">동아리를 선택하세요</option>

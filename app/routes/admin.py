@@ -9,6 +9,7 @@ from flask import Blueprint, abort, current_app, flash, g, jsonify, redirect, re
 
 from app.market_catalog import CATEGORIES, CLUBS
 from app.services.admin_service import PERMISSIONS, ROLE_NAMES
+from app.services.database import DatabaseError
 
 admin = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -89,6 +90,9 @@ def database_error(error):
     if request.path.startswith('/admin/api/'):
         return jsonify(success=False, message='일시적인 저장소 오류입니다.'), 503
     return render_template('admin/error.html', message='일시적인 저장소 오류입니다. 잠시 후 다시 시도하세요.'), 503
+
+
+admin.register_error_handler(DatabaseError, database_error)
 
 
 @admin.route('/login', methods=['GET', 'POST'])

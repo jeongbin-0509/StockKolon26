@@ -98,8 +98,8 @@ class AdminService:
             if not valid or not current or not current['active']:
                 for subject, _ in subjects:
                     db.execute('INSERT INTO admin_login_limits VALUES (?, 1, ?) ON CONFLICT(subject) DO UPDATE SET '
-                               'attempts=CASE WHEN reset_at<=? THEN 1 ELSE attempts+1 END, '
-                               'reset_at=CASE WHEN reset_at<=? THEN excluded.reset_at ELSE reset_at END',
+                               'attempts=CASE WHEN admin_login_limits.reset_at<=? THEN 1 ELSE admin_login_limits.attempts+1 END, '
+                               'reset_at=CASE WHEN admin_login_limits.reset_at<=? THEN excluded.reset_at ELSE admin_login_limits.reset_at END',
                                (subject, now + 900, now, now))
                 self._audit(db, current['id'] if current else None, 'auth.failed', '', {}, now)
                 # with 밖에서 오류를 반환해야 실패 횟수도 커밋된다.
@@ -213,6 +213,6 @@ class AdminService:
     def articles(self):
         with self.market.connection() as db:
             rows = db.execute('SELECT a.*, n.effective_at FROM news_articles a '
-                              'JOIN market_news n ON n.event_id=a.id ORDER BY a.published_at DESC, a.rowid DESC LIMIT 50')
+                              'JOIN market_news n ON n.event_id=a.id ORDER BY a.published_at DESC, a.id DESC LIMIT 50')
             return [{**dict(row), 'target_name': (CLUBS if row['target_kind'] == 'club' else CATEGORIES)[row['target']],
                      'sentiment': '호재' if row['impact'] > 0 else '악재'} for row in rows]

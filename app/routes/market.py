@@ -3,6 +3,7 @@ import time
 
 import click
 from flask import Blueprint, current_app, jsonify, session
+from app.services.database import DatabaseError
 
 market = Blueprint("market", __name__)
 
@@ -13,7 +14,7 @@ def market_data():
         return jsonify(success=False, message="로그인이 필요합니다."), 401
     try:
         data = current_app.extensions["market"].snapshot()
-    except sqlite3.Error:
+    except (sqlite3.Error, DatabaseError):
         current_app.logger.exception("주가 데이터 조회 실패")
         return jsonify(success=False, message="주가 데이터를 불러오지 못했습니다. 잠시 후 다시 시도하세요."), 503
     response = jsonify(data)

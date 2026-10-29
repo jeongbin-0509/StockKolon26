@@ -33,9 +33,8 @@ sendCodeBtn.addEventListener('click', async () => {
             method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({email: `${emailId}@goedu.kr`}), signal: AbortSignal.timeout(15000)
         });
-        if (!response.ok) throw new Error('인증 메일을 보내지 못했습니다. 잠시 후 다시 시도해주세요.');
-        const data = await response.json();
-        if (!data.success) throw new Error(data.message || '이메일을 확인하고 다시 시도해주세요.');
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.success) throw new Error(data.message || '인증 메일을 보내지 못했습니다. 잠시 후 다시 시도해주세요.');
         if (emailId !== emailInput.value) throw new Error('이메일이 변경되었습니다. 새 주소로 다시 인증번호를 받아주세요.');
         showStatus('인증번호를 보냈습니다. 학교 메일함을 확인해주세요.', 'success');
         document.getElementById('email_code').focus();
