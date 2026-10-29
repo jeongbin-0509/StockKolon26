@@ -1,14 +1,16 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify, current_app, abort
 from app.services.email_service import EmailDeliveryError, generate_code, send_email_code
 from app.services.email_verification import EmailRateLimit, EmailVerification
 from app.services.database import DatabaseError
 from app.market_catalog import CLUBS
 import re
+import hmac
 import sqlite3
 import httpx
 from postgrest.exceptions import APIError
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.services.supabase_client import supabase
+from app.routes.admin import csrf_token
 
 auth = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -18,8 +20,29 @@ auth = Blueprint("auth", __name__, url_prefix="/auth")
 def login():
 
     if request.method == "POST":
-        usernum = request.form.get("usernum")
-        password = request.form.get("password")
+        expected = session.get("admin_csrf", "")
+        supplied = request.form.get("csrf_token", "")
+        if not expected or not supplied or not hmac.compare_digest(expected.encode(), supplied.encode()):
+            abort(403)
+        usernum = request.form.get("usernum", "").strip()
+        password = request.form.get("password", "")
+
+        # 관리자 아이디가 학번과 겹칠 경우 관리자 계정이 우선한다.
+        admin = current_app.extensions["admin"]
+        with admin.market.connection() as db:
+            account = db.execute('SELECT 1 FROM admin_accounts WHERE username=?', (usernum.lower(),)).fetchone()
+        if account or not re.fullmatch(r"[0-9]{5}", usernum):
+            try:
+                token = admin.login(usernum, password, request.remote_addr or "unknown")
+                if token:
+                    session.clear()
+                    session["admin_token"] = token
+                    csrf_token()
+                    return redirect(url_for("admin.dashboard"))
+                flash("아이디 또는 비밀번호가 올바르지 않습니다.")
+            except ValueError as exc:
+                flash(str(exc))
+            return redirect(url_for("auth.login"))
 
         # 로그인 로직
 
@@ -47,7 +70,7 @@ def login():
         flash("로그인되었습니다.")
         return redirect(url_for("main.index"))
     
-    return render_template("auth/login.html")
+    return render_template("auth/login.html", csrf_token=csrf_token)
 
 # 회원가입 페이지
 @auth.route("/signup", methods=["GET", "POST"])

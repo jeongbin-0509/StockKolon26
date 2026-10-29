@@ -4,7 +4,7 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from app import create_app
 
@@ -76,6 +76,39 @@ class AdminTests(unittest.TestCase):
         self.assertEqual(self.client.post('/admin/news', data=self.news_form()).status_code, 403)
         self.assertEqual(self.client.post('/admin/logout').status_code, 403)
         self.assertEqual(self.admin.articles(), [])
+
+    def test_shared_login_authenticates_admin_and_requires_password_change(self):
+        token = self.token('/auth/login')
+        result = self.client.post('/auth/login', data={'csrf_token': token, 'usernum': 'owner', 'password': PASSWORD})
+        self.assertTrue(result.location.endswith('/admin/'))
+        self.assertTrue(self.client.get('/admin/').location.endswith('/admin/password'))
+
+    def test_shared_login_checks_csrf_and_admin_password(self):
+        self.assertEqual(self.client.post('/auth/login', data={'usernum': 'owner', 'password': PASSWORD}).status_code, 403)
+        token = self.token('/auth/login')
+        result = self.client.post('/auth/login', data={'csrf_token': token, 'usernum': 'owner', 'password': 'wrong-password'})
+        self.assertTrue(result.location.endswith('/auth/login'))
+        self.assertEqual(self.client.get('/admin/api/market').status_code, 401)
+
+    def test_shared_login_numeric_admin_takes_priority(self):
+        self.admin.create_account('12345', PASSWORD, 'editor')
+        token = self.token('/auth/login')
+        with patch('app.routes.auth.supabase', new=MagicMock()) as supabase:
+            result = self.client.post('/auth/login', data={'csrf_token': token, 'usernum': '12345', 'password': PASSWORD})
+            supabase.table.assert_not_called()
+        self.assertTrue(result.location.endswith('/admin/'))
+
+    def test_shared_login_keeps_student_login(self):
+        from werkzeug.security import generate_password_hash
+        token = self.token('/auth/login')
+        with patch('app.routes.auth.supabase', new=MagicMock()) as supabase:
+            supabase.table.return_value.select.return_value.eq.return_value.execute.return_value.data = [
+                {'id': 'member', 'usernum': '54321', 'name': '학생', 'password': generate_password_hash(PASSWORD)}]
+            result = self.client.post('/auth/login', data={'csrf_token': token, 'usernum': '54321', 'password': PASSWORD})
+        self.assertTrue(result.location.endswith('/'))
+        with self.client.session_transaction() as sess:
+            self.assertEqual(sess['user_id'], 'member')
+            self.assertNotIn('admin_token', sess)
 
     def test_editor_cannot_manage_admin_accounts(self):
         editor = self.admin.create_account('editor', PASSWORD, 'editor')
