@@ -57,7 +57,7 @@ async function loadProfileData() {
             row.className = 'holding-row';
             const values = [item.name, `${item.quantity.toLocaleString('ko-KR')}주`,
                 `${item.price.toLocaleString('ko-KR')}원`, `${item.profit >= 0 ? '+' : ''}${item.profit.toLocaleString('ko-KR')}원`,
-                `${item.rate >= 0 ? '+' : ''}${item.rate.toFixed(2)}%`, '—'];
+                `${item.rate >= 0 ? '+' : ''}${item.rate.toFixed(2)}%`];
             values.forEach((value, index) => {
                 const cell = document.createElement('td');
                 cell.className = 'head2';
@@ -65,6 +65,18 @@ async function loadProfileData() {
                 cell.textContent = value;
                 row.appendChild(cell);
             });
+            const chartCell = document.createElement('td');
+            chartCell.className = 'chart-cell';
+            const chart = document.createElement('div');
+            chart.className = 'mini-chart';
+            StockolonCharts.renderLineChart(chart, {
+                prices: item.prices,
+                tone: item.prices?.at(-1) >= item.prices?.[0] ? 'up' : 'down',
+                compact: true,
+                ariaLabel: `${item.name} 최근 30분 가격 변화`
+            });
+            chartCell.append(chart);
+            row.appendChild(chartCell);
             tbody.appendChild(row);
         }
     }

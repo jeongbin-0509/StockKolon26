@@ -1,0 +1,67 @@
+.readable-chart {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    color: var(--text-secondary);
+}
+
+.readable-chart .chart-grid {
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+}
+
+.readable-chart .chart-baseline {
+    stroke: rgba(255, 255, 255, 0.28);
+    stroke-width: 1;
+    stroke-dasharray: 5 5;
+    vector-effect: non-scaling-stroke;
+}
+
+.readable-chart .chart-line {
+    fill: none;
+    stroke: var(--chart-color);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+
+.readable-chart .chart-area {
+    fill: var(--chart-color);
+    opacity: 0.12;
+}
+
+.readable-chart .chart-current-point {
+    fill: var(--chart-color);
+    stroke: #fff;
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+}
+
+.readable-chart.up-chart { --chart-color: var(--color-stock-up); }
+.readable-chart.down-chart { --chart-color: var(--color-stock-down); }
+.readable-chart.neutral-chart { --chart-color: #a7adb8; }
+
+.chart-axis-label,
+.chart-time-label {
+    fill: #aeb2bb;
+    font-family: "Noto Sans KR", sans-serif;
+    font-weight: 600;
+}
+
+.chart-axis-label {
+    font-size: 18px;
+    dominant-baseline: middle;
+}
+
+.chart-time-label { font-size: 17px; }
+
+.chart-empty {
+    display: grid;
+    height: 100%;
+    place-items: center;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}

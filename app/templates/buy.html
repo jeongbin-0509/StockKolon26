@@ -6,6 +6,7 @@
     <title>Buy - STOCKOLON 26</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/buy.css') }}">
 </head>
 <body>
@@ -105,9 +106,7 @@
                 </dl>
             </div>
 
-            <svg class="modal-chart up-chart" viewBox="0 0 820 260" aria-hidden="true">
-                <polyline points="18,230 60,190 92,220 128,160 160,190 198,135 224,205 270,170 318,100 348,145 382,95 420,210 452,150 486,178 530,130 572,190 616,160 650,115 690,170 720,120 752,170 782,95 806,60" />
-            </svg>
+            <div class="modal-chart" aria-live="polite"></div>
 
             <p class="market-caption" id="order-balance">보유 현금 확인 중…</p>
             <form class="order-form" data-csrf="{{ csrf_token() }}">
@@ -163,6 +162,7 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/header-profile.js') }}" data-autoload="true"></script>
+    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
     <script src="{{ url_for('static', filename='js/buy.js') }}"></script>
 </body>
 </html>

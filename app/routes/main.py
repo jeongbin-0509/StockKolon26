@@ -91,20 +91,19 @@ def index_data():
     user = result.data
     profile_image, club_name = club_profile(user)
     trading = current_app.extensions['trading']
+    movers = current_app.extensions['market'].five_minute_movers()
     portfolio = trading.portfolio(user_id, None if trading.market.store.postgres else user.get('cash', 0))
     rate = (portfolio['profit'] / portfolio['cost'] * 100) if portfolio['cost'] else 0
 
-    movers = current_app.extensions['market'].five_minute_movers()
-
     def stock_card(stock):
         if stock is None:
-            return {'name': '데이터 없음', 'sub': '최근 5분 기준', 'change': None, 'prices': [],
+            return {'name': '데이터 없음', 'sub': '최근 5분 기준', 'change': None, 'prices': [], 'timestamps': [],
                     'logo': url_for('static', filename='images/default_stock_logo.png')}
         filename = f"images/{stock['club_num']}.png"
         if not (Path(current_app.static_folder) / filename).is_file():
             filename = 'images/default_stock_logo.png'
         return {'name': stock['name'], 'sub': f"{stock['price']:,.0f}원 · {stock['category']}",
-                'change': stock['change'], 'prices': stock['prices'],
+                'change': stock['change'], 'prices': stock['prices'], 'timestamps': stock['timestamps'],
                 'logo': url_for('static', filename=filename)}
 
     data = {
@@ -116,7 +115,9 @@ def index_data():
         },
         "portfolio": {
             "assets": f"{portfolio['total']:,}원",
-            "rate": f"{rate:+.2f}%"
+            "rate": f"{rate:+.2f}%",
+            "cash": portfolio['cash'],
+            "stockValue": portfolio['value']
         },
         "topUpStock": stock_card(movers['up']),
         "topDownStock": stock_card(movers['down'])
@@ -137,7 +138,13 @@ def profile_data():
     user = result.data
     profile_image, club_name = club_profile(user)
     trading = current_app.extensions['trading']
+    market = current_app.extensions['market'].snapshot()
     portfolio = trading.portfolio(user_id, None if trading.market.store.postgres else user.get('cash', 0))
+    market_by_club = {stock['club_num']: stock for stock in market['stocks']}
+    for holding in portfolio['holdings']:
+        candles = market_by_club.get(holding['club_num'], {}).get('candles', [])[-7:]
+        holding['prices'] = [candle['close'] for candle in candles]
+        holding['timestamps'] = [candle['timestamp'] for candle in candles]
     cash = portfolio['cash']
     rate = (portfolio['profit'] / portfolio['cost'] * 100) if portfolio['cost'] else 0
 

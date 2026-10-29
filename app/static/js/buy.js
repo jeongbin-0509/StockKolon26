@@ -40,45 +40,22 @@ function setClubImage(img, clubNum) {
     img.src = `${imageBase}${clubNum}.png`;
 }
 
-function nicePriceStep(value) {
-    const power = 10 ** Math.floor(Math.log10(Math.max(1, value)));
-    const fraction = value / power;
-    return (fraction <= 1 ? 1 : fraction <= 2 ? 2 : fraction <= 5 ? 5 : 10) * power;
-}
-
-function chartMarkup(stock, width = 420, height = 150) {
-    const candles = stock.candles;
-    if (!candles.length) return "";
-    const prices = candles.map((candle) => candle.close);
-    const rawMin = Math.min(...prices);
-    const rawMax = Math.max(...prices);
-    const padding = Math.max((rawMax - rawMin) * 0.15, stock.price * 0.001, 1);
-    const step = nicePriceStep((rawMax - rawMin + padding * 2) / 4);
-    const scaleMin = Math.max(0, Math.floor((rawMin - padding) / step) * step);
-    const scaleMax = Math.ceil((rawMax + padding) / step) * step;
-    const left = 10;
-    const top = 10;
-    const bottom = height - 26;
-    const right = width - (width <= 500 ? 70 : 105);
-    const priceToY = (price) => bottom - (price - scaleMin) / (scaleMax - scaleMin || 1) * (bottom - top);
-    const start = candles[0].timestamp;
-    const duration = candles.at(-1).timestamp - start;
-    const xFor = (candle) => duration ? left + (candle.timestamp - start) / duration * (right - left) : left;
-    let grid = "";
-    for (let price = scaleMin; price <= scaleMax; price += step) {
-        const y = priceToY(price);
-        grid += `<line class="chart-grid-line" x1="${left}" y1="${y}" x2="${right}" y2="${y}" />
-            <text class="chart-price-label" x="${right + 7}" y="${y}">${price.toLocaleString("ko-KR")}원</text>`;
-    }
-    const points = candles.map((candle) => `${xFor(candle)},${priceToY(candle.close)}`).join(" ");
-    const timeLabel = (timestamp) => new Date(timestamp * 1000).toLocaleTimeString("ko-KR", {
+function timeLabel(timestamp) {
+    return new Date(timestamp * 1000).toLocaleTimeString("ko-KR", {
         timeZone: "Asia/Seoul", hour: "2-digit", minute: "2-digit", hour12: false
     });
-    const last = candles.at(-1);
-    return `${grid}<polyline points="${points}" />
-        <circle class="chart-last-point" cx="${xFor(last)}" cy="${priceToY(last.close)}" r="3" />
-        <text class="chart-price-label" x="${left}" y="${height - 7}">${timeLabel(start)}</text>
-        ${duration ? `<text class="chart-price-label" text-anchor="end" x="${right}" y="${height - 7}">${timeLabel(last.timestamp)}</text>` : ""}`;
+}
+
+function renderStockChart(container, stock, compact = false) {
+    const candles = stock.candles || [];
+    StockolonCharts.renderLineChart(container, {
+        prices: candles.map(candle => candle.close),
+        tone: trendOf(stock),
+        compact,
+        startLabel: candles.length ? timeLabel(candles[0].timestamp) : '',
+        endLabel: candles.length ? timeLabel(candles.at(-1).timestamp) : '',
+        ariaLabel: `${stock.club_name} 최근 가격 변화`
+    });
 }
 
 function trendOf(stock) {
@@ -102,8 +79,9 @@ function createStockCard(stock) {
             <strong>${formatWon(stock.price)}</strong>
             <span>${stock.changeRate > 0 ? "+" : ""}${stock.changeRate.toFixed(2)}% ${stock.changeRate === 0 ? "↔" : trend === "up" ? "↗" : "↘"}</span>
         </div>
-        <svg class="stock-chart ${trend}-chart" viewBox="0 0 420 150" aria-hidden="true">${chartMarkup(stock)}</svg>`;
+        <div class="stock-chart"></div>`;
     setClubImage(card.querySelector(".stock-logo"), stock.club_num);
+    renderStockChart(card.querySelector('.stock-chart'), stock, true);
     return card;
 }
 
@@ -138,10 +116,7 @@ function updateModal(stock) {
     change.textContent = `${stock.changeWon > 0 ? "+" : stock.changeWon < 0 ? "−" : ""}${formatWon(Math.abs(stock.changeWon))} (${stock.changeRate > 0 ? "+" : ""}${stock.changeRate.toFixed(2)}%)`;
     change.classList.toggle("up", trend === "up");
     change.classList.toggle("down", trend === "down");
-    const chart = document.querySelector(".modal-chart");
-    chart.classList.toggle("up-chart", trend === "up");
-    chart.classList.toggle("down-chart", trend === "down");
-    chart.innerHTML = chartMarkup(stock, 820, 260);
+    renderStockChart(document.querySelector(".modal-chart"), stock);
     setClubImage(document.querySelector(".modal-logo"), stock.club_num);
     const stats = document.querySelectorAll(".modal-stats dd");
     stats[1].textContent = formatWon(stock.high);

@@ -189,7 +189,8 @@ class MarketService:
                 movers.append({'club_num': club, 'name': CLUBS[club],
                                'category': CATEGORIES[club // 10], 'price': last,
                                'change': (last / first - 1) * 100,
-                               'prices': [point['price'] for point in series]})
+                               'prices': [point['price'] for point in series],
+                               'timestamps': [point['timestamp'] for point in series]})
             rising = [stock for stock in movers if stock['change'] > 0]
             falling = [stock for stock in movers if stock['change'] < 0]
             return {'up': max(rising, key=lambda stock: stock['change'], default=None),

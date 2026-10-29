@@ -42,7 +42,24 @@ class PortfolioSection {
                 this.todayRate.className = "head2 down";
             }
         }
-
+        const total = Number(data.cash || 0) + Number(data.stockValue || 0);
+        const stockRatio = total ? Number(data.stockValue || 0) / total * 100 : 0;
+        this.chart.replaceChildren();
+        const bar = document.createElement('div');
+        bar.className = 'allocation-bar';
+        bar.setAttribute('role', 'img');
+        bar.setAttribute('aria-label', `주식 ${stockRatio.toFixed(0)}%, 현금 ${(100 - stockRatio).toFixed(0)}%`);
+        const stock = document.createElement('span');
+        stock.className = 'allocation-stock';
+        stock.style.width = `${stockRatio}%`;
+        const cash = document.createElement('span');
+        cash.className = 'allocation-cash';
+        cash.style.width = `${100 - stockRatio}%`;
+        bar.append(stock, cash);
+        const legend = document.createElement('div');
+        legend.className = 'allocation-legend';
+        legend.innerHTML = `<span><i class="stock-dot"></i>주식 ${stockRatio.toFixed(0)}%</span><span><i class="cash-dot"></i>현금 ${(100 - stockRatio).toFixed(0)}%</span>`;
+        this.chart.append(bar, legend);
     }
 }
 
@@ -76,23 +93,17 @@ class StockCard {
         this.change.classList.add(isUp ? 'up' : 'down');
         if (!Array.isArray(data.prices) || data.prices.length < 2) return;
 
-        const min = Math.min(...data.prices);
-        const range = Math.max(...data.prices) - min;
-        const points = data.prices.map((price, index) => {
-            const x = 10 + index * 980 / (data.prices.length - 1);
-            const y = range ? 95 - (price - min) / range * 90 : 50;
-            return `${x},${y}`;
-        }).join(' ');
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('viewBox', '0 0 1000 100');
-        svg.setAttribute('preserveAspectRatio', 'none');
-        svg.setAttribute('aria-label', '최근 5분 주가 그래프');
-        svg.setAttribute('role', 'img');
-        svg.classList.add(isUp ? 'up-chart' : 'down-chart');
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-        line.setAttribute('points', points);
-        svg.append(line);
-        this.chart.append(svg);
+        const times = Array.isArray(data.timestamps) ? data.timestamps : [];
+        const formatTime = timestamp => new Date(timestamp * 1000).toLocaleTimeString('ko-KR', {
+            timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false
+        });
+        StockolonCharts.renderLineChart(this.chart, {
+            prices: data.prices,
+            tone: isUp ? 'up' : 'down',
+            startLabel: times.length ? formatTime(times[0]) : '5분 전',
+            endLabel: times.length ? formatTime(times.at(-1)) : '현재',
+            ariaLabel: `${data.name} 최근 5분 가격 변화`
+        });
     }
 }
 

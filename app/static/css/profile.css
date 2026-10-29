@@ -323,7 +323,10 @@ main {
   display: block;
   margin-left: auto;
   width: clamp(80px, 10vw, 130px);
-  height: auto;
+  height: 72px;
+  overflow: hidden;
+  border-radius: 0.65rem;
+  background: #141414;
 }
 
 .trade-history-row {
@@ -336,3 +339,9 @@ main {
 }
 .trade-history-row:last-child { border-bottom: 0; }
 .trade-history-row span { color: var(--text-secondary); }
+
+@media (max-width: 760px) {
+  #holdings { overflow-x: auto; }
+  #holdings-table { min-width: 760px; }
+  .mini-chart { width: 110px; }
+}

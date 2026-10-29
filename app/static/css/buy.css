@@ -168,48 +168,6 @@ body {
     overflow: visible;
 }
 
-.stock-chart polyline,
-.modal-chart polyline {
-    fill: none;
-    stroke-width: 6;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-.up-chart polyline {
-    stroke: var(--color-stock-up);
-    filter: drop-shadow(0 0 7px rgba(255, 59, 48, 0.55));
-}
-
-.down-chart polyline {
-    stroke: var(--color-stock-down);
-    filter: drop-shadow(0 0 7px rgba(0, 122, 255, 0.55));
-}
-
-.up-chart .chart-last-point { fill: var(--color-stock-up); }
-.down-chart .chart-last-point { fill: var(--color-stock-down); }
-
-.chart-grid-line {
-    stroke: rgba(255, 255, 255, 0.12);
-    stroke-width: 1;
-    vector-effect: non-scaling-stroke;
-}
-
-.chart-grid-line-minor {
-    stroke: rgba(255, 255, 255, 0.055);
-}
-
-.chart-price-label {
-    fill: #929292;
-    font-size: 11px;
-    font-weight: 700;
-    dominant-baseline: middle;
-}
-
-.modal-chart .chart-price-label {
-    font-size: 18px;
-}
-
 .trade-overlay {
     position: fixed;
     inset: 0;
@@ -362,7 +320,8 @@ body {
 
 .stock-chart,
 .modal-chart {
-    background-color: #181818;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: #121212;
 }
 
 .order-form {
