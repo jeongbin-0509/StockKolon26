@@ -29,7 +29,7 @@ def protect_admin():
     if request.method == 'POST':
         expected = session.get('admin_csrf', '')
         supplied = request.form.get('csrf_token', '')
-        if not expected or not supplied or not hmac.compare_digest(expected, supplied):
+        if not expected or not supplied or not hmac.compare_digest(expected.encode(), supplied.encode()):
             abort(403, '요청을 확인할 수 없습니다. 화면을 새로고침한 후 다시 시도하세요.')
 
 

@@ -1,62 +1,6 @@
-/* ==========================================
-   로그인 / 회원가입 페이지 전용 header 스타일
-   (login.html, signup.html 에만 링크할 것)
-============================================ */
-header {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 44px 20px 32px;
-    text-align: center;
-    gap: 14px;
-}
-
-header .logo-link {
-    display: inline-block;
-    line-height: 0;
-}
-
-header #logo {
-    width: 500px;
-    max-width: 84vw;
-    height: auto;
-    object-fit: contain;
-    filter: drop-shadow(0 6px 10px rgba(0,0,0,.5));
-}
-
-header .logo_text_wrap {
-    width: 500px;
-    max-width: 84vw;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-header .school_text {
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--text-primary);
-}
-
-header .by_text {
-    font-size: 18px;
-    font-weight: 800;
-    color: var(--text-primary);
-}
-
-@media screen and (max-width: 767px) {
-    header {
-        padding: 30px 16px 22px;
-        gap: 10px;
-    }
-
-    header .school_text {
-        font-size: 14px;
-    }
-
-    header .by_text {
-        font-size: 13px;
-    }
-}
+/* 회원 인증 화면 전용. 기존 배경과 브랜드 색상을 유지한다. */
+.auth-header { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .9rem; padding: 2.2rem 1.25rem 1.8rem; text-align: center; background: var(--bg-card); border-bottom: 1px solid var(--border-card); }
+.auth-header .logo-link { display: block; line-height: 0; }
+.auth-header #logo { display: block; width: 290px; max-width: 75vw; height: auto; object-fit: contain; }
+.auth-header .school_text { color: var(--text-primary); font-size: .85rem; font-weight: 500; letter-spacing: -.02em; }
+@media (max-width: 600px) { .auth-header { padding: 1.7rem 1rem 1.4rem; gap: .75rem; } .auth-header #logo { width: 245px; } .auth-header .school_text { font-size: .8rem; } }

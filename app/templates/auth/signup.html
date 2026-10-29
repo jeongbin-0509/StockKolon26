@@ -1,50 +1,30 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Sign Up - STOCKOLON 26</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth-header.css') }}">
-</head>
-<body>
-
-<header>
-    <a href="{{ url_for('main.index') }}" class="logo-link" aria-label="메인으로 이동">
-        <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo">
-    </a>
-
-    <div class="logo_text_wrap">
-        <p class="school_text">운정고 동아리 모의주식투자 게임</p>
-        <p class="by_text">by SemiColon26</p>
-    </div>
-</header>
-
-<main>
-    <form action="{{ url_for('auth.signup') }}" method="POST" id="signup_form">
-        <input type="text" id="name" name="name" placeholder="이름" required>
-
-        <input type="text" id="usernum" name="usernum" placeholder="학번" required>
-
-        <div class="email_wrap">
-            <input type="text" id="email_id" name="email_id" placeholder="학교 계정 입력" required>
-            <span>@goedu.kr</span>
-            <button type="button" id="send_code_btn">이메일 인증</button>
+{% extends 'auth/base.html' %}
+{% block title %}회원가입{% endblock %}
+{% block panel_class %}signup-panel{% endblock %}
+{% block heading %}나의 첫 동아리 투자{% endblock %}
+{% block description %}학교 이메일로 인증하고 STOCKOLON에 참여하세요.{% endblock %}
+{% block form %}
+<form method="post" action="{{ url_for('auth.signup') }}" id="signup_form" class="auth-form">
+    <section class="form-section" aria-labelledby="basic-info-title"><h2 id="basic-info-title">기본 정보</h2>
+        <div class="field-row">
+            <div class="form-field"><label for="name">이름</label><input type="text" id="name" name="name" placeholder="이름을 입력하세요" autocomplete="name" maxlength="40" required aria-describedby="name_errormsg"><p class="field-error" id="name_errormsg" hidden>이름을 입력해주세요.</p></div>
+            <div class="form-field"><label for="usernum">학번</label><input type="text" id="usernum" name="usernum" placeholder="학번 5자리" autocomplete="username" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" required aria-describedby="usernum_errormsg"><p class="field-error" id="usernum_errormsg" hidden>학번 5자리를 숫자로 입력해주세요.</p></div>
         </div>
-
-        <input type="text" id="email_code" name="email_code" placeholder="인증번호 입력" required>
-
-        <input type="password" id="password" name="password" placeholder="비밀번호" required minlength="6">
-
-        <input type="password" id="password_check" name="password_check" placeholder="비밀번호 확인" required minlength="6">
-
-        <div class="club_select_wrap">
-            <p class="club_select_title">동아리 선택</p>
-
-            <select id="club_id" name="club_id" required>
+    </section>
+    <section class="form-section" aria-labelledby="email-info-title"><h2 id="email-info-title">학교 이메일 인증</h2>
+        <div class="form-field"><label for="email_id">학교 이메일</label>
+            <div class="email-row"><div class="email-address"><input type="text" id="email_id" name="email_id" placeholder="이메일 아이디" autocomplete="off" autocapitalize="none" spellcheck="false" pattern="[a-zA-Z0-9._%+\-]+" required aria-describedby="email_hint email_id_errormsg"><span>@goedu.kr</span></div><button type="button" id="send_code_btn">인증번호 받기</button></div>
+            <p class="field-hint" id="email_hint">학교 이메일의 @ 앞부분만 입력해주세요.</p>
+            <p class="field-error" id="email_id_errormsg" hidden>학교 이메일 아이디를 확인해주세요.</p>
+            <p class="form-status" id="email_status" role="status" aria-live="polite" hidden></p>
+        </div>
+        <div class="form-field"><label for="email_code">인증번호</label><input type="text" id="email_code" name="email_code" placeholder="메일로 받은 인증번호 6자리" required inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" aria-describedby="email_code_errormsg"><p class="field-error" id="email_code_errormsg" hidden>인증번호 6자리를 숫자로 입력해주세요.</p></div>
+    </section>
+    <section class="form-section" aria-labelledby="password-info-title"><h2 id="password-info-title">비밀번호 설정</h2>
+        <div class="field-row"><div class="form-field"><label for="password">비밀번호</label><input type="password" id="password" name="password" placeholder="6자 이상 입력하세요" autocomplete="new-password" required minlength="6" aria-describedby="password_errormsg"><p class="field-error" id="password_errormsg" hidden>비밀번호를 6자 이상 입력해주세요.</p></div>
+        <div class="form-field"><label for="password_check">비밀번호 확인</label><input type="password" id="password_check" name="password_check" placeholder="한 번 더 입력하세요" autocomplete="new-password" required minlength="6" aria-describedby="password_check_errormsg"><p class="field-error" id="password_check_errormsg" hidden>입력한 비밀번호와 일치하지 않습니다.</p></div></div>
+    </section>
+    <div class="form-field"><label for="club_id">소속 동아리</label><div class="select-wrap"><select id="club_id" name="club_id" required aria-describedby="club_hint club_id_errormsg">
                 <option value="">동아리를 선택하세요</option>
                 <option value="00">미선택(종목미참여동아리)</option>
                 <option value="01">온에어</option>
@@ -90,27 +70,10 @@
                 <option value="83">소솜</option>
                 <option value="84">라온제나</option>
 
-                {% for club in clubs %}
-                    <option value="{{ club.id }}">
-                        {{ club.name }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
 
-        <button type="submit" id="signup_btn">회원가입</button>
-    </form>
-</main>
-
-{% with messages = get_flashed_messages() %}
-    {% if messages %}
-        {% for message in messages %}
-            <p class="flash_msg">{{ message }}</p>
-        {% endfor %}
-    {% endif %}
-{% endwith %}
-
-<script src="{{ url_for('static', filename='js/signup.js') }}"></script>
-
-</body>
-</html>
+    </select></div><p class="field-hint" id="club_hint">참여 종목에 없는 동아리라면 ‘미선택’을 골라주세요.</p><p class="field-error" id="club_id_errormsg" hidden>소속 동아리 또는 미선택을 선택해주세요.</p></div>
+    <button type="submit" id="signup_btn" class="primary-button">회원가입</button>
+</form>
+{% endblock %}
+{% block footer %}<p class="auth-footer">이미 계정이 있으신가요? <a href="{{ url_for('auth.login') }}">로그인</a></p>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/signup.js') }}"></script>{% endblock %}

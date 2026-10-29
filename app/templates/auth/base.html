@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{% endblock %} · STOCKOLON 26</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth-header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body class="auth-page">
+<header class="auth-header">
+    <a href="{{ url_for('main.index') }}" class="logo-link" aria-label="STOCKOLON 26 메인으로 이동">
+        <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo" alt="STOCKOLON 26">
+    </a>
+    <p class="school_text">운정고 동아리 모의주식투자 게임</p>
+</header>
+<main class="auth-main">
+    <section class="auth-panel {% block panel_class %}{% endblock %}" aria-labelledby="auth-title">
+        <div class="auth-heading"><h1 id="auth-title">{% block heading %}{% endblock %}</h1><p>{% block description %}{% endblock %}</p></div>
+        {% for message in get_flashed_messages() %}<p class="flash_msg" role="alert">{{ message }}</p>{% endfor %}
+        {% block form %}{% endblock %}
+        {% block footer %}{% endblock %}
+    </section>
+</main>
+<script src="{{ url_for('static', filename='js/auth-form.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

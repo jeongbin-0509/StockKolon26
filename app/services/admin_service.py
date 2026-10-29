@@ -85,7 +85,7 @@ class AdminService:
                     (hashlib.sha256(f'ip:{address}'.encode()).hexdigest(), 20)]
         with self.market.connection() as db:
             account = db.execute('SELECT * FROM admin_accounts WHERE username=?', (username,)).fetchone()
-        valid = check_password_hash(account['password_hash'] if account else self._dummy_hash, password[:128])
+        valid = len(password) <= 128 and check_password_hash(account['password_hash'] if account else self._dummy_hash, password)
         with self.market.connection(write=True) as db:
             # 해시 검사 중 계정 삭제·비활성화·비밀번호 변경이 있었으면 거부한다.
             current = db.execute('SELECT * FROM admin_accounts WHERE username=?', (username,)).fetchone()
@@ -135,7 +135,7 @@ class AdminService:
             raise ValueError('기존 비밀번호와 다른 비밀번호를 입력하세요.')
         with self.market.connection() as db:
             account = db.execute('SELECT * FROM admin_accounts WHERE id=? AND active=1', (account_id,)).fetchone()
-        if not account or not check_password_hash(account['password_hash'], old_password[:128]):
+        if not account or len(old_password) > 128 or not check_password_hash(account['password_hash'], old_password):
             raise ValueError('현재 비밀번호가 올바르지 않습니다.')
         hashed = generate_password_hash(new_password)
         with self.market.connection(write=True) as db:
@@ -201,7 +201,8 @@ class AdminService:
                 if values != (title, body, target_kind, target, impact, actor_id):
                     raise ValueError('이미 사용된 발행 요청입니다. 화면을 새로고침하세요.')
                 return False
-            self.market._add_news(db, article_id, target_kind, target, impact)
+            if not self.market._add_news(db, article_id, target_kind, target, impact):
+                raise ValueError('이 발행 ID는 이미 시장 이벤트에서 사용 중입니다.')
             now = int(self.clock())
             db.execute('INSERT INTO news_articles VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
                        (article_id, title, body, target_kind, target, impact, actor_id, now))

@@ -50,6 +50,15 @@ class AdminTests(unittest.TestCase):
         self.assertEqual(self.client.get('/admin/').status_code, 302)
         self.assertEqual(self.client.get('/admin/api/market').status_code, 401)
 
+    def test_non_ascii_csrf_is_rejected_without_server_error(self):
+        self.token()
+        result = self.client.post('/admin/login', data={'csrf_token': '잘못된토큰', 'username': 'owner', 'password': PASSWORD})
+        self.assertEqual(result.status_code, 403)
+
+    def test_overlong_password_cannot_authenticate_by_truncated_prefix(self):
+        self.admin.create_account('long-password', 'x' * 128, 'editor')
+        self.assertIsNone(self.admin.login('long-password', 'x' * 128 + 'suffix', 'length-test'))
+
     def test_first_login_requires_password_change(self):
         self.login(password=PASSWORD)
         response = self.client.get('/admin/')
