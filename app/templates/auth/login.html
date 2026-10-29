@@ -6,9 +6,9 @@
 <form method="post" action="{{ url_for('auth.login') }}" id="login_form" class="auth-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="form-field">
-        <label for="usernum">학번 또는 관리자 아이디</label>
-        <input type="text" name="usernum" id="usernum" placeholder="학번 또는 관리자 아이디" required maxlength="32" autocomplete="username" aria-describedby="usernum_errormsg">
-        <p class="field-error" id="usernum_errormsg" hidden>학번 또는 관리자 아이디를 입력해주세요.</p>
+        <label for="usernum">아이디</label>
+        <input type="text" name="usernum" id="usernum" placeholder="아이디 또는 학번을 입력하세요" required maxlength="32" autocomplete="username" aria-describedby="usernum_errormsg">
+        <p class="field-error" id="usernum_errormsg" hidden>아이디 또는 학번을 확인해주세요.</p>
     </div>
     <div class="form-field">
         <label for="password">비밀번호</label>
@@ -21,6 +21,5 @@
 {% block footer %}
 <p class="auth-footer">아직 계정이 없으신가요? <a href="{{ url_for('auth.signup') }}" id="moveto_signup_btn">회원가입</a></p>
 <p class="auth-footer"><a href="{{ url_for('auth.forgot_password') }}">비밀번호 찾기</a></p>
-<p class="admin-entry"><a href="{{ url_for('admin.login') }}">관리자 로그인</a></p>
 {% endblock %}
 {% block scripts %}<script src="{{ url_for('static', filename='js/login.js') }}"></script>{% endblock %}

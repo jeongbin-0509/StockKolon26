@@ -23,7 +23,7 @@ class AdminTests(unittest.TestCase):
         self.market = self.app.extensions['market']
         self.owner = self.admin.create_account('owner', PASSWORD, 'owner')
 
-    def token(self, path='/admin/login'):
+    def token(self, path='/auth/login'):
         response = self.client.get(path)
         return re.search(r'name="csrf_token" value="([^"]+)"', response.get_data(as_text=True)).group(1)
 
@@ -82,6 +82,12 @@ class AdminTests(unittest.TestCase):
         result = self.client.post('/auth/login', data={'csrf_token': token, 'usernum': 'owner', 'password': PASSWORD})
         self.assertTrue(result.location.endswith('/admin/'))
         self.assertTrue(self.client.get('/admin/').location.endswith('/admin/password'))
+
+    def test_login_page_does_not_expose_admin_entry(self):
+        page = self.client.get('/auth/login').get_data(as_text=True)
+        self.assertNotIn('관리자', page)
+        self.assertNotIn('/admin/login', page)
+        self.assertTrue(self.client.get('/admin/login').location.endswith('/auth/login'))
 
     def test_shared_login_checks_csrf_and_admin_password(self):
         self.assertEqual(self.client.post('/auth/login', data={'usernum': 'owner', 'password': PASSWORD}).status_code, 403)

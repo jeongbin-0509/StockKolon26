@@ -99,6 +99,8 @@ admin.register_error_handler(DatabaseError, database_error)
 def login():
     if g.admin:
         return redirect(url_for('admin.dashboard'))
+    if request.method == 'GET':
+        return redirect(url_for('auth.login'))
     error = None
     if request.method == 'POST':
         try:
@@ -111,7 +113,9 @@ def login():
             error = '아이디 또는 비밀번호가 올바르지 않습니다.'
         except ValueError as exc:
             error = str(exc)
-    return render_template('admin/login.html', error=error), 401 if error else 200
+    if error:
+        flash(error)
+    return redirect(url_for('auth.login'))
 
 
 @admin.route('/logout', methods=['POST'])

@@ -18,13 +18,11 @@
 .auth-page [hidden] { display: none !important; }
 .auth-form button { min-height: 52px; border-radius: 12px; padding: .75rem 1rem; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; transition: opacity .15s; }
 .auth-form button:hover { opacity: .9; }
-.auth-form button:focus-visible, .auth-footer a:focus-visible, .admin-entry a:focus-visible { outline: 2px solid var(--color-brand-mint); outline-offset: 4px; }
+.auth-form button:focus-visible, .auth-footer a:focus-visible { outline: 2px solid var(--color-brand-mint); outline-offset: 4px; }
 .auth-form button:disabled { opacity: .55; cursor: wait; }
 .auth-form .primary-button { margin-top: .25rem; border: none; background: #00d96f; color: white; width: 100%; box-shadow: 0 8px 20px rgba(0,0,0,.40); }
 .auth-footer { margin-top: 1.5rem; text-align: center; color: #9a9a9a; font-size: .85rem; line-height: 1.8; }
 .auth-footer a { color: white; text-decoration: underline; text-underline-offset: 4px; margin-left: .4rem; font-weight: 600; }
-.admin-entry { text-align: center; margin-top: 1.5rem; }
-.admin-entry a { font-size: .75rem; color: #9a9a9a; text-underline-offset: 3px; }
 .form-section { border: 0; padding: 0; min-width: 0; display: grid; gap: 1.1rem; }
 .form-section + .form-section { border-top: 1px solid #333; padding-top: 1.1rem; }
 .form-section h2 { margin: 0; font-size: .9rem; font-weight: 700; color: white; }
