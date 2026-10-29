@@ -1,4 +1,5 @@
 import tempfile
+import re
 import time
 import unittest
 from pathlib import Path
@@ -96,6 +97,46 @@ class EmailTests(unittest.TestCase):
             self.assertTrue(check_password_hash(payload['password'], 'valid-password'))
             self.client.post('/auth/signup', data=form)
             self.assertEqual(supabase.table.return_value.insert.call_count, 1)
+
+    def test_password_reset_requires_email_code_and_is_single_use(self):
+        page = self.client.get('/auth/forgot-password').get_data(as_text=True)
+        token = re.search(r'name="csrf_token" value="([^"]+)"', page).group(1)
+        fake = MagicMock()
+        table = fake.table.return_value
+        table.select.return_value.eq.return_value.eq.return_value.limit.return_value.execute.return_value.data = [{'id': 'member-1'}]
+        table.update.return_value.eq.return_value.eq.return_value.eq.return_value.execute.return_value.data = [{'id': 'member-1'}]
+        with patch('app.routes.auth.supabase', new=fake), patch('app.routes.auth.generate_code', return_value='123456'), patch('app.routes.auth.send_email_code') as send:
+            result = self.client.post('/auth/forgot-password', data={'csrf_token': token, 'usernum': '12345', 'email': 'student@goedu.kr'})
+            self.assertTrue(result.location.endswith('/auth/reset-password'))
+            send.assert_called_once_with('student@goedu.kr', '123456')
+            with self.client.session_transaction() as sess:
+                self.assertIsInstance(sess['password_reset'], str)
+                self.assertNotIn('member-1', str(dict(sess)))
+                self.assertNotIn('student@goedu.kr', str(dict(sess)))
+            form = {'csrf_token': token, 'email_code': '000000', 'password': 'new-password', 'password_check': 'new-password'}
+            self.client.post('/auth/reset-password', data=form)
+            table.update.assert_not_called()
+            form['email_code'] = '123456'
+            result = self.client.post('/auth/reset-password', data=form)
+            self.assertTrue(result.location.endswith('/auth/login'))
+            self.assertTrue(check_password_hash(table.update.call_args.args[0]['password'], 'new-password'))
+            self.client.post('/auth/reset-password', data=form)
+            self.assertEqual(table.update.call_count, 1)
+
+    def test_unknown_account_never_receives_reset_code(self):
+        page = self.client.get('/auth/forgot-password').get_data(as_text=True)
+        token = re.search(r'name="csrf_token" value="([^"]+)"', page).group(1)
+        fake = MagicMock()
+        fake.table.return_value.select.return_value.eq.return_value.eq.return_value.limit.return_value.execute.return_value.data = []
+        with patch('app.routes.auth.supabase', new=fake), patch('app.routes.auth.send_email_code') as send:
+            result = self.client.post('/auth/forgot-password', data={'csrf_token': token, 'usernum': '12345', 'email': 'student@goedu.kr'})
+            self.assertTrue(result.location.endswith('/auth/reset-password'))
+            send.assert_not_called()
+            self.client.post('/auth/reset-password', data={'csrf_token': token, 'email_code': '123456', 'password': 'new-password', 'password_check': 'new-password'})
+            fake.table.return_value.update.assert_not_called()
+
+    def test_password_reset_requires_csrf(self):
+        self.assertEqual(self.client.post('/auth/forgot-password', data={'usernum': '12345', 'email': 'student@goedu.kr'}).status_code, 403)
 
     def test_brevo_and_resend_use_https_and_configured_sender(self):
         for provider, endpoint in [('brevo','https://api.brevo.com/v3/smtp/email'), ('resend','https://api.resend.com/emails')]:

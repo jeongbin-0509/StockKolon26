@@ -5,6 +5,7 @@ from app.services.database import DatabaseError
 from app.market_catalog import CLUBS
 import re
 import hmac
+import time
 import sqlite3
 import httpx
 from postgrest.exceptions import APIError
@@ -15,14 +16,18 @@ from app.routes.admin import csrf_token
 auth = Blueprint("auth", __name__, url_prefix="/auth")
 
 
+def valid_csrf():
+    expected = session.get("admin_csrf", "")
+    supplied = request.form.get("csrf_token", "")
+    return bool(expected and supplied and hmac.compare_digest(expected.encode(), supplied.encode()))
+
+
 # 로그인 페이지
 @auth.route("/login", methods=["GET", "POST"])
 def login():
 
     if request.method == "POST":
-        expected = session.get("admin_csrf", "")
-        supplied = request.form.get("csrf_token", "")
-        if not expected or not supplied or not hmac.compare_digest(expected.encode(), supplied.encode()):
+        if not valid_csrf():
             abort(403)
         usernum = request.form.get("usernum", "").strip()
         password = request.form.get("password", "")
@@ -71,6 +76,88 @@ def login():
         return redirect(url_for("main.index"))
     
     return render_template("auth/login.html", csrf_token=csrf_token)
+
+
+@auth.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        if not valid_csrf():
+            abort(403)
+        session.pop('password_reset', None)
+        usernum = request.form.get('usernum', '').strip()
+        try:
+            if not re.fullmatch(r'[0-9]{5}', usernum):
+                raise ValueError('학번 5자리를 확인해주세요.')
+            email = EmailVerification.normalize(request.form.get('email', ''))
+            verification = current_app.extensions['email_verification']
+            code = generate_code()
+            challenge = verification.prepare(email, request.remote_addr or 'unknown', code)
+            try:
+                result = supabase.table('users').select('id').eq('usernum', usernum).eq('email', email).limit(1).execute()
+                user = result.data[0] if result.data else None
+                if user:
+                    send_email_code(email, code)
+                    verification.activate(challenge)
+                else:
+                    verification.fail(challenge)
+            except (APIError, httpx.HTTPError, RuntimeError, EmailDeliveryError, sqlite3.Error, DatabaseError):
+                verification.fail(challenge)
+                raise ValueError('인증 요청을 처리하지 못했습니다. 잠시 후 다시 시도해주세요.') from None
+            with verification.market.connection(write=True) as db:
+                db.execute('DELETE FROM password_reset_requests WHERE created_at<?', (int(time.time()) - 86400,))
+                db.execute('INSERT INTO password_reset_requests VALUES (?, ?, ?, ?, ?)',
+                           (challenge, email, usernum, str(user['id']) if user else None, int(time.time())))
+            session['password_reset'] = challenge
+            flash('입력한 정보와 일치하는 계정이 있다면 인증번호를 보냈습니다. 학교 메일함을 확인해주세요.')
+            return redirect(url_for('auth.reset_password'))
+        except (ValueError, EmailRateLimit) as exc:
+            flash(str(exc))
+        except (sqlite3.Error, DatabaseError):
+            flash('인증 서비스를 일시적으로 이용할 수 없습니다. 잠시 후 다시 시도해주세요.')
+    return render_template('auth/forgot_password.html', csrf_token=csrf_token)
+
+
+@auth.route('/reset-password', methods=['GET', 'POST'])
+def reset_password():
+    challenge = session.get('password_reset')
+    if not isinstance(challenge, str):
+        flash('먼저 비밀번호 재설정 인증을 요청해주세요.')
+        return redirect(url_for('auth.forgot_password'))
+    try:
+        with current_app.extensions['email_verification'].market.connection() as db:
+            reset = db.execute('SELECT email, usernum, user_id FROM password_reset_requests WHERE challenge=?', (challenge,)).fetchone()
+    except (sqlite3.Error, DatabaseError):
+        flash('인증 서비스를 일시적으로 이용할 수 없습니다. 잠시 후 다시 시도해주세요.')
+        return redirect(url_for('auth.forgot_password'))
+    if not reset:
+        session.pop('password_reset', None)
+        flash('먼저 비밀번호 재설정 인증을 요청해주세요.')
+        return redirect(url_for('auth.forgot_password'))
+    if request.method == 'POST':
+        if not valid_csrf():
+            abort(403)
+        password = request.form.get('password', '')
+        try:
+            if not 6 <= len(password) <= 128 or password != request.form.get('password_check'):
+                raise ValueError('6~128자의 비밀번호와 비밀번호 확인을 확인해주세요.')
+            verified = current_app.extensions['email_verification'].consume(
+                challenge, reset['email'], request.form.get('email_code', ''))
+            if not verified or not reset['user_id']:
+                raise ValueError('인증번호가 올바르지 않거나 만료되었습니다. 다시 확인해주세요.')
+            session.pop('password_reset', None)
+            result = (supabase.table('users').update({'password': generate_password_hash(password)})
+                      .eq('id', reset['user_id']).eq('usernum', reset['usernum']).eq('email', reset['email']).execute())
+            if not result.data:
+                raise ValueError('계정을 확인할 수 없습니다. 인증을 다시 요청해주세요.')
+            flash('비밀번호를 변경했습니다. 새 비밀번호로 로그인해주세요.')
+            return redirect(url_for('auth.login'))
+        except ValueError as exc:
+            flash(str(exc))
+        except (APIError, httpx.HTTPError, RuntimeError, sqlite3.Error, DatabaseError):
+            session.pop('password_reset', None)
+            flash('비밀번호를 변경하지 못했습니다. 인증을 다시 요청해주세요.')
+            return redirect(url_for('auth.forgot_password'))
+    return render_template('auth/reset_password.html', csrf_token=csrf_token)
 
 # 회원가입 페이지
 @auth.route("/signup", methods=["GET", "POST"])

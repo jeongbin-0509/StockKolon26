@@ -20,6 +20,7 @@
 {% endblock %}
 {% block footer %}
 <p class="auth-footer">아직 계정이 없으신가요? <a href="{{ url_for('auth.signup') }}" id="moveto_signup_btn">회원가입</a></p>
+<p class="auth-footer"><a href="{{ url_for('auth.forgot_password') }}">비밀번호 찾기</a></p>
 <p class="admin-entry"><a href="{{ url_for('admin.login') }}">관리자 로그인</a></p>
 {% endblock %}
 {% block scripts %}<script src="{{ url_for('static', filename='js/login.js') }}"></script>{% endblock %}

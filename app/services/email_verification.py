@@ -21,6 +21,8 @@ class EmailVerification:
                        'attempts INTEGER NOT NULL, status TEXT NOT NULL, ip_hash TEXT NOT NULL)')
             db.execute('CREATE INDEX IF NOT EXISTS email_verification_email ON email_verifications(email, created_at)')
             db.execute('CREATE INDEX IF NOT EXISTS email_verification_ip ON email_verifications(ip_hash, created_at)')
+            db.execute('CREATE TABLE IF NOT EXISTS password_reset_requests (challenge TEXT PRIMARY KEY, '
+                       'email TEXT NOT NULL, usernum TEXT NOT NULL, user_id TEXT, created_at INTEGER NOT NULL)')
 
     @staticmethod
     def normalize(email):
