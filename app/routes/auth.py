@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from app.services.email_service import EmailDeliveryError, generate_code, send_email_code
 from app.services.email_verification import EmailRateLimit, EmailVerification
 from app.services.database import DatabaseError
-from app.market_catalog import CLUBS
+from app.market_catalog import CATEGORIES, CLUBS
 import re
 import hmac
 import time
@@ -20,6 +20,23 @@ def valid_csrf():
     expected = session.get("admin_csrf", "")
     supplied = request.form.get("csrf_token", "")
     return bool(expected and supplied and hmac.compare_digest(expected.encode(), supplied.encode()))
+
+
+def resolve_club_id(code):
+    """가입 화면의 종목 코드를 회원 테이블에서 사용하는 동아리 UUID로 변환한다."""
+    if code == '00':
+        return None
+    number = int(code)
+    name = '에스쿱' if number == 82 else CLUBS[number]
+    table = supabase.table('clubs')
+    result = table.select('id').eq('name', name).limit(1).execute()
+    if not result.data:
+        category = CATEGORIES.get(number // 10)
+        table.upsert({'name': name, 'category': category}, on_conflict='name', ignore_duplicates=True).execute()
+        result = table.select('id').eq('name', name).limit(1).execute()
+    if not result.data:
+        raise RuntimeError('동아리 정보를 찾을 수 없습니다.')
+    return result.data[0]['id']
 
 
 # 로그인 페이지
@@ -191,9 +208,10 @@ def signup():
             return redirect(url_for("auth.signup"))
         session.pop("email_challenge", None)
         try:
+            selected_club_id = resolve_club_id(club_id)
             supabase.table("users").insert({
                 "name": name, "usernum": usernum, "email": email,
-                "password": generate_password_hash(password), "club_id": club_id,
+                "password": generate_password_hash(password), "club_id": selected_club_id,
             }).execute()
         except (APIError, httpx.HTTPError, RuntimeError):
             flash("가입하지 못했습니다. 기존 가입 여부를 확인하고 새 인증번호로 다시 시도해주세요.")

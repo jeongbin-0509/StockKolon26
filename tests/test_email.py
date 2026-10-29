@@ -115,12 +115,26 @@ class EmailTests(unittest.TestCase):
         form = {'name': '학생', 'usernum': '12345', 'email_id': 'student', 'email_code': '123456',
                 'password': 'valid-password', 'password_check': 'valid-password', 'club_id': '61'}
         with patch('app.routes.auth.supabase', new=MagicMock()) as supabase:
+            supabase.table.return_value.select.return_value.eq.return_value.limit.return_value.execute.return_value.data = [
+                {'id': '12345678-1234-4234-8234-123456789abc'}]
             response = self.client.post('/auth/signup', data=form)
             self.assertTrue(response.location.endswith('/auth/login'))
             payload = supabase.table.return_value.insert.call_args.args[0]
             self.assertTrue(check_password_hash(payload['password'], 'valid-password'))
+            self.assertEqual(payload['club_id'], '12345678-1234-4234-8234-123456789abc')
             self.client.post('/auth/signup', data=form)
             self.assertEqual(supabase.table.return_value.insert.call_count, 1)
+
+    def test_club_code_creates_missing_club_and_supports_no_selection(self):
+        from app.routes.auth import resolve_club_id
+        fake = MagicMock()
+        query = fake.table.return_value.select.return_value.eq.return_value.limit.return_value.execute
+        query.side_effect = [MagicMock(data=[]), MagicMock(data=[{'id': 'club-uuid'}])]
+        with patch('app.routes.auth.supabase', new=fake):
+            self.assertIsNone(resolve_club_id('00'))
+            self.assertEqual(resolve_club_id('82'), 'club-uuid')
+        fake.table.return_value.upsert.assert_called_once_with(
+            {'name': '에스쿱', 'category': '기타'}, on_conflict='name', ignore_duplicates=True)
 
     def test_password_reset_requires_email_code_and_is_single_use(self):
         page = self.client.get('/auth/forgot-password').get_data(as_text=True)
