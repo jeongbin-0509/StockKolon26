@@ -130,7 +130,7 @@
                     <strong id="submit-label">매수 주문하기</strong>
                 </button>
             </form>
-            <p class="market-caption">표시된 가격으로 즉시 체결됩니다. 매수가는 기준가보다 0.25% 높고 매도가는 0.25% 낮으며 1원 단위로 반올림합니다. 가격이 바뀌면 다시 확인해주세요. 한 번에 최대 1,000주까지 주문할 수 있습니다.</p>
+            <p class="market-caption">시장가 주문은 확인하는 순간의 최신 가격으로 즉시 체결됩니다. 매수가는 기준가보다 0.25% 높고 매도가는 0.25% 낮으며 1원 단위로 반올림합니다. 한 번에 최대 1,000주까지 주문할 수 있습니다.</p>
             <p class="market-caption" id="order-status" role="status" aria-live="polite"></p>
         </section>
     </div>
@@ -144,10 +144,10 @@
                 <div><dt>종목</dt><dd id="confirm-stock"></dd></div>
                 <div><dt>주문 종류</dt><dd id="confirm-side"></dd></div>
                 <div><dt>수량</dt><dd id="confirm-quantity"></dd></div>
-                <div><dt>주당 가격</dt><dd id="confirm-price"></dd></div>
+                <div><dt>예상 시장가</dt><dd id="confirm-price"></dd></div>
                 <div class="order-confirm-total"><dt>예상 금액</dt><dd id="confirm-total"></dd></div>
             </dl>
-            <p class="order-confirm-hint">가격이 변경되면 체결하지 않고 다시 확인을 요청합니다.</p>
+            <p class="order-confirm-hint">확인을 누르면 그 시점의 최신 시장가로 바로 체결됩니다.</p>
             <div class="order-confirm-actions">
                 <button type="button" id="confirm-cancel">취소</button>
                 <button type="button" id="confirm-submit">체결하기</button>

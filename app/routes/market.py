@@ -23,7 +23,7 @@ def place_order():
     try:
         result = current_app.extensions['trading'].place_order(
             session['user_id'], data.get('orderId'), data.get('clubNum'), data.get('side'),
-            data.get('quantity'), data.get('quotedPrice'))
+            data.get('quantity'))
         response = jsonify(result)
         response.headers['Cache-Control'] = 'no-store'
         return response, 200 if result['success'] else 409

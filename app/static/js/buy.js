@@ -282,7 +282,7 @@ orderForm.addEventListener('submit', event => {
         orderStatus.textContent = `이전 주문 결과를 먼저 확인해주세요. 종목 ${pendingOrder.clubNum}, ${pendingOrder.side === 'buy' ? '매수' : '매도'} ${pendingOrder.quantity}주로 다시 요청하세요.`;
         return;
     }
-    const order = pendingOrder || {orderId: crypto.randomUUID(), clubNum: selectedClub, side: currentMode, quantity, quotedPrice: currentPrice};
+    const order = pendingOrder || {orderId: crypto.randomUUID(), clubNum: selectedClub, side: currentMode, quantity};
     const stock = stocks.find(item => item.club_num === order.clubNum);
     if (!stock) return;
     confirmedOrder = order;
@@ -294,8 +294,8 @@ orderForm.addEventListener('submit', event => {
     document.querySelector('#confirm-stock').textContent = stock.club_name;
     document.querySelector('#confirm-side').textContent = sideText;
     document.querySelector('#confirm-quantity').textContent = `${order.quantity.toLocaleString('ko-KR')}주`;
-    document.querySelector('#confirm-price').textContent = formatWon(order.quotedPrice);
-    document.querySelector('#confirm-total').textContent = formatWon(order.quotedPrice * order.quantity);
+    document.querySelector('#confirm-price').textContent = `${formatWon(currentPrice)} 전후`;
+    document.querySelector('#confirm-total').textContent = `${formatWon(currentPrice * order.quantity)} 전후`;
     confirmSubmit.textContent = pendingOrder ? '결과 확인' : `${sideText}하기`;
     confirmDialog.showModal();
     confirmCancel.focus();
@@ -338,6 +338,7 @@ confirmSubmit.addEventListener('click', async () => {
             executionToast.hidden = false;
             clearTimeout(toastTimer);
             toastTimer = setTimeout(() => { executionToast.hidden = true; }, 9000);
+            lastTimestamp = null;
             await Promise.all([loadPortfolio(), loadMarket()]);
         }
     } catch (_) {

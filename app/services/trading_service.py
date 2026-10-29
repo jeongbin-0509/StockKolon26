@@ -27,7 +27,7 @@ class TradingService:
     def _users_table(self):
         return 'public.users' if self.market.store.postgres else 'users'
 
-    def place_order(self, user_id, order_id, club_num, side, quantity, quoted_price):
+    def place_order(self, user_id, order_id, club_num, side, quantity):
         try:
             if not isinstance(order_id, str) or str(uuid.UUID(order_id)) != order_id:
                 raise ValueError()
@@ -37,13 +37,11 @@ class TradingService:
             raise ValueError('종목과 주문 종류를 확인해주세요.')
         if type(quantity) is not int or not 1 <= quantity <= self.MAX_QUANTITY:
             raise ValueError(f'주문 수량은 1~{self.MAX_QUANTITY}주로 입력해주세요.')
-        if type(quoted_price) is not int or quoted_price < 1 or quoted_price > self.MAX_CASH:
-            raise ValueError('주문 가격을 확인해주세요.')
         user_id = str(user_id)
         with self.market.connection(write=True) as db:
             previous = db.execute('SELECT * FROM trade_orders WHERE order_id=?', (order_id,)).fetchone()
             if previous:
-                if (previous['user_id'], previous['club_num'], previous['side'], previous['quantity'], previous['price']) != (user_id, club_num, side, quantity, quoted_price):
+                if (previous['user_id'], previous['club_num'], previous['side'], previous['quantity']) != (user_id, club_num, side, quantity):
                     raise ValueError('이미 사용된 주문 번호입니다.')
                 return {'success': True, 'replayed': True, 'order': self._order(previous)}
             target = int(self.market.clock()) // TICK_SECONDS * TICK_SECONDS
@@ -55,9 +53,6 @@ class TradingService:
                 raise ValueError('종목을 찾을 수 없습니다.')
             buy_price, sell_price = trade_quotes(stock['price'])
             price = buy_price if side == 'buy' else sell_price
-            if quoted_price != price:
-                return {'success': False, 'message': '가격이 변경되었습니다. 새 가격을 확인하고 다시 주문해주세요.',
-                        'priceChanged': True, 'currentPrice': price}
             # 모든 거래는 DB의 스키마별 쓰기 잠금 안에서 처리한다.
             user = db.execute(f'SELECT cash FROM {self._users_table()} WHERE id=?', (user_id,)).fetchone()
             if not user or user['cash'] is None or user['cash'] < 0:

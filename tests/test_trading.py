@@ -25,10 +25,8 @@ class TradingTests(unittest.TestCase):
             db.execute('UPDATE market_state SET last_tick=?', (self.now // 30 * 30,))
         self.client = self.app.test_client()
 
-    def place(self, side='buy', qty=2, price=None, order_id=None):
-        stock = next(s for s in self.market.snapshot()['stocks'] if s['club_num'] == 61)
-        price = price if price is not None else stock['buyPrice' if side == 'buy' else 'sellPrice']
-        return self.trade.place_order('member', order_id or str(uuid.uuid4()), 61, side, qty, price)
+    def place(self, side='buy', qty=2, order_id=None):
+        return self.trade.place_order('member', order_id or str(uuid.uuid4()), 61, side, qty)
 
     def test_buy_sell_and_valuation_are_saved_together(self):
         buy = self.place()
@@ -57,25 +55,29 @@ class TradingTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.place(qty=3, order_id=order_id)
         with self.assertRaises(ValueError):
-            self.trade.place_order('another', order_id, 61, 'buy', 2, first['order']['price'])
+            self.trade.place_order('another', order_id, 61, 'buy', 2)
         self.assertEqual(self.trade.portfolio('member')['holdings'][0]['quantity'], 2)
 
-    def test_insufficient_funds_holdings_and_old_price_do_not_trade(self):
+    def test_insufficient_funds_and_holdings_do_not_trade(self):
         with self.assertRaisesRegex(ValueError, '현금'):
             self.place(qty=1000)
         with self.assertRaisesRegex(ValueError, '수량'):
             self.place('sell', qty=1)
-        result = self.place(price=1)
-        self.assertFalse(result['success'])
-        self.assertTrue(result['priceChanged'])
         self.assertEqual(self.trade.portfolio('member')['cash'], 100000)
         with self.market.connection() as db:
             self.assertEqual(db.execute('SELECT COUNT(*) FROM trade_orders').fetchone()[0], 0)
 
+    def test_market_order_uses_latest_server_price(self):
+        with self.market.connection(write=True) as db:
+            db.execute('UPDATE market_stocks SET price=? WHERE club_num=?', (12345, 61))
+        result = self.place(qty=1)
+        self.assertEqual(result['order']['price'], 12376)
+        self.assertEqual(result['order']['total'], 12376)
+
     def test_parallel_orders_cannot_overspend(self):
         def attempt(_):
             try:
-                return self.trade.place_order('member', str(uuid.uuid4()), 61, 'buy', 6, 10025)['success']
+                return self.trade.place_order('member', str(uuid.uuid4()), 61, 'buy', 6)['success']
             except ValueError:
                 return False
         with ThreadPoolExecutor(max_workers=2) as pool:
@@ -88,13 +90,14 @@ class TradingTests(unittest.TestCase):
         with self.market.connection(write=True) as db:
             db.execute('INSERT INTO market_flows VALUES (?, ?, ?, ?)', ('order:' + order_id, 61, 1, self.now + 30))
         with self.assertRaises(sqlite3.IntegrityError):
-            self.trade.place_order('member', order_id, 61, 'buy', 1, 10025)
+            self.trade.place_order('member', order_id, 61, 'buy', 1)
         self.assertEqual(self.trade.portfolio('member')['cash'], 100000)
         self.assertEqual(self.trade.portfolio('member')['holdings'], [])
         self.assertEqual(self.trade.history('member'), [])
 
     def test_buy_and_sell_require_session_and_csrf(self):
-        payload = {'orderId': str(uuid.uuid4()), 'clubNum': 61, 'side': 'buy', 'quantity': 1, 'quotedPrice': 10025}
+        payload = {'orderId': str(uuid.uuid4()), 'clubNum': 61, 'side': 'buy', 'quantity': 1,
+                   'quotedPrice': 1}
         self.assertEqual(self.client.post('/api/orders', json=payload).status_code, 401)
         with self.client.session_transaction() as session:
             session['user_id'] = 'member'
@@ -104,3 +107,4 @@ class TradingTests(unittest.TestCase):
         response = self.client.post('/api/orders', json=payload, headers={'X-CSRF-Token': token})
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json['success'])
+        self.assertNotEqual(response.json['order']['price'], payload['quotedPrice'])
