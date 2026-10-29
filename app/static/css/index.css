@@ -285,8 +285,9 @@ main {
 }
 
 .link-card > img {
-    width: clamp(2.5rem, 5vw, 4rem);
-    height: clamp(2.5rem, 5vw, 4rem);
+    width: clamp(3.5rem, 6vw, 5rem);
+    height: clamp(3.5rem, 6vw, 5rem);
+    border-radius: 20%;
     object-fit: contain;
     flex-shrink: 0;
 }
