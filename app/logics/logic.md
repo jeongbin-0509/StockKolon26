@@ -1,19 +1,7 @@
-# logic 대충 적기
+# 주가 로직
 
-- 전체 가격 T * 가중치 w
-- 
+기존 12틱 상승/하락 횟수 사전 배정 방식은 폐기했습니다.
+현재 설계·초기 설정·뉴스/거래 입력·시간 처리·검증 방법은
+[README의 주가 변동 설계 및 구현](../../README.md#주가-변동-설계-및-구현-2026-10-29)을 기준으로 합니다.
 
-## TotalVariation Class 사용법 (12틱마다 사용)
-- 가격총합리스트[12] = TotalVariation(동아리별 변동수)
-
-## StockVariation Class 사용법 (12틱마다 사용)
-- 동아리 = StockVariation()
-
-### .setFluctuateTick() : 12틱 중 오르는 틱과 내리는 틱을 결정
-- return : list[12] : 오르는 틱은 True, 내리는 틱은 False로 반환
-
-- 호재 : 7 ~ 9틱 상승
-- 일반 : 5 ~ 7틱 상승
-- 악재 : 3 ~ 5틱 상승
-- 맘에 안들면 바꾸면 됨
-
+순수 계산은 `logic.py`, 영속 상태와 이력은 `../services/market_service.py`에 있습니다.

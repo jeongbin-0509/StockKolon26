@@ -7,6 +7,11 @@ body {
     margin: 0 auto 5rem;
 }
 
+.market-status { margin-top: 1.2rem; color: var(--text-secondary); }
+.market-status.error { color: var(--color-stock-down); }
+.market-caption { margin-top: 0.7rem; color: var(--text-secondary); font-size: 0.85rem; }
+.order-submit:disabled, .shortcut-btn:disabled { cursor: not-allowed; opacity: 0.45; }
+
 .asset-summary {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -180,6 +185,9 @@ body {
     stroke: var(--color-stock-down);
     filter: drop-shadow(0 0 7px rgba(0, 122, 255, 0.55));
 }
+
+.up-chart .chart-last-point { fill: var(--color-stock-up); }
+.down-chart .chart-last-point { fill: var(--color-stock-down); }
 
 .chart-grid-line {
     stroke: rgba(255, 255, 255, 0.12);
@@ -562,6 +570,7 @@ body {
 
     .buy-header #header-nav {
         width: 100%;
+        flex-wrap: wrap;
         justify-content: flex-end;
     }
 
@@ -605,7 +614,7 @@ body {
     .trade-tabs {
         position: static;
         margin-bottom: 1rem;
-        padding-right: 0;
+        padding-right: 2rem;
     }
 
     .trade-tab {
@@ -613,5 +622,22 @@ body {
         flex: 1;
         border: 2px solid #363636;
         border-radius: 1rem;
+        padding: 0.55rem 0.5rem;
     }
+
+    .order-form {
+        grid-template-columns: minmax(0, 1fr) 48px 48px;
+        gap: 0.5rem;
+    }
+
+    .order-input-wrap {
+        min-width: 0;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: center;
+        padding: 0.4rem 0.6rem;
+    }
+
+    .order-input-wrap span { font-size: 0.8rem; }
+    .amount-btn { font-size: 2rem; }
 }

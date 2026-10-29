@@ -11,7 +11,7 @@
 <body>
     
     <!-- 헤더 -->
-    <header>
+    <header class="buy-header">
         <a href="{{ url_for('main.index') }}" class="logo-link" aria-label="메인으로 이동">
             <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo" alt="STOCKOLON 26 Logo" />
         </a>
@@ -37,15 +37,15 @@
         <section class="asset-summary" aria-label="자산 요약">
             <article class="summary-card">
                 <span class="summary-label">총 자산</span>
-                <strong>12,300,000<span>원</span></strong>
+                <strong>—</strong>
             </article>
             <article class="summary-card">
                 <span class="summary-label">총 매입금액</span>
-                <strong>12,100,000<span>원</span></strong>
+                <strong>—</strong>
             </article>
             <article class="summary-card">
                 <span class="summary-label">보유 현금</span>
-                <strong>200,000<span>원</span></strong>
+                <strong>—</strong>
             </article>
         </section>
 
@@ -62,7 +62,9 @@
             <button class="category-btn" type="button" data-category="8">기타</button>
         </nav>
 
-        <section class="stock-grid" aria-label="주식 목록" data-image-base="{{ url_for('static', filename='images/') }}"></section>
+        <p class="market-status" id="market-status" role="status" aria-live="polite">주가 데이터를 불러오는 중입니다.</p>
+        <p class="market-caption">등락·최고가·최저가는 오늘 00:00(한국시간) 기준 · 차트는 최근 최대 5시간의 5분봉 종가</p>
+        <section class="stock-grid" aria-label="주식 목록" aria-busy="true" data-image-base="{{ url_for('static', filename='images/') }}"></section>
     </main>
 
     <div class="trade-overlay" id="trade-modal" hidden>
@@ -93,11 +95,11 @@
                         <dd>9</dd>
                     </div>
                     <div>
-                        <dt>최고가</dt>
+                        <dt>오늘 최고가</dt>
                         <dd>42,300</dd>
                     </div>
                     <div>
-                        <dt>최저가</dt>
+                        <dt>오늘 최저가</dt>
                         <dd>6,700</dd>
                     </div>
                 </dl>
@@ -118,19 +120,19 @@
                 <div class="shortcut-row">
                     <button type="button" class="shortcut-btn" data-value="10">10</button>
                     <button type="button" class="shortcut-btn" data-value="100">100</button>
-                    <button type="button" class="shortcut-btn" data-value="max">최대</button>
+                    <button type="button" class="shortcut-btn" data-value="max" disabled title="보유 자산 연동 후 제공됩니다">최대</button>
                 </div>
 
-                <button type="submit" class="order-submit">
+                <button type="submit" class="order-submit" disabled>
                     <span id="submit-count">0주</span>
                     <small id="submit-total">(0원)</small>
                     <strong id="submit-label">매수 주문하기</strong>
                 </button>
             </form>
+            <p class="market-caption">현재 주가 조회만 가능합니다. 주문·보유 자산 연동은 준비 중입니다.</p>
         </section>
     </div>
 
-    <script src="{{ url_for('static', filename='js/clubinfo.js') }}"></script>
     <script src="{{ url_for('static', filename='js/buy.js') }}"></script>
 </body>
 </html>
