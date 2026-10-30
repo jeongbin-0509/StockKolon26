@@ -10,14 +10,13 @@
     </tbody></table></div>
 </section>
 <section class="panel" id="news">
-    <h2>동아리별 뉴스 발행</h2><p class="muted">선택한 동아리 한 곳에만 적용됩니다. 발행 즉시 뉴스 목록에 공개되고 다음 30초 가격 틱부터 영향을 반영합니다.</p>
+    <h2>동아리별 뉴스 발행</h2><p class="muted">동아리와 준비된 뉴스 문구를 선택하세요. 발행 즉시 뉴스 목록에 공개되고 다음 30초 가격 틱부터 영향을 반영합니다.</p>
     <form class="stack" method="post" action="{{ url_for('admin.publish_news') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="article_id" value="{{ article_id }}">
-        <label>제목<input name="title" required maxlength="120" placeholder="뉴스 제목을 입력하세요"></label>
-        <label>내용<textarea name="body" required maxlength="3000" rows="4" placeholder="이 사건이 동아리에 어떤 영향을 주는지 설명하세요"></textarea></label>
-        <div class="form-row"><label>영향 동아리<select name="club_num" required><option value="" selected disabled>동아리를 선택하세요</option>{% for number, name in clubs.items() %}<option value="{{ number }}">{{ name }}</option>{% endfor %}</select></label>
-        <label>영향 크기 (%)<input name="impact" type="number" required min="-15" max="15" step="0.1" value="1"><small>양수: 호재 · 음수: 악재 · 0 제외</small></label></div>
-        <p class="muted">입력한 수치는 뉴스 영향의 예산입니다. 시장·거래 요인과 틱 제한 때문에 실제 등락률과 다를 수 있습니다. 발행 후에는 기록과 가격 영향을 되돌리지 않습니다.</p>
+        <div class="form-row"><label>영향 동아리<select id="news-club" required><option value="" selected>동아리를 선택하세요</option>{% for number, name in clubs|dictsort %}{% if number in news_club_numbers %}<option value="{{ number }}">{{ name }}</option>{% endif %}{% endfor %}</select></label>
+        <label>뉴스 문구<select id="news-preset" name="preset_id" required disabled><option value="">동아리를 먼저 선택하세요</option></select></label></div>
+        <template id="news-preset-options">{% for option in news_options %}<option value="{{ option.id }}" data-club="{{ option.club_num }}">[{{ option.sentiment }}] {{ option.title }}</option>{% endfor %}</template>
+        <p class="muted">뉴스의 성격과 내용에 따라 정해진 가격 영향이 서버에서 적용됩니다. 발행 후에는 기록과 가격 영향을 되돌리지 않습니다.</p>
         <button>뉴스 발행</button>
     </form>
     <h3>최근 발행 뉴스</h3>

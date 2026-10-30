@@ -1,4 +1,21 @@
 const updated = document.querySelector('#market-updated');
+const newsClub = document.querySelector('#news-club');
+const newsPreset = document.querySelector('#news-preset');
+const newsPresetOptions = document.querySelector('#news-preset-options');
+
+function refreshNewsPresets() {
+    if (!newsClub || !newsPreset || !newsPresetOptions) return;
+    const club = newsClub.value;
+    newsPreset.replaceChildren(new Option(club ? '뉴스 문구를 선택하세요' : '동아리를 먼저 선택하세요', ''));
+    if (club) {
+        const options = [...newsPresetOptions.content.querySelectorAll(`[data-club="${club}"]`)];
+        for (const option of options) newsPreset.append(option.cloneNode(true));
+    }
+    newsPreset.disabled = !club;
+}
+
+if (newsClub) newsClub.addEventListener('change', refreshNewsPresets);
+
 async function refreshMarket() {
     if (document.hidden) return;
     try {

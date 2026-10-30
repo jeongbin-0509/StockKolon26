@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from app import create_app
+from app.news_catalog import get_news_preset, public_news_options
 
 PASSWORD = 'test-initial-password-123'
 NEW_PASSWORD = 'test-changed-password-456'
@@ -41,8 +42,7 @@ class AdminTests(unittest.TestCase):
         return self.client.post(path, data=data)
 
     def news_form(self, article_id='news-test'):
-        return {'article_id': article_id, 'title': '세미콜론 연구 성과', 'body': '새로운 연구가 발표되었습니다.',
-                'club_num': '61', 'impact': '1'}
+        return {'article_id': article_id, 'preset_id': 'c1-good-1'}
 
     def test_general_member_and_fake_role_cannot_access_admin(self):
         with self.client.session_transaction() as sess:
@@ -191,9 +191,9 @@ class AdminTests(unittest.TestCase):
             self.assertEqual(db.execute('SELECT COUNT(*) FROM market_news').fetchone()[0], 1)
             self.assertEqual(db.execute("SELECT COUNT(*) FROM admin_audit WHERE action='news.publish'").fetchone()[0], 1)
             event = db.execute('SELECT * FROM market_news').fetchone()
-            self.assertEqual(event['target'], 61)
-            self.assertEqual(event['impact'], 0.01)
-        self.assertEqual(self.admin.articles()[0]['target_name'], '세미콜론')
+            self.assertEqual(event['target'], 1)
+            self.assertEqual(event['impact'], get_news_preset('c1-good-1')['impact'])
+        self.assertEqual(self.admin.articles()[0]['target_name'], '온에어')
 
     def test_atomic_news_failure_rolls_back_price_event(self):
         self.ready()
@@ -205,13 +205,39 @@ class AdminTests(unittest.TestCase):
         with self.market.connection() as db:
             self.assertEqual(db.execute('SELECT COUNT(*) FROM market_news').fetchone()[0], 0)
 
-    def test_invalid_impact_cannot_create_news(self):
+    def test_unknown_or_forged_preset_cannot_create_news(self):
         self.ready()
-        for impact in ('nan', 'inf', '16', '-16', '0', 'invalid'):
-            data = self.news_form()
-            data['impact'] = impact
+        for preset_id in ('', 'missing', 'c61-good-1', '../../secret'):
+            data = self.news_form(f'invalid-{preset_id}')
+            data['preset_id'] = preset_id
+            data.update(title='위조 제목', body='위조 본문', impact='15', club_num='61')
             self.post('/admin/news', **data)
         self.assertEqual(self.admin.articles(), [])
+
+    def test_preset_uses_server_owned_content_and_hides_impact(self):
+        self.ready()
+        data = self.news_form()
+        data.update(title='위조 제목', body='위조 본문', impact='15', club_num='61')
+        self.post('/admin/news', **data)
+        preset = get_news_preset(data['preset_id'])
+        article = self.admin.articles()[0]
+        self.assertEqual((article['title'], article['body'], article['target']),
+                         (preset['title'], preset['body'], preset['club_num']))
+        dashboard = self.client.get('/admin/').get_data(as_text=True)
+        self.assertNotIn('name="impact"', dashboard)
+        self.assertNotIn(str(preset['impact']), dashboard)
+        self.assertNotIn('"impact"', str(self.admin.audit()))
+
+    def test_catalog_has_three_good_and_bad_presets_per_included_club(self):
+        options = public_news_options()
+        counts = {}
+        for option in options:
+            key = (option['club_num'], option['sentiment'])
+            counts[key] = counts.get(key, 0) + 1
+            self.assertNotIn('impact', option)
+            self.assertNotIn('level', option)
+        self.assertEqual(len(options), 102)
+        self.assertEqual(set(counts.values()), {3})
 
     def test_sector_news_cannot_be_published(self):
         with self.assertRaises(ValueError):
@@ -221,8 +247,8 @@ class AdminTests(unittest.TestCase):
     def test_old_sector_form_is_rejected(self):
         self.ready()
         data = self.news_form('old-sector-form')
-        data.pop('club_num')
-        data['target'] = 'sector:6'
+        data.pop('preset_id')
+        data.update(title='분야 뉴스', body='여러 동아리 대상', impact='1', target='sector:6')
         self.post('/admin/news', **data)
         self.assertEqual(self.admin.articles(), [])
 

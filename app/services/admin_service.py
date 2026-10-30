@@ -183,10 +183,23 @@ class AdminService:
 
     def audit(self):
         with self.market.connection() as db:
-            return [dict(row) for row in db.execute('SELECT l.action, l.target_id, l.detail, l.created_at, a.username '
-                        'FROM admin_audit l LEFT JOIN admin_accounts a ON a.id=l.actor_id ORDER BY l.id DESC LIMIT 50')]
+            events = []
+            for row in db.execute('SELECT l.action, l.target_id, l.detail, l.created_at, a.username '
+                                  'FROM admin_audit l LEFT JOIN admin_accounts a ON a.id=l.actor_id '
+                                  'ORDER BY l.id DESC LIMIT 50'):
+                event = dict(row)
+                try:
+                    detail = json.loads(event['detail'])
+                    if isinstance(detail, dict):
+                        detail.pop('impact', None)
+                        detail.pop('level', None)
+                        event['detail'] = json.dumps(detail, ensure_ascii=False)
+                except (TypeError, json.JSONDecodeError):
+                    pass
+                events.append(event)
+            return events
 
-    def publish_news(self, article_id, title, body, target_kind, target, impact, actor_id):
+    def publish_news(self, article_id, title, body, target_kind, target, impact, actor_id, preset_id=None):
         self.market._event_id(article_id)
         title, body = title.strip(), body.strip()
         if target_kind != 'club':
@@ -209,7 +222,8 @@ class AdminService:
             db.execute('INSERT INTO news_articles VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
                        (article_id, title, body, target_kind, target, impact, actor_id, now))
             self._audit(db, actor_id, 'news.publish', article_id,
-                        {'title': title, 'target_kind': target_kind, 'target': target, 'impact': impact}, now)
+                        {'title': title, 'target_kind': target_kind, 'target': target,
+                         **({'preset_id': preset_id} if preset_id else {})}, now)
         return True
 
     def articles(self):
