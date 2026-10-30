@@ -50,6 +50,38 @@ img, svg { max-width: 100%; }
 }
 
 ::selection { background: var(--color-brand-mint); color: var(--bg-main); }
+
+.page-back-nav {
+    width: min(100%, var(--page-width));
+    margin: 1rem auto 0;
+    padding-inline: var(--page-gutter);
+}
+
+.page-back-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: .55rem .85rem;
+    border: 1px solid var(--border-card);
+    border-radius: .7rem;
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: .85rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-decoration: none;
+    transition: border-color .18s ease, background .18s ease, color .18s ease, transform .18s ease;
+}
+
+.page-back-link:hover {
+    border-color: #505050;
+    background: var(--border-card);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
+.page-back-link:active { transform: translateY(0); }
 .sub_text { color: var(--text-secondary); }
 
 @media (prefers-reduced-motion: reduce) {
