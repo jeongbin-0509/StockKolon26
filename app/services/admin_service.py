@@ -236,7 +236,7 @@ class AdminService:
         now = int(self.clock())
         with self.market.connection(write=True) as db:
             state = db.execute('SELECT next_at, published_count FROM automatic_news_state WHERE id=1').fetchone()
-            paired_before = db.execute("SELECT 1 FROM news_articles WHERE id LIKE 'auto-pair-%' LIMIT 1").fetchone()
+            paired_before = db.execute('SELECT 1 FROM news_articles WHERE id LIKE ? LIMIT 1', ('auto-pair-%',)).fetchone()
             if state and paired_before and now < state['next_at']:
                 return False
             count = state['published_count'] if state else 0
