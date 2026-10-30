@@ -3,6 +3,7 @@
 import hashlib
 import json
 import math
+import random
 import re
 import secrets
 import time
@@ -10,6 +11,7 @@ import time
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.market_catalog import CATEGORIES, CLUBS
+from app.news_catalog import news_presets
 
 PERMISSIONS = {
     'owner': {'market:view', 'news:publish', 'audit:view', 'admins:manage'},
@@ -17,6 +19,7 @@ PERMISSIONS = {
 }
 ROLE_NAMES = {'owner': '최고관리자', 'editor': '운영관리자'}
 SESSION_SECONDS = 8 * 3600
+AUTO_NEWS_INTERVAL = 30 * 60
 
 
 class AdminService:
@@ -38,6 +41,8 @@ class AdminService:
                 'action TEXT NOT NULL, target_id TEXT NOT NULL, detail TEXT NOT NULL, created_at INTEGER NOT NULL)',
                 'CREATE TABLE IF NOT EXISTS news_articles (id TEXT PRIMARY KEY, title TEXT NOT NULL, body TEXT NOT NULL, '
                 'target_kind TEXT NOT NULL, target INTEGER NOT NULL, impact REAL NOT NULL, author_id TEXT NOT NULL, published_at INTEGER NOT NULL)',
+                'CREATE TABLE IF NOT EXISTS automatic_news_state (id INTEGER PRIMARY KEY CHECK(id=1), '
+                'next_at INTEGER NOT NULL, published_count INTEGER NOT NULL)',
             ):
                 db.execute(sql)
 
@@ -224,6 +229,32 @@ class AdminService:
             self._audit(db, actor_id, 'news.publish', article_id,
                         {'title': title, 'target_kind': target_kind, 'target': target,
                          **({'preset_id': preset_id} if preset_id else {})}, now)
+        return True
+
+    def publish_due_automatic_news(self):
+        """Publish at most one due item atomically; missed intervals do not flood the market."""
+        now = int(self.clock())
+        with self.market.connection(write=True) as db:
+            state = db.execute('SELECT next_at, published_count FROM automatic_news_state WHERE id=1').fetchone()
+            if state and now < state['next_at']:
+                return False
+            count = state['published_count'] if state else 0
+            presets = sorted(news_presets(), key=lambda item: item['id'])
+            if not presets:
+                return False
+            market_seed = db.execute('SELECT seed FROM market_state WHERE id=1').fetchone()['seed']
+            cycle, position = divmod(count, len(presets))
+            choices = list(presets)
+            random.Random(hashlib.sha256(f'{market_seed}:auto-news:{cycle}'.encode()).digest()).shuffle(choices)
+            preset = choices[position]
+            article_id = f'auto-news-{count}'
+            self.market._add_news(db, article_id, 'club', preset['club_num'], preset['impact'])
+            db.execute('INSERT INTO news_articles VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                       (article_id, preset['title'], preset['body'], 'club', preset['club_num'],
+                        preset['impact'], 'system', now))
+            db.execute('INSERT INTO automatic_news_state (id, next_at, published_count) VALUES (1, ?, ?) '
+                       'ON CONFLICT(id) DO UPDATE SET next_at=excluded.next_at, published_count=excluded.published_count',
+                       (now + AUTO_NEWS_INTERVAL, count + 1))
         return True
 
     def articles(self):

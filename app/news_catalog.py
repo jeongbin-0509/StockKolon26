@@ -41,6 +41,11 @@ def get_news_preset(preset_id):
     return _catalog().get((preset_id or '').strip())
 
 
+def news_presets():
+    """Private server catalog used by the automatic publisher."""
+    return tuple(_catalog().values())
+
+
 def public_news_options():
     """Return only fields that are safe to embed in the admin HTML."""
     return [

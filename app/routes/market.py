@@ -73,6 +73,8 @@ def market_data():
     if "user_id" not in session:
         return jsonify(success=False, message="로그인이 필요합니다."), 401
     try:
+        if current_app.config['AUTO_NEWS_ENABLED']:
+            current_app.extensions['admin'].publish_due_automatic_news()
         data = current_app.extensions["market"].snapshot()
     except (sqlite3.Error, DatabaseError):
         current_app.logger.exception("주가 데이터 조회 실패")

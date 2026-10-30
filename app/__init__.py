@@ -22,8 +22,11 @@ def create_app(test_config=None):
     app.config["MARKET_DATABASE"] = os.getenv("MARKET_DATABASE", str(Path(app.instance_path) / "market.sqlite3"))
     app.config["DATABASE_URL"] = os.getenv("DATABASE_URL")
     app.config["DATABASE_SCHEMA"] = "stockolon_private"
+    app.config["AUTO_NEWS_ENABLED"] = True
     if test_config:
         app.config.update(test_config)
+        if test_config.get("TESTING") and "AUTO_NEWS_ENABLED" not in test_config:
+            app.config["AUTO_NEWS_ENABLED"] = False
         # 개발자의 실제 DATABASE_URL을 로컬 단위 테스트가 사용하지 않도록 한다.
         if test_config.get("TESTING") and "DATABASE_URL" not in test_config:
             app.config["DATABASE_URL"] = None

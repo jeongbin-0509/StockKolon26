@@ -83,7 +83,22 @@ def news():
     if "user_id" not in session:
         return redirect(url_for("auth.login"))
 
+    if current_app.config['AUTO_NEWS_ENABLED']:
+        current_app.extensions['admin'].publish_due_automatic_news()
     return render_template("news.html", articles=current_app.extensions["admin"].articles())
+
+
+@main.get('/api/news/latest')
+def latest_news():
+    if 'user_id' not in session:
+        return jsonify(success=False, message='로그인이 필요합니다.'), 401
+    admin = current_app.extensions['admin']
+    if current_app.config['AUTO_NEWS_ENABLED']:
+        admin.publish_due_automatic_news()
+    articles = admin.articles()
+    response = jsonify(success=True, latest_id=articles[0]['id'] if articles else None)
+    response.headers['Cache-Control'] = 'no-store'
+    return response
 
 # 메인에서 매도매수로 이동
 @main.route("/buy")

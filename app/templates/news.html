@@ -38,7 +38,7 @@
         <a class="page-back-link" href="{{ url_for('main.index') }}">← 메인으로</a>
     </nav>
     
-    <main class="news-page">
+    <main class="news-page" data-latest-id="{{ articles[0].id if articles else '' }}">
         <p class="news-kicker">SEMI NEWS</p>
         <h1>동아리 시장 뉴스</h1>
         <p class="news-description">새로운 소식과 동아리 시장의 흐름을 확인하세요.</p>
@@ -54,6 +54,7 @@
 
     </footer>
 <script src="{{ url_for('static', filename='js/header-profile.js') }}" data-autoload="true"></script>
+<script src="{{ url_for('static', filename='js/news.js') }}"></script>
 {% include '_pwa_script.html' %}
 </body>
 </html>

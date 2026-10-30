@@ -3,11 +3,13 @@ import sqlite3
 import tempfile
 import time
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from app import create_app
 from app.news_catalog import get_news_preset, public_news_options
+from app.services.admin_service import AUTO_NEWS_INTERVAL
 
 PASSWORD = 'test-initial-password-123'
 NEW_PASSWORD = 'test-changed-password-456'
@@ -194,6 +196,38 @@ class AdminTests(unittest.TestCase):
             self.assertEqual(event['target'], 1)
             self.assertEqual(event['impact'], get_news_preset('c1-good-1')['impact'])
         self.assertEqual(self.admin.articles()[0]['target_name'], '온에어')
+
+    def test_automatic_news_first_publication_interval_and_market_event(self):
+        now = int(time.time())
+        self.admin.clock = lambda: now
+        self.market.clock = lambda: now
+        self.assertTrue(self.admin.publish_due_automatic_news())
+        self.assertFalse(self.admin.publish_due_automatic_news())
+        with self.market.connection() as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM news_articles').fetchone()[0], 1)
+            event = db.execute('SELECT * FROM market_news').fetchone()
+            article = db.execute('SELECT * FROM news_articles').fetchone()
+            self.assertEqual((event['target'], event['impact']), (article['target'], article['impact']))
+            self.assertEqual(article['author_id'], 'system')
+        self.admin.clock = lambda: now + AUTO_NEWS_INTERVAL
+        self.market.clock = lambda: now + AUTO_NEWS_INTERVAL
+        self.assertTrue(self.admin.publish_due_automatic_news())
+        self.assertEqual(len(self.admin.articles()), 2)
+        self.assertNotEqual(self.admin.articles()[0]['title'], self.admin.articles()[1]['title'])
+
+    def test_automatic_news_concurrent_requests_publish_only_once(self):
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            results = list(pool.map(lambda _: self.admin.publish_due_automatic_news(), range(4)))
+        self.assertEqual(results.count(True), 1)
+        self.assertEqual(len(self.admin.articles()), 1)
+
+    def test_news_page_publishes_due_article_when_enabled(self):
+        self.app.config['AUTO_NEWS_ENABLED'] = True
+        with self.client.session_transaction() as sess:
+            sess['user_id'] = 'regular-user'
+        page = self.client.get('/news').get_data(as_text=True)
+        self.assertIn(self.admin.articles()[0]['title'], page)
+        self.assertNotIn('아직 새로운 소식이 없어요', page)
 
     def test_atomic_news_failure_rolls_back_price_event(self):
         self.ready()
