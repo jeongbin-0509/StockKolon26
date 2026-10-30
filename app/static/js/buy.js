@@ -27,6 +27,7 @@ let currentPrice = 0;
 let refreshTimer;
 let loading = false;
 let lastTimestamp = null;
+let requestedTradeHandled = false;
 
 function formatWon(value) {
     return `${Math.round(value).toLocaleString("ko-KR")}원`;
@@ -135,6 +136,31 @@ function openModal(card) {
     closeButton.focus();
 }
 
+function setTradeMode(mode) {
+    currentMode = mode === 'sell' ? 'sell' : 'buy';
+    tabs.forEach(item => item.classList.toggle('active', item.dataset.mode === currentMode));
+    updateSubmit();
+}
+
+function openRequestedTrade() {
+    if (requestedTradeHandled || !stocks.length || !portfolio) return;
+    const params = new URLSearchParams(location.search);
+    const clubNum = Number(params.get('club'));
+    const side = params.get('side');
+    if (!Number.isInteger(clubNum) || !stocks.some(stock => stock.club_num === clubNum) || !['buy', 'sell'].includes(side)) {
+        requestedTradeHandled = true;
+        return;
+    }
+    requestedTradeHandled = true;
+    selectedCategory = 'all';
+    categoryFilter.querySelectorAll('.category-btn').forEach(item => item.classList.toggle('active', item.dataset.category === 'all'));
+    renderStockCards();
+    setTradeMode(side);
+    const card = stockGrid.querySelector(`[data-club="${clubNum}"]`);
+    if (card) openModal(card);
+    history.replaceState({}, '', location.pathname);
+}
+
 function closeModal() {
     modal.hidden = true;
     stockGrid.querySelector(`[data-club="${selectedClub}"]`)?.focus({ preventScroll: true });
@@ -162,6 +188,7 @@ async function loadMarket() {
             lastTimestamp = data.timestamp;
             renderStockCards();
             if (selectedClub !== null) updateModal(stocks.find((stock) => stock.club_num === selectedClub));
+            openRequestedTrade();
         }
         const updated = new Date(data.timestamp * 1000).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
         statusElement.textContent = data.catchingUp
@@ -215,11 +242,7 @@ document.addEventListener("keydown", (event) => {
         }
     }
 });
-tabs.forEach((tab) => tab.addEventListener("click", () => {
-    currentMode = tab.dataset.mode;
-    tabs.forEach((item) => item.classList.toggle("active", item === tab));
-    updateSubmit();
-}));
+tabs.forEach((tab) => tab.addEventListener("click", () => setTradeMode(tab.dataset.mode)));
 document.querySelectorAll(".amount-btn, .shortcut-btn:not(:disabled)").forEach((button) => {
     button.addEventListener("click", () => {
         if (button.dataset.value === 'max') {
@@ -243,6 +266,7 @@ async function loadPortfolio() {
         document.querySelector('#asset-cost').textContent = data.summary.purchase_amount;
         document.querySelector('#asset-cash').textContent = data.summary.cash;
         updateSubmit();
+        openRequestedTrade();
     } catch (_) {
         portfolio = null;
         document.querySelector('#order-balance').textContent = '잔액을 불러오지 못했습니다. 새로고침해주세요.';

@@ -46,7 +46,7 @@ async function loadProfileData() {
     if (data.holdings.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" class="head2" style="text-align:center;">
+                <td colspan="7" class="head2" style="text-align:center;">
                     아직 보유한 주식이 없습니다.
                 </td>
             </tr>
@@ -77,6 +77,23 @@ async function loadProfileData() {
             });
             chartCell.append(chart);
             row.appendChild(chartCell);
+            const actionCell = document.createElement('td');
+            actionCell.className = 'holding-actions-cell';
+            const actions = document.createElement('div');
+            actions.className = 'holding-actions';
+            const buy = document.createElement('a');
+            buy.className = 'holding-trade-button buy-action';
+            buy.href = `/buy?club=${encodeURIComponent(item.club_num)}&side=buy`;
+            buy.textContent = '추가 매수';
+            buy.setAttribute('aria-label', `${item.name} 추가 매수`);
+            const sell = document.createElement('a');
+            sell.className = 'holding-trade-button sell-action';
+            sell.href = `/buy?club=${encodeURIComponent(item.club_num)}&side=sell`;
+            sell.textContent = '매도';
+            sell.setAttribute('aria-label', `${item.name} 매도`);
+            actions.append(buy, sell);
+            actionCell.append(actions);
+            row.appendChild(actionCell);
             tbody.appendChild(row);
         }
     }
