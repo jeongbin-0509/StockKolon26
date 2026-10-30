@@ -47,6 +47,10 @@ class EngineTests(unittest.TestCase):
             def gauss(mean, deviation):
                 return mean
 
+            @staticmethod
+            def random():
+                return 1.0
+
         state = {'market': 0.001, 'market_volatility': 1.0,
                  'sectors': {'6': 0.001}, 'trends': {'61': 0.001}}
         _, updated, parts = next_tick({61: 10000}, state, {}, {}, NoShock())
@@ -54,6 +58,38 @@ class EngineTests(unittest.TestCase):
         self.assertAlmostEqual(updated['sectors']['6'], 0.001 * SECTOR_MEMORY)
         self.assertAlmostEqual(updated['trends']['61'], 0.001 * TREND_MEMORY)
         self.assertGreater(parts[61]['individual'], 0)
+
+    def test_random_event_targets_one_stock_and_finishes_without_resetting_price(self):
+        prices = {61: 10000, 62: 10000}
+        state = {'random_event': {'club': 61, 'remaining': 3, 'per_tick': 0.003}}
+        for remaining in (2, 1, 0):
+            previous = prices
+            prices, state, parts = next_tick(prices, state, {}, {}, random.Random(42))
+            self.assertEqual(parts[61]['random_event'], 0.003)
+            self.assertEqual(parts[62]['random_event'], 0)
+            self.assertGreater(prices[61], previous[61])
+            if remaining:
+                self.assertEqual(state['random_event']['remaining'], remaining)
+            else:
+                self.assertIsNone(state['random_event'])
+        self.assertGreater(prices[61], 10000)
+
+    def test_random_events_are_reproducible_and_both_directions_occur(self):
+        def simulate(seed):
+            prices = {61: 10000, 62: 10000, 31: 10000}
+            state, rng, events = {}, random.Random(seed), []
+            for _ in range(3000):
+                prices, state, parts = next_tick(prices, state, {}, {}, rng)
+                active = [(club, part['random_event']) for club, part in parts.items() if part['random_event']]
+                self.assertLessEqual(len(active), 1)
+                if active:
+                    events.append(active[0])
+            return prices, events
+        prices, events = simulate(987)
+        self.assertEqual((prices, events), simulate(987))
+        self.assertTrue(any(value > 0 for _, value in events))
+        self.assertTrue(any(value < 0 for _, value in events))
+        self.assertGreater(len({club for club, _ in events}), 1)
 
     def test_volatility_decays_after_event(self):
         prices, state, _ = next_tick({61: 10000}, {}, {61: 0.04}, {}, random.Random(3))

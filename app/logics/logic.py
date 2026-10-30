@@ -19,6 +19,11 @@ TREND_SHOCK = 0.000045
 INDIVIDUAL_SHOCK = 0.00018
 FLOW_MAX_LOG_RETURN = 0.0008
 FLOW_LIQUIDITY_SHARES = 1200
+RANDOM_EVENT_PROBABILITY = 1 / 40  # 진행 중인 이벤트가 없을 때 틱당 2.5%
+RANDOM_EVENT_MIN_TICKS = 6
+RANDOM_EVENT_MAX_TICKS = 12
+RANDOM_EVENT_MIN_RETURN = 0.02
+RANDOM_EVENT_MAX_RETURN = 0.04
 
 
 def news_return(impact, age):
@@ -50,6 +55,11 @@ def next_tick(stocks, state, news, flows, rng):
         sector_vol = 0.85 + 0.15 * market_vol
         sectors[str(sector)] = SECTOR_MEMORY * last + rng.gauss(0, SECTOR_SHOCK * sector_vol)
 
+    # 한 번에 한 종목만 선택하고, 충격을 여러 틱에 나눠 적용한다.
+    # 상태는 DB에 저장되어 서버 재시작과 과거 틱 복구 시에도 이어진다.
+    event = state.get("random_event")
+    if not isinstance(event, dict) or event.get("club") not in stocks or event.get("remaining", 0) <= 0:
+        event = None
     prices, volatility, trends, components = {}, {}, {}, {}
     for club_num, price in sorted(stocks.items()):
         news_effect = news.get(club_num, 0.0)
@@ -69,6 +79,7 @@ def next_tick(stocks, state, news, flows, rng):
             "news": news_effect,
             "flow": flow_effect,
             "individual": individual,
+            "random_event": event["per_tick"] if event and event["club"] == club_num else 0.0,
         }
         movement = max(-MAX_LOG_RETURN, min(MAX_LOG_RETURN, sum(parts.values())))
         prices[club_num] = max(1.0, price * math.exp(movement))
@@ -76,7 +87,19 @@ def next_tick(stocks, state, news, flows, rng):
         trends[str(club_num)] = trend
         components[club_num] = {**parts, "applied": movement}
 
+    if event:
+        event = {**event, "remaining": event["remaining"] - 1}
+        if event["remaining"] <= 0:
+            event = None
+    elif stocks and rng.random() < RANDOM_EVENT_PROBABILITY:
+        duration = rng.randint(RANDOM_EVENT_MIN_TICKS, RANDOM_EVENT_MAX_TICKS)
+        magnitude = rng.uniform(RANDOM_EVENT_MIN_RETURN, RANDOM_EVENT_MAX_RETURN)
+        direction = 1 if rng.random() < 0.5 else -1
+        event = {"club": rng.choice(sorted(stocks)), "remaining": duration,
+                 "per_tick": direction * magnitude / duration}
+
     return prices, {
         "market": market, "market_volatility": market_vol,
         "sectors": sectors, "volatility": volatility, "trends": trends,
+        "random_event": event,
     }, components
