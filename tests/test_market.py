@@ -9,7 +9,9 @@ from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import patch
 
 from app import create_app
-from app.logics.logic import MAX_LOG_RETURN, NEWS_TICKS, news_return, next_tick
+from app.logics.logic import (FLOW_LIQUIDITY_SHARES, FLOW_MAX_LOG_RETURN,
+                              MARKET_MEMORY, MAX_LOG_RETURN, NEWS_TICKS,
+                              SECTOR_MEMORY, TREND_MEMORY, news_return, next_tick)
 from app.market_catalog import CLUBS
 from app.services.market_service import MarketService
 
@@ -39,6 +41,20 @@ class EngineTests(unittest.TestCase):
         self.assertNotEqual(parts[61]['sector'], parts[31]['sector'])
         self.assertNotEqual(parts[61]['individual'], parts[62]['individual'])
 
+    def test_market_sector_and_stock_trends_decay_smoothly(self):
+        class NoShock:
+            @staticmethod
+            def gauss(mean, deviation):
+                return mean
+
+        state = {'market': 0.001, 'market_volatility': 1.0,
+                 'sectors': {'6': 0.001}, 'trends': {'61': 0.001}}
+        _, updated, parts = next_tick({61: 10000}, state, {}, {}, NoShock())
+        self.assertAlmostEqual(updated['market'], 0.001 * MARKET_MEMORY)
+        self.assertAlmostEqual(updated['sectors']['6'], 0.001 * SECTOR_MEMORY)
+        self.assertAlmostEqual(updated['trends']['61'], 0.001 * TREND_MEMORY)
+        self.assertGreater(parts[61]['individual'], 0)
+
     def test_volatility_decays_after_event(self):
         prices, state, _ = next_tick({61: 10000}, {}, {61: 0.04}, {}, random.Random(3))
         start_vol = state['volatility']['61']
@@ -51,7 +67,7 @@ class EngineTests(unittest.TestCase):
         for sign in (-1, 1):
             prices, _, parts = next_tick({61: 10000}, {}, {61: sign * 1000}, {61: sign * 10**12}, random.Random(3))
             self.assertGreater(prices[61], 0)
-            self.assertLessEqual(abs(parts[61]['flow']), 0.002)
+            self.assertLessEqual(abs(parts[61]['flow']), FLOW_MAX_LOG_RETURN)
             self.assertLessEqual(abs(math.log(prices[61] / 10000)), MAX_LOG_RETURN + 1e-12)
 
     def test_three_days_no_news_simulation(self):
@@ -168,7 +184,9 @@ class ServiceTests(unittest.TestCase):
         self.assertGreater(parts[61]['news'], 0)
         self.assertEqual(parts[61]['news'], parts[62]['news'])
         self.assertEqual(parts[31]['news'], 0)
-        self.assertAlmostEqual(parts[61]['flow'], 0.002 * math.tanh(0.1))
+        self.assertAlmostEqual(
+            parts[61]['flow'], FLOW_MAX_LOG_RETURN * math.tanh(100 / FLOW_LIQUIDITY_SHARES)
+        )
         self.now += 30
         self.service.snapshot()
         with self.service.connection() as db:

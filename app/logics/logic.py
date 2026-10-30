@@ -10,6 +10,15 @@ TICK_SECONDS = 30
 CANDLE_SECONDS = 300
 NEWS_TICKS = 120
 MAX_LOG_RETURN = math.log1p(0.01)
+MARKET_MEMORY = 0.72
+MARKET_SHOCK = 0.00009
+SECTOR_MEMORY = 0.58
+SECTOR_SHOCK = 0.00014
+TREND_MEMORY = 0.86
+TREND_SHOCK = 0.000045
+INDIVIDUAL_SHOCK = 0.00018
+FLOW_MAX_LOG_RETURN = 0.0008
+FLOW_LIQUIDITY_SHARES = 1200
 
 
 def news_return(impact, age):
@@ -31,22 +40,29 @@ def next_tick(stocks, state, news, flows, rng):
     한 틱 최대 변동을 넘는 영향은 소진하며 나중에 보장 수익으로 이월하지 않는다.
     """
     previous = state.get("market", 0.0)
-    market_vol = min(2.5, 1 + abs(previous) / 0.001)
-    market = 0.15 * previous + rng.gauss(0, 0.00022 * market_vol)
+    old_market_vol = state.get("market_volatility", 1.0)
+    volatility_signal = min(2.0, max(0.8, 0.85 + abs(previous) / 0.00025))
+    market_vol = min(2.0, max(0.8, 0.92 * old_market_vol + 0.08 * volatility_signal))
+    market = MARKET_MEMORY * previous + rng.gauss(0, MARKET_SHOCK * market_vol)
     sectors = {}
     for sector in sorted({club_num // 10 for club_num in stocks}):
         last = state.get("sectors", {}).get(str(sector), 0.0)
-        sectors[str(sector)] = 0.2 * last + rng.gauss(0, 0.00027)
+        sector_vol = 0.85 + 0.15 * market_vol
+        sectors[str(sector)] = SECTOR_MEMORY * last + rng.gauss(0, SECTOR_SHOCK * sector_vol)
 
-    prices, volatility, components = {}, {}, {}
+    prices, volatility, trends, components = {}, {}, {}, {}
     for club_num, price in sorted(stocks.items()):
         news_effect = news.get(club_num, 0.0)
-        flow_effect = 0.002 * math.tanh(flows.get(club_num, 0) / 1000)
+        flow_effect = FLOW_MAX_LOG_RETURN * math.tanh(
+            flows.get(club_num, 0) / FLOW_LIQUIDITY_SHARES
+        )
         target_vol = min(3.0, 1 + 60 * abs(news_effect) + 300 * abs(flow_effect))
         old_vol = state.get("volatility", {}).get(str(club_num), 1.0)
         vol = max(target_vol, 1 + (old_vol - 1) * 0.9)
         beta = 0.8 + (club_num % 5) * 0.1
-        individual = rng.gauss(0, 0.00032 * vol)
+        old_trend = state.get("trends", {}).get(str(club_num), 0.0)
+        trend = TREND_MEMORY * old_trend + rng.gauss(0, TREND_SHOCK)
+        individual = trend + rng.gauss(0, INDIVIDUAL_SHOCK * vol)
         parts = {
             "market": beta * market,
             "sector": sectors[str(club_num // 10)],
@@ -57,8 +73,10 @@ def next_tick(stocks, state, news, flows, rng):
         movement = max(-MAX_LOG_RETURN, min(MAX_LOG_RETURN, sum(parts.values())))
         prices[club_num] = max(1.0, price * math.exp(movement))
         volatility[str(club_num)] = vol
+        trends[str(club_num)] = trend
         components[club_num] = {**parts, "applied": movement}
 
     return prices, {
-        "market": market, "sectors": sectors, "volatility": volatility,
+        "market": market, "market_volatility": market_vol,
+        "sectors": sectors, "volatility": volatility, "trends": trends,
     }, components
