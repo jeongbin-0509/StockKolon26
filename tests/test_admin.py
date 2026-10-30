@@ -221,22 +221,48 @@ class AdminTests(unittest.TestCase):
         self.assertTrue(self.admin.publish_due_automatic_news())
         self.assertFalse(self.admin.publish_due_automatic_news())
         with self.market.connection() as db:
-            self.assertEqual(db.execute('SELECT COUNT(*) FROM news_articles').fetchone()[0], 1)
-            event = db.execute('SELECT * FROM market_news').fetchone()
-            article = db.execute('SELECT * FROM news_articles').fetchone()
-            self.assertEqual((event['target'], event['impact']), (article['target'], article['impact']))
-            self.assertEqual(article['author_id'], 'system')
+            articles = db.execute('SELECT * FROM news_articles').fetchall()
+            self.assertEqual(len(articles), 2)
+            self.assertEqual({article['impact'] > 0 for article in articles}, {True, False})
+            self.assertEqual(len({article['target'] for article in articles}), 2)
+            for article in articles:
+                event = db.execute('SELECT * FROM market_news WHERE event_id=?', (article['id'],)).fetchone()
+                self.assertEqual((event['target'], event['impact']), (article['target'], article['impact']))
+                self.assertEqual(article['author_id'], 'system')
         self.admin.clock = lambda: now + AUTO_NEWS_INTERVAL
         self.market.clock = lambda: now + AUTO_NEWS_INTERVAL
         self.assertTrue(self.admin.publish_due_automatic_news())
-        self.assertEqual(len(self.admin.articles()), 2)
-        self.assertNotEqual(self.admin.articles()[0]['title'], self.admin.articles()[1]['title'])
+        self.assertEqual(len(self.admin.articles()), 4)
+        self.assertEqual(len({article['title'] for article in self.admin.articles()}), 4)
 
     def test_automatic_news_concurrent_requests_publish_only_once(self):
         with ThreadPoolExecutor(max_workers=4) as pool:
             results = list(pool.map(lambda _: self.admin.publish_due_automatic_news(), range(4)))
         self.assertEqual(results.count(True), 1)
-        self.assertEqual(len(self.admin.articles()), 1)
+        self.assertEqual(len(self.admin.articles()), 2)
+
+    def test_automatic_pair_rolls_back_when_second_event_fails(self):
+        original = self.market._add_news
+        calls = []
+        def fail_second(*args, **kwargs):
+            calls.append(1)
+            if len(calls) == 2:
+                raise sqlite3.OperationalError('test failure')
+            return original(*args, **kwargs)
+        with patch.object(self.market, '_add_news', side_effect=fail_second):
+            with self.assertRaises(sqlite3.OperationalError):
+                self.admin.publish_due_automatic_news()
+        with self.market.connection() as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM news_articles').fetchone()[0], 0)
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM market_news').fetchone()[0], 0)
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM automatic_news_state').fetchone()[0], 0)
+
+    def test_existing_single_news_schedule_starts_pair_immediately(self):
+        with self.market.connection(write=True) as db:
+            db.execute('INSERT INTO automatic_news_state VALUES (1, ?, 1)', (int(time.time()) + 1800,))
+        self.assertTrue(self.admin.publish_due_automatic_news())
+        self.assertEqual(len(self.admin.articles()), 2)
+        self.assertFalse(self.admin.publish_due_automatic_news())
 
     def test_news_page_publishes_due_article_when_enabled(self):
         self.app.config['AUTO_NEWS_ENABLED'] = True

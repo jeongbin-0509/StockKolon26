@@ -232,26 +232,40 @@ class AdminService:
         return True
 
     def publish_due_automatic_news(self):
-        """Publish at most one due item atomically; missed intervals do not flood the market."""
+        """Publish one good/bad pair atomically, without replaying missed intervals."""
         now = int(self.clock())
         with self.market.connection(write=True) as db:
             state = db.execute('SELECT next_at, published_count FROM automatic_news_state WHERE id=1').fetchone()
-            if state and now < state['next_at']:
+            paired_before = db.execute("SELECT 1 FROM news_articles WHERE id LIKE 'auto-pair-%' LIMIT 1").fetchone()
+            if state and paired_before and now < state['next_at']:
                 return False
             count = state['published_count'] if state else 0
-            presets = sorted(news_presets(), key=lambda item: item['id'])
-            if not presets:
+            presets = news_presets()
+            good = sorted((p for p in presets if p['sentiment'] == 'good'), key=lambda item: item['id'])
+            bad = sorted((p for p in presets if p['sentiment'] == 'bad'), key=lambda item: item['id'])
+            if not good or len(good) != len(bad):
                 return False
             market_seed = db.execute('SELECT seed FROM market_state WHERE id=1').fetchone()['seed']
-            cycle, position = divmod(count, len(presets))
-            choices = list(presets)
-            random.Random(hashlib.sha256(f'{market_seed}:auto-news:{cycle}'.encode()).digest()).shuffle(choices)
-            preset = choices[position]
-            article_id = f'auto-news-{count}'
-            self.market._add_news(db, article_id, 'club', preset['club_num'], preset['impact'])
-            db.execute('INSERT INTO news_articles VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                       (article_id, preset['title'], preset['body'], 'club', preset['club_num'],
-                        preset['impact'], 'system', now))
+            cycle, position = divmod(count, len(good))
+            rng = random.Random(hashlib.sha256(f'{market_seed}:auto-news-pairs:{cycle}'.encode()).digest())
+            rng.shuffle(good)
+            rng.shuffle(bad)
+            # 충돌하는 쌍을 교환해 같은 동아리가 동시에 호재와 악재를 받지 않도록 한다.
+            for i in range(len(good)):
+                if good[i]['club_num'] != bad[i]['club_num']:
+                    continue
+                candidates = list(range(i + 1, len(good))) + list(range(i))
+                swap = next((j for j in candidates if good[i]['club_num'] != bad[j]['club_num']
+                             and good[j]['club_num'] != bad[i]['club_num']), None)
+                if swap is None:
+                    raise ValueError('서로 다른 동아리의 뉴스 쌍을 만들 수 없습니다.')
+                bad[i], bad[swap] = bad[swap], bad[i]
+            for preset in (good[position], bad[position]):
+                article_id = f"auto-pair-{count}-{preset['sentiment']}"
+                self.market._add_news(db, article_id, 'club', preset['club_num'], preset['impact'])
+                db.execute('INSERT INTO news_articles VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                           (article_id, preset['title'], preset['body'], 'club', preset['club_num'],
+                            preset['impact'], 'system', now))
             db.execute('INSERT INTO automatic_news_state (id, next_at, published_count) VALUES (1, ?, ?) '
                        'ON CONFLICT(id) DO UPDATE SET next_at=excluded.next_at, published_count=excluded.published_count',
                        (now + AUTO_NEWS_INTERVAL, count + 1))
