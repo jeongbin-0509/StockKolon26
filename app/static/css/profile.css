@@ -7,109 +7,6 @@
 }
 
 
-/* header */
-#logo {
-    width: clamp(200px, 30vw, 420px);
-    height: auto;
-    object-fit: contain;
-}
-
-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem 1.25rem;
-    background-color: var(--bg-card);
-    border-bottom: 1px solid var(--border-card);
-}
-
-#header-nav {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-/* user info */
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-card);
-  border-radius: 1rem;
-  padding: 0.5rem 1.25rem 0.5rem 0.75rem;
-}
-
-.user-avatar {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 50%;
-  background-color: #2a2a2a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.user-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.avatar-default-icon {
-  font-size: 1.4rem;
-  color: var(--text-secondary);
-  line-height: 1;
-}
-
-.user-name {
-  font-size: clamp(0.95rem, 1.5vw, 1.15rem);
-  white-space: nowrap;
-}
-
-.user-rank {
-  font-size: clamp(0.75rem, 1.2vw, 0.9rem);
-  color: var(--text-secondary);
-  margin-top: 0.15rem;
-}
-
-#ranking_btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--bg-main);
-    border: 1px solid var(--border-card);
-    border-radius: 0.75rem;
-    padding: 0.5rem;
-    cursor: pointer;
-    text-decoration: none;
-}
-
-#ranking_btn img {
-    width: clamp(1.6rem, 4.5vw, 2.2rem);
-    height: clamp(1.6rem, 4.5vw, 2.2rem);
-    object-fit: contain;
-}
-
-/* logout btn */
-#logout_btn {
-  background: transparent;
-  border: 1px solid var(--border-card);
-  border-radius: 0.6rem;
-  color: var(--text-secondary);
-  font-family: "Noto Sans KR", sans-serif;
-  font-weight: 500;
-  font-size: clamp(0.75rem, 1.2vw, 0.9rem);
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: color 0.2s, border-color 0.2s;
-}
-
-
 /* main */
 
 main {
@@ -117,6 +14,8 @@ main {
   display: flex;
   flex-direction: column;
   gap: clamp(1.5rem, 3vw, 2.5rem);
+  width: min(100%, var(--page-width));
+  margin-inline: auto;
 }
 
 
@@ -381,7 +280,15 @@ main {
 .trade-history-row span { color: var(--text-secondary); }
 
 @media (max-width: 760px) {
+  main { padding: 1rem; gap: 1rem; }
+  #summary { grid-template-columns: 1fr; gap: .75rem; }
+  .summary-card, #holdings { border-radius: 1rem; padding: 1rem; }
   #holdings { overflow-x: auto; }
   #holdings-table { min-width: 920px; }
   .mini-chart { width: 110px; }
+}
+
+@media (min-width: 761px) and (max-width: 1050px) {
+  #summary { grid-template-columns: repeat(2, 1fr); }
+  #card-top { grid-column: 1 / -1; }
 }

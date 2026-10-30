@@ -483,3 +483,35 @@
         font-size: .68rem;
     }
 }
+/* 전체 화면에서 카드 밀도와 가독성을 통일한다. */
+.rank-page { padding-bottom: 1rem; }
+.rank-filter-btn:focus-visible { outline-offset: 3px; }
+.podium-section { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; }
+.podium-card { width: 100%; max-width: 350px; justify-self: center; }
+.rank-card { border-width: 1px; box-shadow: 0 8px 22px rgba(0,0,0,.3); }
+.rank-scroll-box { scrollbar-width: thin; scrollbar-color: #3a3a3a #111; }
+
+@media (max-width: 980px) {
+    .rank-card { grid-template-columns: minmax(260px, 1.2fr) minmax(330px, 1.5fr); }
+    .podium-section { gap: 1rem; }
+    .podium-card { padding-inline: .8rem; }
+    .podium-name { font-size: 1.7rem; }
+}
+
+@media (max-width: 767px) {
+    .rank-page { width: calc(100% - 2rem); margin-bottom: 3rem; }
+    .rank-top-bar { margin-top: 1.5rem; }
+    .podium-section { gap: .45rem; }
+    .podium-card { width: 100%; }
+    .rank-card { grid-template-columns: 1fr; border-radius: 1rem; }
+    .rank-card-right { gap: .65rem; padding-left: 0; }
+    .rank-info-value { font-size: 1rem; }
+}
+
+@media (max-width: 390px) {
+    .podium-trophy { font-size: 2.35rem; }
+    .podium-card.gold { height: 245px; }
+    .podium-card.silver, .podium-card.bronze { height: 215px; }
+    .podium-name { font-size: .88rem; }
+    .podium-money, .podium-change { font-size: .65rem; }
+}

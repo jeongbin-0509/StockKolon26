@@ -38,3 +38,25 @@ thead { color: var(--text-secondary); }
 .empty { padding: 1.5rem 0; color: var(--text-secondary); }
 .audit-detail { white-space: normal; overflow-wrap: anywhere; max-width: 420px; }
 @media (max-width: 650px) { .admin-header { align-items: flex-start; flex-direction: column; } .form-row { grid-template-columns: 1fr; } }
+
+.admin-header { background: var(--bg-card); }
+.admin-shell { max-width: 1180px; }
+.panel { box-shadow: 0 12px 34px rgba(0,0,0,.16); }
+.section-links a { padding: .4rem .65rem; border: 1px solid var(--border-card); border-radius: .55rem; text-decoration: none; }
+.section-links a:hover { border-color: #505050; background: var(--bg-card); }
+button { transition: filter .18s ease, transform .18s ease; }
+button:hover { filter: brightness(1.08); transform: translateY(-1px); }
+button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.table-wrap { border: 1px solid var(--border-card); border-radius: .75rem; }
+table { min-width: 680px; }
+th, td { padding: .9rem .8rem; }
+tbody tr:hover { background: rgba(255,255,255,.025); }
+
+@media (max-width: 650px) {
+    .admin-header { padding: 1rem; }
+    .admin-header nav { width: 100%; gap: .7rem; }
+    .admin-shell { width: calc(100% - 2rem); margin-top: 1.5rem; }
+    .panel { padding: 1rem; border-radius: 1rem; }
+    .section-links { gap: .5rem; }
+    .stack > button { width: 100%; }
+}

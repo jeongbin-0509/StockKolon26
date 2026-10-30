@@ -1,34 +1,58 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap');
 
 :root {
+    color-scheme: dark;
     --bg-main: #111111;
     --bg-card: #1a1a1a;
     --border-card: #2a2a2a;
-
     --text-primary: #ffffff;
     --text-secondary: #7a7a7a;
-
     --color-stock-up: #ff3b30;
     --color-stock-down: #007aff;
     --color-brand-mint: #00ff99;
+    --color-primary: var(--color-brand-mint);
+    --page-width: 1400px;
+    --page-gutter: clamp(1rem, 3vw, 2rem);
+    --card-radius: 1.15rem;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
+    min-width: 320px;
     overflow-y: scroll;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
 }
 
 body {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
     background: var(--bg-main);
     color: var(--text-primary);
     font-family: "Noto Sans KR", sans-serif;
+    line-height: 1.5;
+    overflow-wrap: break-word;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
-.sub_text {
-    color: var(--text-secondary);
+button, input, select, textarea { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button { touch-action: manipulation; }
+a { color: inherit; }
+img, svg { max-width: 100%; }
+
+:focus-visible {
+    outline: 2px solid var(--color-brand-mint);
+    outline-offset: 3px;
+}
+
+::selection { background: var(--color-brand-mint); color: var(--bg-main); }
+.sub_text { color: var(--text-secondary); }
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }

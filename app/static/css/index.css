@@ -22,6 +22,8 @@ main {
     gap: 1.25rem;
     padding: 1.25rem;
     flex: 1;
+    width: min(100%, var(--page-width));
+    margin-inline: auto;
 }
 
 /* profile */
@@ -35,7 +37,7 @@ main {
 
 #profile-img-wrap {
     flex-shrink: 0;
-    width: 25%;
+    width: clamp(5rem, 9vw, 7.25rem);
     aspect-ratio: 1 / 1;
     border-radius: 50%;
     overflow: hidden;
@@ -77,11 +79,13 @@ main {
     color: inherit;
     text-decoration: none;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, border-color .2s ease, transform .2s ease;
 }
 
 #portfolio-section:hover {
     background-color: var(--border-card);
+    border-color: #444;
+    transform: translateY(-2px);
 }
 
 #portfolio-header {
@@ -284,12 +288,17 @@ main {
     border-radius: 1.25rem;
     padding: 1.25rem 1.5rem;
     text-decoration: none;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, border-color .2s ease, transform .2s ease;
 }
 
 .link-card:hover {
     background-color: var(--border-card);
+    border-color: #444;
+    transform: translateY(-2px);
 }
+
+#portfolio-section:focus-visible,
+.link-card:focus-visible { outline-offset: 4px; }
 
 .link-card > img {
     width: clamp(3.5rem, 6vw, 5rem);
@@ -322,6 +331,8 @@ main {
             "portfolio"
             "highlight"
             "links";
+        gap: 1rem;
+        padding: 1rem;
     }
 
     #highlight-section,
@@ -338,4 +349,12 @@ main {
     }
 
     .stock-chart { height: 9.5rem; }
+
+    #profile-section { padding: .75rem .25rem; }
+    #profile-img-wrap { width: 4.75rem; }
+    #username { font-size: 1.65rem; }
+    #portfolio-section, .highlight-card, .link-card { border-radius: 1rem; padding: 1rem; }
+    .link-card > img { width: 3.75rem; height: 3.75rem; }
+    .link-text .head2 { font-size: 1.2rem; }
+    .link-text .sub_text { font-size: .82rem; line-height: 1.5; }
 }

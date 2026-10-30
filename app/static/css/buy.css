@@ -567,7 +567,7 @@ body {
     }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 760px) {
     .buy-header {
         align-items: flex-start;
         flex-direction: column;
@@ -646,4 +646,42 @@ body {
 
     .order-input-wrap span { font-size: 0.8rem; }
     .amount-btn { font-size: 2rem; }
+}
+
+/* 화면 크기별 정보 밀도를 일정하게 유지한다. */
+@media (max-width: 900px) {
+    .buy-page { width: min(100% - 2rem, 720px); }
+    .asset-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; padding: 1rem; border-width: 1px; border-radius: 1.2rem; }
+    .summary-label { font-size: clamp(.72rem, 2.2vw, .9rem); }
+    .summary-card strong { font-size: clamp(1.15rem, 4vw, 1.75rem); }
+    .stock-grid { gap: 1rem; }
+    .stock-card { min-height: 0; border-width: 1px; border-radius: 1.2rem; box-shadow: 0 10px 26px rgba(0,0,0,.3); }
+}
+
+@media (max-width: 620px) {
+    .buy-page { width: calc(100% - 2rem); margin-bottom: 3rem; }
+    .asset-summary { padding: .85rem .65rem; }
+    .summary-card { gap: .15rem; min-width: 0; }
+    .summary-label { line-height: 1.35; }
+    .summary-card strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .stock-category-filter { flex-wrap: nowrap; overflow-x: auto; padding-bottom: .35rem; scrollbar-width: thin; }
+    .category-btn { flex: 0 0 auto; }
+    .stock-card { padding: 1rem; }
+    .stock-logo { width: 58px; height: 58px; }
+    .trade-overlay { padding: .6rem; }
+    .trade-modal { max-height: calc(100dvh - 1.2rem); padding: 1rem; border-width: 1px; border-radius: 1.1rem; }
+    .modal-stock { gap: .8rem; }
+    .modal-logo { width: 58px; height: 58px; }
+    .modal-stock h2 { font-size: 1.6rem; }
+    .modal-stock p { font-size: .9rem; }
+    .modal-price { margin-top: 1rem; gap: .8rem; }
+    .modal-price strong { font-size: 2.35rem; }
+    .modal-change { font-size: 1.1rem; }
+    .modal-stats { grid-template-columns: repeat(3, 1fr); gap: .5rem; text-align: left; }
+    .modal-stats dt { font-size: .7rem; }
+    .modal-stats dd { font-size: .95rem; }
+    .modal-chart { height: 150px; margin: .8rem 0; padding: .6rem; }
+    .order-input-wrap, .amount-btn { min-height: 56px; border-radius: .8rem; }
+    .shortcut-btn { min-height: 44px; border-radius: .8rem; font-size: .9rem; }
+    .order-submit { min-height: 52px; border-radius: .8rem; font-size: 1.05rem; }
 }

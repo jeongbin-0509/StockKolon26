@@ -1,17 +1,17 @@
 /* 색상은 기존 auth.css의 값을 그대로 사용한다. */
 .auth-page { min-height: 100dvh; background: var(--bg-main); }
 .auth-main { display: flex; justify-content: center; width: 100%; padding: 2.4rem 1.25rem 3.5rem; }
-.auth-panel { width: 100%; max-width: 420px; min-width: 0; }
-.signup-panel { max-width: 560px; }
+.auth-panel { width: 100%; max-width: 440px; min-width: 0; padding: 1.6rem; border: 1px solid var(--border-card); border-radius: 1.2rem; background: var(--bg-card); box-shadow: 0 18px 50px rgba(0,0,0,.22); }
+.signup-panel { max-width: 590px; }
 .auth-heading { margin-bottom: 1.8rem; }
 .auth-heading h1 { color: white; font-size: 1.75rem; font-weight: 750; line-height: 1.4; letter-spacing: -.05em; }
 .auth-heading > p { color: #9a9a9a; font-size: .875rem; margin-top: .5rem; line-height: 1.7; }
 .auth-form { display: grid; gap: 1.25rem; }
 .form-field { display: flex; flex-direction: column; gap: .5rem; min-width: 0; }
 .form-field > label { color: white; font-size: .85rem; font-weight: 600; }
-.auth-form input, .auth-form select { width: 100%; min-width: 0; height: 52px; padding: 0 1rem; border: 2px solid #383838; border-radius: 12px; background: #2f2f32; color: white; font: inherit; font-size: 1rem; font-weight: 400; outline: none; transition: border-color .15s; }
+.auth-form input, .auth-form select { width: 100%; min-width: 0; height: 52px; padding: 0 1rem; border: 1px solid #414145; border-radius: 12px; background: #2f2f32; color: white; font: inherit; font-size: 1rem; font-weight: 400; outline: none; transition: border-color .15s, box-shadow .15s; }
 .auth-form input::placeholder { color: #777; }
-.auth-form input:focus, .auth-form select:focus { border-color: var(--color-brand-mint); }
+.auth-form input:focus, .auth-form select:focus { border-color: var(--color-brand-mint); box-shadow: 0 0 0 3px rgba(0,255,153,.1); }
 .auth-form input[aria-invalid="true"], .auth-form select[aria-invalid="true"] { border-color: #ff6b6b; }
 .field-hint { font-size: .75rem; color: #9a9a9a; line-height: 1.6; }
 .field-error { font-size: .75rem; color: #ff6b6b; line-height: 1.6; }
@@ -28,7 +28,7 @@
 .form-section h2 { margin: 0; font-size: .9rem; font-weight: 700; color: white; }
 .field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .email-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .65rem; align-items: start; }
-.email-address { display: flex; align-items: center; min-width: 0; height: 52px; padding-right: .8rem; border: 2px solid #383838; border-radius: 12px; background: #2f2f32; }
+.email-address { display: flex; align-items: center; min-width: 0; height: 52px; padding-right: .8rem; border: 1px solid #414145; border-radius: 12px; background: #2f2f32; }
 .email-address:focus-within { border-color: var(--color-brand-mint); }
 .email-address input { border: 0; height: 48px; background: transparent; padding-right: .3rem; }
 .email-address span { color: white; font-size: .85rem; white-space: nowrap; }
@@ -41,5 +41,5 @@
 .auth-form select { appearance: none; padding-right: 2.5rem; cursor: pointer; }
 .auth-form select option { background: #2f2f32; color: white; }
 .flash_msg { margin-bottom: 1.25rem; color: #ff6b6b; font-size: .85rem; line-height: 1.7; }
-@media(max-width: 600px) { .auth-main { padding: 1.7rem 1rem 2.5rem; } .auth-heading h1 { font-size: 1.5rem; } .auth-heading { margin-bottom: 1.5rem; } .field-row { grid-template-columns: 1fr; gap: 1.1rem; } }
+@media(max-width: 600px) { .auth-main { padding: 1.6rem 1rem 2.5rem; } .auth-panel { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; } .auth-heading h1 { font-size: 1.5rem; } .auth-heading { margin-bottom: 1.5rem; } .field-row { grid-template-columns: 1fr; gap: 1.1rem; } }
 @media(max-width: 360px) { .email-row { gap: .4rem; } #send_code_btn { padding-inline: .65rem; font-size: .75rem; } .email-address span { font-size: .75rem; } .email-address { padding-right: .5rem; } }
