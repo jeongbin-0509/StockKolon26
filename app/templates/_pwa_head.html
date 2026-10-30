@@ -1,0 +1,26 @@
+<meta name="theme-color" content="#111111">
+<meta name="application-name" content="STOCKOLON 26">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="STOCKOLON">
+<link rel="manifest" href="{{ url_for('main.web_manifest') }}">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/pwa/favicon-32.png') }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/pwa/apple-touch-icon.png') }}">
+<style>
+    .pwa-install-button {
+        position: fixed;
+        right: max(18px, env(safe-area-inset-right));
+        bottom: max(18px, env(safe-area-inset-bottom));
+        z-index: 10000;
+        border: 1px solid #2a2a2a;
+        border-radius: 999px;
+        padding: 11px 18px;
+        background: #00ff99;
+        color: #08150f;
+        font: inherit;
+        font-weight: 800;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+        cursor: pointer;
+    }
+    .pwa-install-button[hidden] { display: none; }
+</style>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>오프라인 · STOCKOLON 26</title>
+    {% include '_pwa_head.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <style>
+        body { min-height: 100vh; display: grid; place-items: center; padding: 24px; text-align: center; }
+        main { max-width: 460px; }
+        img { width: min(280px, 80vw); height: auto; margin-bottom: 28px; }
+        h1 { margin-bottom: 12px; }
+        p { color: var(--text-secondary); line-height: 1.7; }
+        button { margin-top: 24px; border: 0; border-radius: 12px; padding: 12px 20px; background: var(--color-brand-mint); color: #08150f; font: inherit; font-weight: 800; cursor: pointer; }
+    </style>
+</head>
+<body>
+<main>
+    <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" alt="STOCKOLON 26">
+    <h1>인터넷 연결을 확인해주세요</h1>
+    <p>주가와 거래 정보는 최신 데이터가 필요합니다. 연결이 복구되면 다시 시도해주세요.</p>
+    <button type="button" onclick="location.reload()">다시 연결</button>
+</main>
+{% include '_pwa_script.html' %}
+</body>
+</html>

@@ -1,4 +1,5 @@
 import os
+import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -37,6 +38,30 @@ class DeploymentTests(unittest.TestCase):
             self.assertEqual(client.get('/healthz').json, {'status': 'ok'})
             with patch.object(app.extensions['market'], 'connection', side_effect=DatabaseError('test')):
                 self.assertEqual(client.get('/healthz').status_code, 503)
+
+    def test_pwa_manifest_and_service_worker_are_served_from_root(self):
+        with tempfile.TemporaryDirectory() as directory:
+            app = create_app({'TESTING': True, 'SECRET_KEY': 'test-only',
+                              'MARKET_DATABASE': str(Path(directory)/'market.sqlite3')})
+            client = app.test_client()
+            manifest_response = client.get('/manifest.webmanifest')
+            manifest = json.loads(manifest_response.data)
+            self.assertEqual(manifest_response.mimetype, 'application/manifest+json')
+            self.assertEqual(manifest['start_url'], '/')
+            self.assertTrue(any(icon['sizes'] == '512x512' for icon in manifest['icons']))
+
+            worker = client.get('/service-worker.js')
+            self.assertEqual(worker.status_code, 200)
+            self.assertEqual(worker.headers['Service-Worker-Allowed'], '/')
+            self.assertIn('no-store', worker.headers['Cache-Control'])
+            self.assertIn(b"caches.match('/offline')", worker.data)
+
+            login = client.get('/auth/login')
+            self.assertIn(b'rel="manifest"', login.data)
+            self.assertIn(b'/static/js/pwa.js', login.data)
+            manifest_response.close()
+            worker.close()
+            login.close()
 
     def test_readiness_checker_rejects_password_placeholder(self):
         values = {'SECRET_KEY': 'x'*64, 'DATABASE_URL': 'postgresql://postgres:[YOUR-PASSWORD]@example.invalid/postgres',

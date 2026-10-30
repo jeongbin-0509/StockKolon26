@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ranking - STOCKOLON 26</title>
+    {% include '_pwa_head.html' %}
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
@@ -186,5 +187,6 @@
 </main>
 
 <script src="{{ url_for('static', filename='js/header-profile.js') }}" data-autoload="true"></script>
+{% include '_pwa_script.html' %}
 </body>
 </html>

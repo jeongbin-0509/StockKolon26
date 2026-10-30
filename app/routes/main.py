@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session, redirect, url_for, jsonify, current_app
+from flask import Blueprint, render_template, session, redirect, url_for, jsonify, current_app, send_from_directory
 from app.services.supabase_client import supabase
 from app.market_catalog import CLUBS
 from app.routes.admin import csrf_token
@@ -7,6 +7,34 @@ import httpx
 from pathlib import Path
 
 main = Blueprint("main", __name__)
+
+
+@main.get("/manifest.webmanifest")
+def web_manifest():
+    return send_from_directory(
+        current_app.static_folder,
+        "manifest.webmanifest",
+        mimetype="application/manifest+json",
+        max_age=0,
+    )
+
+
+@main.get("/service-worker.js")
+def service_worker():
+    response = send_from_directory(
+        current_app.static_folder,
+        "service-worker.js",
+        mimetype="application/javascript",
+        max_age=0,
+    )
+    response.headers["Service-Worker-Allowed"] = "/"
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    return response
+
+
+@main.get("/offline")
+def offline():
+    return render_template("offline.html")
 
 
 def club_profile(user):
