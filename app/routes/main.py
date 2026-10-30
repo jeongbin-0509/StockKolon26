@@ -65,7 +65,7 @@ def index():
         return redirect(url_for("auth.login"))
 
     # 로그인 되어 있으면 메인 페이지
-    return render_template("index.html")
+    return render_template("index.html", csrf_token=csrf_token)
 
 # 메인에서 프로필로 이동
 @main.route("/profile")
@@ -74,7 +74,7 @@ def profile():
     if "user_id" not in session:
         return redirect(url_for("auth.login"))
 
-    return render_template("profile.html")
+    return render_template("profile.html", csrf_token=csrf_token)
 
 # 메인에서 뉴스로 이동
 @main.route("/news")
@@ -85,7 +85,7 @@ def news():
 
     if current_app.config['AUTO_NEWS_ENABLED']:
         current_app.extensions['admin'].publish_due_automatic_news()
-    return render_template("news.html", articles=current_app.extensions["admin"].articles())
+    return render_template("news.html", articles=current_app.extensions["admin"].articles(), csrf_token=csrf_token)
 
 
 @main.get('/api/news/latest')

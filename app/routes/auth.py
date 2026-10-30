@@ -252,10 +252,10 @@ def send_code():
 
 
 # 로그아웃
-@auth.route("/logout")
+@auth.route("/logout", methods=["POST"])
 def logout():
-
+    if not valid_csrf():
+        abort(403)
     session.clear()
-
     flash("로그아웃되었습니다.")
-    return redirect(url_for("main.index"))
+    return redirect(url_for("auth.login"))

@@ -164,6 +164,23 @@ class AdminTests(unittest.TestCase):
         self.client.set_cookie('session', old_cookie)
         self.assertEqual(self.client.get('/admin/api/market').status_code, 401)
 
+    def test_member_logout_works_from_each_page_and_requires_csrf(self):
+        self.assertEqual(self.client.get('/auth/logout').status_code, 405)
+        for path in ('/', '/buy', '/news', '/profile'):
+            with self.subTest(path=path):
+                with self.client.session_transaction() as sess:
+                    sess['user_id'] = 'regular-user'
+                page = self.client.get(path).get_data(as_text=True)
+                form = re.search(r'<form method="post" action="/auth/logout">(.*?)</form>', page, re.S)
+                self.assertIsNotNone(form)
+                token = re.search(r'name="csrf_token" value="([^"]+)"', form.group(1)).group(1)
+                self.assertEqual(self.client.post('/auth/logout').status_code, 403)
+                response = self.client.post('/auth/logout', data={'csrf_token': token})
+                self.assertTrue(response.location.endswith('/auth/login'))
+                with self.client.session_transaction() as sess:
+                    self.assertNotIn('user_id', sess)
+                self.assertEqual(self.client.get('/api/market').status_code, 401)
+
     def test_password_change_invalidates_all_sessions(self):
         self.ready()
         token = self.admin.login('owner', NEW_PASSWORD, 'another-ip')
