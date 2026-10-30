@@ -15,6 +15,8 @@ class TradingService:
 
     def initialize(self):
         with self.market.connection(write=True) as db:
+            db.execute('CREATE TABLE IF NOT EXISTS stock_favorites (user_id TEXT NOT NULL, club_num INTEGER NOT NULL, '
+                       'PRIMARY KEY (user_id, club_num))')
             db.execute('CREATE TABLE IF NOT EXISTS trade_holdings (user_id TEXT NOT NULL, club_num INTEGER NOT NULL, '
                        'quantity INTEGER NOT NULL CHECK(quantity >= 0), cost_basis INTEGER NOT NULL CHECK(cost_basis >= 0), '
                        'PRIMARY KEY(user_id, club_num))')

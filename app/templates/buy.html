@@ -55,6 +55,11 @@
             </article>
         </section>
 
+        <div class="stock-tools">
+            <label class="stock-search"><span>종목 검색</span><input id="stock-search" type="search" placeholder="동아리 이름을 검색하세요" autocomplete="off"></label>
+            <button type="button" id="favorites-filter" class="favorites-filter" aria-pressed="false" disabled>☆ 즐겨찾기만 보기</button>
+        </div>
+        <p id="favorites-status" class="favorites-status" role="status" aria-live="polite"></p>
         <nav class="stock-category-filter" aria-label="종목 카테고리">
             <button class="category-btn active" type="button" data-category="all">전체</button>
             <button class="category-btn" type="button" data-category="0">공식</button>
@@ -70,6 +75,7 @@
 
         <p class="market-status" id="market-status" role="status" aria-live="polite">주가 데이터를 불러오는 중입니다.</p>
         <p class="market-caption">등락·최고가·최저가는 오늘 00:00(한국시간) 기준 · 차트는 최근 최대 5시간의 5분봉 종가</p>
+        <p id="stock-results" class="stock-results" role="status" aria-live="polite"></p>
         <section class="stock-grid" aria-label="주식 목록" aria-busy="true" data-image-base="{{ url_for('static', filename='images/') }}"></section>
     </main>
 

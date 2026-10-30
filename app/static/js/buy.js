@@ -1,5 +1,9 @@
 const stockGrid = document.querySelector(".stock-grid");
 const categoryFilter = document.querySelector(".stock-category-filter");
+const stockSearch = document.querySelector('#stock-search');
+const favoritesFilter = document.querySelector('#favorites-filter');
+const favoritesStatus = document.querySelector('#favorites-status');
+const stockResults = document.querySelector('#stock-results');
 const statusElement = document.querySelector("#market-status");
 const imageBase = stockGrid.dataset.imageBase;
 const modal = document.querySelector("#trade-modal");
@@ -20,6 +24,10 @@ let submitting = false;
 let pendingOrder = null;
 try { pendingOrder = JSON.parse(sessionStorage.getItem('stockolon-pending-order') || 'null'); } catch (_) {}
 let stocks = [];
+let favorites = new Set();
+let favoritesLoaded = false;
+let favoritesOnly = false;
+const favoriteRequests = new Set();
 let selectedCategory = "all";
 let selectedClub = null;
 let currentMode = "buy";
@@ -67,11 +75,9 @@ function createStockCard(stock) {
     const trend = trendOf(stock);
     const card = document.createElement("article");
     card.className = "stock-card";
-    card.tabIndex = 0;
-    card.setAttribute("role", "button");
-    card.setAttribute("aria-label", `${stock.club_name} ${formatWon(stock.price)} 상세 보기`);
     card.dataset.club = stock.club_num;
     card.innerHTML = `
+        <button type="button" class="stock-open" aria-label="${stock.club_name} ${formatWon(stock.price)} 상세 보기">
         <div class="stock-top">
             <img alt="${stock.club_name} 로고" class="stock-logo">
             <div><h2>${stock.club_name}</h2><p>${stock.category}</p></div>
@@ -80,7 +86,8 @@ function createStockCard(stock) {
             <strong>${formatWon(stock.price)}</strong>
             <span>${stock.changeRate > 0 ? "+" : ""}${stock.changeRate.toFixed(2)}% ${stock.changeRate === 0 ? "↔" : trend === "up" ? "↗" : "↘"}</span>
         </div>
-        <div class="stock-chart"></div>`;
+        <div class="stock-chart"></div></button>
+        <button type="button" class="favorite-button" aria-label="${stock.club_name} 즐겨찾기" aria-pressed="${favorites.has(stock.club_num)}" ${!favoritesLoaded || favoriteRequests.has(stock.club_num) ? 'disabled' : ''}>${favorites.has(stock.club_num) ? '★' : '☆'}</button>`;
     setClubImage(card.querySelector(".stock-logo"), stock.club_num);
     renderStockChart(card.querySelector('.stock-chart'), stock, true);
     return card;
@@ -88,9 +95,61 @@ function createStockCard(stock) {
 
 function renderStockCards() {
     const focusedClub = document.activeElement?.closest(".stock-card")?.dataset.club;
-    const visible = stocks.filter((stock) => selectedCategory === "all" || stock.categoryKey === Number(selectedCategory));
+    const focusedFavorite = document.activeElement?.classList.contains('favorite-button');
+    const query = stockSearch.value.trim().normalize('NFC').toLocaleLowerCase('ko-KR').replace(/\s+/g, '');
+    const visible = stocks.filter((stock) =>
+        (selectedCategory === 'all' || stock.categoryKey === Number(selectedCategory)) &&
+        (!favoritesOnly || favorites.has(stock.club_num)) &&
+        stock.club_name.normalize('NFC').toLocaleLowerCase('ko-KR').replace(/\s+/g, '').includes(query));
     stockGrid.replaceChildren(...visible.map(createStockCard));
-    if (focusedClub) stockGrid.querySelector(`[data-club="${focusedClub}"]`)?.focus({ preventScroll: true });
+    if (stocks.length && (query || favoritesOnly || selectedCategory !== 'all')) {
+        stockResults.textContent = visible.length ? `${visible.length}개 종목` : (favoritesOnly && !favorites.size ? '즐겨찾기한 종목이 없습니다. 종목의 별을 눌러 추가해보세요.' : '조건에 맞는 종목이 없습니다.');
+    } else stockResults.textContent = '';
+    if (focusedClub) stockGrid.querySelector(`[data-club="${focusedClub}"] ${focusedFavorite ? '.favorite-button' : '.stock-open'}`)?.focus({ preventScroll: true });
+}
+
+async function loadFavorites() {
+    try {
+        const response = await fetch('/api/favorites', {cache: 'no-store', signal: AbortSignal.timeout(15000)});
+        if (response.status === 401) { location.assign('/auth/login'); return; }
+        if (!response.ok) throw new Error();
+        const result = await response.json();
+        favorites = new Set(result.favorites);
+        favoritesLoaded = true;
+        favoritesFilter.disabled = false;
+        favoritesStatus.textContent = '';
+        favoritesStatus.classList.remove('error');
+    } catch (_) {
+        favoritesStatus.textContent = '즐겨찾기를 불러오지 못했습니다. 페이지를 새로고침해 다시 시도해주세요.';
+        favoritesStatus.classList.add('error');
+    }
+    renderStockCards();
+}
+
+async function changeFavorite(clubNum) {
+    if (!favoritesLoaded || favoriteRequests.has(clubNum)) return;
+    const adding = !favorites.has(clubNum);
+    favoriteRequests.add(clubNum);
+    renderStockCards();
+    try {
+        const response = await fetch('/api/favorites', {
+            method: adding ? 'PUT' : 'DELETE',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-Token': orderForm.dataset.csrf},
+            body: JSON.stringify({clubNum}), signal: AbortSignal.timeout(15000)
+        });
+        if (response.status === 401) { location.assign('/auth/login'); return; }
+        if (!response.ok) throw new Error();
+        // Apply only the requested change so simultaneous updates to different clubs do not overwrite each other.
+        if (adding) favorites.add(clubNum); else favorites.delete(clubNum);
+        favoritesStatus.textContent = adding ? '즐겨찾기에 추가했습니다.' : '즐겨찾기에서 삭제했습니다.';
+        favoritesStatus.classList.remove('error');
+    } catch (_) {
+        favoritesStatus.textContent = '즐겨찾기를 저장하지 못했습니다. 다시 시도해주세요.';
+        favoritesStatus.classList.add('error');
+    } finally {
+        favoriteRequests.delete(clubNum);
+        renderStockCards();
+    }
 }
 
 function updateSubmit() {
@@ -153,6 +212,9 @@ function openRequestedTrade() {
     }
     requestedTradeHandled = true;
     selectedCategory = 'all';
+    stockSearch.value = '';
+    favoritesOnly = false;
+    favoritesFilter.setAttribute('aria-pressed', 'false');
     categoryFilter.querySelectorAll('.category-btn').forEach(item => item.classList.toggle('active', item.dataset.category === 'all'));
     renderStockCards();
     setTradeMode(side);
@@ -163,7 +225,7 @@ function openRequestedTrade() {
 
 function closeModal() {
     modal.hidden = true;
-    stockGrid.querySelector(`[data-club="${selectedClub}"]`)?.focus({ preventScroll: true });
+    stockGrid.querySelector(`[data-club="${selectedClub}"] .stock-open`)?.focus({ preventScroll: true });
     selectedClub = null;
 }
 
@@ -216,16 +278,17 @@ categoryFilter.addEventListener("click", (event) => {
     categoryFilter.querySelectorAll(".category-btn").forEach((item) => item.classList.toggle("active", item === button));
     renderStockCards();
 });
+stockSearch.addEventListener('input', renderStockCards);
+favoritesFilter.addEventListener('click', () => {
+    favoritesOnly = !favoritesOnly;
+    favoritesFilter.setAttribute('aria-pressed', String(favoritesOnly));
+    renderStockCards();
+});
 stockGrid.addEventListener("click", (event) => {
     const card = event.target.closest(".stock-card");
-    if (card) openModal(card);
-});
-stockGrid.addEventListener("keydown", (event) => {
-    const card = event.target.closest(".stock-card");
-    if (card && (event.key === "Enter" || event.key === " ")) {
-        event.preventDefault();
-        openModal(card);
-    }
+    if (!card) return;
+    if (event.target.closest('.favorite-button')) changeFavorite(Number(card.dataset.club));
+    else if (event.target.closest('.stock-open')) openModal(card);
 });
 closeButton.addEventListener("click", closeModal);
 modal.addEventListener("click", (event) => { if (event.target === modal) closeModal(); });
@@ -350,3 +413,4 @@ confirmSubmit.addEventListener('click', async () => {
 document.addEventListener("visibilitychange", () => { if (!document.hidden) loadMarket(); });
 loadMarket();
 loadPortfolio();
+loadFavorites();

@@ -4,9 +4,43 @@ import time
 import click
 from flask import Blueprint, current_app, jsonify, session, request
 import hmac
+from app.market_catalog import CLUBS
 from app.services.database import DatabaseError
 
 market = Blueprint("market", __name__)
+
+
+@market.route('/api/favorites', methods=['GET', 'PUT', 'DELETE'])
+def favorites():
+    if 'user_id' not in session:
+        return jsonify(success=False, message='로그인이 필요합니다.'), 401
+    try:
+        service = current_app.extensions['market']
+        user_id = str(session['user_id'])
+        if request.method != 'GET':
+            expected = session.get('admin_csrf', '')
+            supplied = request.headers.get('X-CSRF-Token', '')
+            if not expected or not supplied or not hmac.compare_digest(expected.encode(), supplied.encode()):
+                return jsonify(success=False, message='요청을 확인할 수 없습니다. 화면을 새로고침해주세요.'), 403
+            data = request.get_json(silent=True)
+            club_num = data.get('clubNum') if isinstance(data, dict) else None
+            if type(club_num) is not int or club_num not in CLUBS:
+                return jsonify(success=False, message='종목을 확인해주세요.'), 400
+            with service.connection(write=True) as db:
+                if request.method == 'PUT':
+                    db.execute('INSERT INTO stock_favorites (user_id, club_num) VALUES (?, ?) '
+                               'ON CONFLICT (user_id, club_num) DO NOTHING', (user_id, club_num))
+                else:
+                    db.execute('DELETE FROM stock_favorites WHERE user_id=? AND club_num=?', (user_id, club_num))
+        with service.connection() as db:
+            rows = db.execute('SELECT club_num FROM stock_favorites WHERE user_id=? ORDER BY club_num', (user_id,))
+            favorite_clubs = [row['club_num'] for row in rows if row['club_num'] in CLUBS]
+        response = jsonify(success=True, favorites=favorite_clubs)
+        response.headers['Cache-Control'] = 'no-store'
+        return response
+    except (sqlite3.Error, DatabaseError):
+        current_app.logger.exception('즐겨찾기 처리 실패')
+        return jsonify(success=False, message='즐겨찾기를 불러오거나 저장하지 못했습니다. 다시 시도해주세요.'), 503
 
 
 @market.post('/api/orders')
