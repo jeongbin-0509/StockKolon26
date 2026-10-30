@@ -7,7 +7,7 @@ import sqlite3
 import click
 from flask import Blueprint, abort, current_app, flash, g, jsonify, redirect, render_template, request, session, url_for
 
-from app.market_catalog import CATEGORIES, CLUBS
+from app.market_catalog import CLUBS
 from app.services.admin_service import PERMISSIONS, ROLE_NAMES
 from app.services.database import DatabaseError
 
@@ -148,7 +148,7 @@ def password():
 @require_admin('market:view')
 def dashboard():
     market = current_app.extensions['market'].snapshot()
-    return render_template('admin/dashboard.html', market=market, clubs=CLUBS, categories=CATEGORIES,
+    return render_template('admin/dashboard.html', market=market, clubs=CLUBS,
                            articles=service().articles(), audit=service().audit(),
                            accounts=service().accounts() if g.admin['role'] == 'owner' else [],
                            article_id=secrets.token_urlsafe(24))
@@ -164,10 +164,10 @@ def market_data():
 @require_admin('news:publish')
 def publish_news():
     try:
-        target_kind, raw_target = request.form.get('target', '').split(':', 1)
+        club_num = int(request.form.get('club_num', ''))
         impact = float(request.form.get('impact', '')) / 100
         created = service().publish_news(request.form.get('article_id', ''), request.form.get('title', ''),
-                          request.form.get('body', ''), target_kind, int(raw_target), impact, g.admin['id'])
+                          request.form.get('body', ''), 'club', club_num, impact, g.admin['id'])
         flash('뉴스를 발행했습니다. 다음 주가 틱부터 영향을 반영합니다.' if created else '이미 발행된 뉴스입니다. 중복 발행하지 않았습니다.')
     except (ValueError, PermissionError) as exc:
         flash(f'발행하지 못했습니다: {exc}')

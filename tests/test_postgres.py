@@ -56,7 +56,7 @@ class PostgresMarketTests(PostgresFixture, unittest.TestCase):
         self.service.initialize()
 
     def test_restart_concurrency_and_recovery(self):
-        self.service.add_news('pg-news', 'sector', 6, 0.01)
+        self.service.add_news('pg-news', 'club', 61, 0.01)
         self.service.record_flow('pg-fill', 61, 100)
         self.now += 3600
         with ThreadPoolExecutor(max_workers=4) as pool:

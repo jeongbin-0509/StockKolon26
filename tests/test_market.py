@@ -170,8 +170,8 @@ class ServiceTests(unittest.TestCase):
         self.assertFalse(self.service.snapshot()['catchingUp'])
 
     def test_events_are_once_only_and_volume_is_gross(self):
-        self.assertTrue(self.service.add_news('news-1', 'sector', 6, 0.03))
-        self.assertFalse(self.service.add_news('news-1', 'sector', 6, 0.03))
+        self.assertTrue(self.service.add_news('news-1', 'club', 61, 0.03))
+        self.assertFalse(self.service.add_news('news-1', 'club', 61, 0.03))
         self.assertTrue(self.service.record_flow('trade-1', 61, 200))
         self.assertFalse(self.service.record_flow('trade-1', 61, 200))
         self.service.record_flow('trade-2', 61, -100)
@@ -182,7 +182,7 @@ class ServiceTests(unittest.TestCase):
             parts = {r['club_num']: json.loads(r['components']) for r in db.execute(
                 'SELECT * FROM market_ticks WHERE timestamp=?', (self.now,))}
         self.assertGreater(parts[61]['news'], 0)
-        self.assertEqual(parts[61]['news'], parts[62]['news'])
+        self.assertEqual(parts[62]['news'], 0)
         self.assertEqual(parts[31]['news'], 0)
         self.assertAlmostEqual(
             parts[61]['flow'], FLOW_MAX_LOG_RETURN * math.tanh(100 / FLOW_LIQUIDITY_SHARES)
@@ -198,7 +198,7 @@ class ServiceTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.service.add_news('bad', 'club', 61, impact)
         with self.assertRaises(ValueError):
-            self.service.add_news('bad', 'sector', 99, 0.02)
+            self.service.add_news('bad', 'sector', 6, 0.02)
         for quantity in (0, 1.5, True, 10**13):
             with self.assertRaises(ValueError):
                 self.service.record_flow('bad', 61, quantity)

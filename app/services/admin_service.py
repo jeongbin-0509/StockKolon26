@@ -189,6 +189,8 @@ class AdminService:
     def publish_news(self, article_id, title, body, target_kind, target, impact, actor_id):
         self.market._event_id(article_id)
         title, body = title.strip(), body.strip()
+        if target_kind != 'club':
+            raise ValueError('뉴스는 개별 동아리에만 발행할 수 있습니다.')
         if not 1 <= len(title) <= 120 or not 1 <= len(body) <= 3000:
             raise ValueError('제목은 1~120자, 내용은 1~3,000자로 입력하세요.')
         if not math.isfinite(impact) or not -0.15 <= impact <= 0.15 or impact == 0:
