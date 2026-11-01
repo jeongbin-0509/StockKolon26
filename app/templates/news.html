@@ -42,13 +42,23 @@
         <p class="news-kicker">SEMI NEWS</p>
         <h1>동아리 시장 뉴스</h1>
         <p class="news-description">새로운 소식과 동아리 시장의 흐름을 확인하세요.</p>
-        {% for article in articles %}
-        <article class="news-card">
-            <div class="news-meta"><span class="news-tag {{ 'up' if article.impact > 0 else 'down' }}">{{ article.sentiment }}</span><span>{{ article.target_name }}</span><time>{{ article.published_at|kst_time }}</time></div>
-            <h2>{{ article.title }}</h2>
-            <p class="news-body">{{ article.body }}</p>
-        </article>
-        {% else %}<section class="news-empty"><h2>아직 새로운 소식이 없어요</h2><p>뉴스가 발행되면 이곳에서 확인할 수 있어요.</p></section>{% endfor %}
+        <div class="news-columns">
+            {% for sentiment in ['호재', '악재'] %}
+            <section class="news-column" aria-labelledby="news-{{ 'good' if sentiment == '호재' else 'bad' }}-heading">
+                <div class="news-column-heading">
+                    <h2 id="news-{{ 'good' if sentiment == '호재' else 'bad' }}-heading"><span class="news-heading-dot {{ 'up' if sentiment == '호재' else 'down' }}" aria-hidden="true"></span>{{ sentiment }} 뉴스</h2>
+                    <span class="news-column-caption">{{ '긍정적인 소식' if sentiment == '호재' else '부정적인 소식' }}</span>
+                </div>
+                {% for article in articles if article.sentiment == sentiment %}
+                <article class="news-card">
+                    <div class="news-meta"><span class="news-tag {{ 'up' if sentiment == '호재' else 'down' }}">{{ article.sentiment }}</span><span>{{ article.target_name }}</span><time>{{ article.published_at|kst_time }}</time></div>
+                    <h3>{{ article.title }}</h3>
+                    <p class="news-body">{{ article.body }}</p>
+                </article>
+                {% else %}<div class="news-empty"><h3>아직 {{ sentiment }} 뉴스가 없어요</h3><p>뉴스가 발행되면 이곳에 표시돼요.</p></div>{% endfor %}
+            </section>
+            {% endfor %}
+        </div>
     </main>
     <footer>
 

@@ -1,11 +1,17 @@
 .news-page {
-    width: min(880px, calc(100% - 2rem));
+    width: min(1400px, calc(100% - 2rem));
     margin: clamp(2rem, 5vw, 3.5rem) auto 5rem;
 }
 .news-kicker { margin-bottom: .65rem; color: var(--color-brand-mint); font-size: .75rem; font-weight: 800; letter-spacing: .14em; }
 .news-page > h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); letter-spacing: -.045em; }
 .news-description, .news-meta, .news-empty p { color: var(--text-secondary); }
 .news-description { margin: .65rem 0 2rem; line-height: 1.7; }
+.news-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(1rem, 2.5vw, 2rem); align-items: start; }
+.news-column { min-width: 0; }
+.news-column-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .4rem 1rem; padding: 0 .2rem .5rem; border-bottom: 1px solid var(--border-card); }
+.news-column-heading h2 { display: flex; align-items: center; gap: .6rem; font-size: clamp(1.2rem, 2vw, 1.5rem); }
+.news-heading-dot { display: inline-block; width: .6rem; height: .6rem; border-radius: 50%; background: currentColor; }
+.news-column-caption { color: var(--text-secondary); font-size: .82rem; }
 .news-card, .news-empty {
     padding: clamp(1.2rem, 3vw, 1.7rem);
     margin-top: 1rem;
@@ -20,10 +26,14 @@
 .news-tag { padding: .2rem .55rem; border: 1px solid currentColor; border-radius: 999px; font-weight: 800; }
 .up { color: var(--color-stock-up); }
 .down { color: var(--color-stock-down); }
-.news-card h2 { margin: 1rem 0 .7rem; font-size: clamp(1.1rem, 3vw, 1.35rem); line-height: 1.45; overflow-wrap: anywhere; }
+.news-card h3 { margin: 1rem 0 .7rem; font-size: clamp(1.1rem, 3vw, 1.35rem); line-height: 1.45; overflow-wrap: anywhere; }
 .news-body { color: #dedede; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; }
 .news-empty { padding-block: 3rem; text-align: center; }
-.news-empty h2 { margin-bottom: .8rem; font-size: 1.1rem; }
+.news-empty h3 { margin-bottom: .8rem; font-size: 1.1rem; }
+
+@media (max-width: 720px) {
+    .news-columns { grid-template-columns: 1fr; gap: 2rem; }
+}
 
 @media (max-width: 520px) {
     .news-page { width: calc(100% - 2rem); margin-top: 1.6rem; }

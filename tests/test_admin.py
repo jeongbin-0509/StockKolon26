@@ -272,6 +272,27 @@ class AdminTests(unittest.TestCase):
         self.assertIn(self.admin.articles()[0]['title'], page)
         self.assertNotIn('아직 새로운 소식이 없어요', page)
 
+    def test_news_page_groups_good_and_bad_separately(self):
+        self.ready()
+        self.admin.publish_news('good-test', '좋은 소식 제목', '좋은 소식 본문', 'club', 61, 0.01, self.owner)
+        self.admin.publish_news('bad-test', '나쁜 소식 제목', '나쁜 소식 본문', 'club', 62, -0.01, self.owner)
+        with self.client.session_transaction() as sess:
+            sess['user_id'] = 'regular-user'
+        page = self.client.get('/news').get_data(as_text=True)
+        good = page.split('aria-labelledby="news-good-heading"', 1)[1].split('</section>', 1)[0]
+        bad = page.split('aria-labelledby="news-bad-heading"', 1)[1].split('</section>', 1)[0]
+        self.assertIn('좋은 소식 제목', good)
+        self.assertNotIn('나쁜 소식 제목', good)
+        self.assertIn('나쁜 소식 제목', bad)
+        self.assertNotIn('좋은 소식 제목', bad)
+
+    def test_news_page_has_separate_empty_states(self):
+        with self.client.session_transaction() as sess:
+            sess['user_id'] = 'regular-user'
+        page = self.client.get('/news').get_data(as_text=True)
+        self.assertIn('아직 호재 뉴스가 없어요', page)
+        self.assertIn('아직 악재 뉴스가 없어요', page)
+
     def test_atomic_news_failure_rolls_back_price_event(self):
         self.ready()
         with patch.object(self.admin, '_audit', side_effect=sqlite3.OperationalError('test')):
