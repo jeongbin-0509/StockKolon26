@@ -116,6 +116,25 @@ def rank():
 
     return render_template("rank.html")
 
+@main.get('/api/rankings')
+def rankings():
+    if 'user_id' not in session:
+        return jsonify(success=False, message='로그인이 필요합니다.'), 401
+    try:
+        result = current_app.extensions['ranking'].rankings(session['user_id'], request.args.get('scope', 'school'))
+    except ValueError as exc:
+        return jsonify(success=False, message=str(exc)), 400
+    for member in result.get('members', []) + ([result['me']] if result.get('me') else []):
+        number = next((n for n, name in CLUBS.items() if name == member['club_name']), None)
+        filename = f'images/{number}.png' if number is not None else 'images/default_stock_logo.png'
+        if not (Path(current_app.static_folder) / filename).is_file():
+            filename = 'images/default_stock_logo.png'
+        member['profileImg'] = url_for('static', filename=filename)
+    response = jsonify(success=True, **result)
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
 @main.route("/settings")
 def settings():
     if "user_id" not in session:

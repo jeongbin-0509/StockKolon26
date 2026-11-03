@@ -56,6 +56,7 @@ def create_app(test_config=None):
     from app.services.market_service import MarketService
     from app.services.admin_service import AdminService
     from app.services.trading_service import TradingService
+    from app.services.ranking_service import RankingService
     from app.services.email_verification import EmailVerification
     from app.services.database import DatabaseError
     import sqlite3
@@ -70,6 +71,7 @@ def create_app(test_config=None):
     trading = TradingService(service)
     trading.initialize()
     app.extensions["trading"] = trading
+    app.extensions["ranking"] = RankingService(service)
     admin_service = AdminService(service)
     admin_service.initialize()
     app.extensions["admin"] = admin_service
