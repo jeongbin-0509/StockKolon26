@@ -23,6 +23,9 @@ body {
 .order-submit:disabled, .shortcut-btn:disabled { cursor: not-allowed; opacity: 0.45; }
 
 .asset-summary {
+    position: sticky;
+    top: max(.5rem, env(safe-area-inset-top));
+    z-index: 20;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;

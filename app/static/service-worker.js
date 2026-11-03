@@ -1,4 +1,4 @@
-const CACHE_NAME = 'stockolon26-pwa-v7';
+const CACHE_NAME = 'stockolon26-pwa-v8';
 const APP_SHELL = [
   '/offline',
   '/manifest.webmanifest',
