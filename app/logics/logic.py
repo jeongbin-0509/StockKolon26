@@ -16,6 +16,8 @@ SECTOR_MEMORY = 0.58
 SECTOR_SHOCK = 0.00014
 TREND_MEMORY = 0.86
 TREND_SHOCK = 0.000045
+LONG_TREND_MEMORY = 0.9995
+LONG_TREND_SHOCK = 0.0000005
 INDIVIDUAL_SHOCK = 0.00018
 FLOW_MAX_LOG_RETURN = 0.0008
 FLOW_LIQUIDITY_SHARES = 1200
@@ -60,7 +62,7 @@ def next_tick(stocks, state, news, flows, rng):
     event = state.get("random_event")
     if not isinstance(event, dict) or event.get("club") not in stocks or event.get("remaining", 0) <= 0:
         event = None
-    prices, volatility, trends, components = {}, {}, {}, {}
+    prices, volatility, trends, long_trends, components = {}, {}, {}, {}, {}
     for club_num, price in sorted(stocks.items()):
         news_effect = news.get(club_num, 0.0)
         flow_effect = FLOW_MAX_LOG_RETURN * math.tanh(
@@ -73,18 +75,22 @@ def next_tick(stocks, state, news, flows, rng):
         old_trend = state.get("trends", {}).get(str(club_num), 0.0)
         trend = TREND_MEMORY * old_trend + rng.gauss(0, TREND_SHOCK)
         individual = trend + rng.gauss(0, INDIVIDUAL_SHOCK * vol)
+        old_long_trend = state.get("long_trends", {}).get(str(club_num), 0.0)
+        long_trend = LONG_TREND_MEMORY * old_long_trend + rng.gauss(0, LONG_TREND_SHOCK)
         parts = {
             "market": beta * market,
             "sector": sectors[str(club_num // 10)],
             "news": news_effect,
             "flow": flow_effect,
             "individual": individual,
+            "long_trend": long_trend,
             "random_event": event["per_tick"] if event and event["club"] == club_num else 0.0,
         }
         movement = max(-MAX_LOG_RETURN, min(MAX_LOG_RETURN, sum(parts.values())))
         prices[club_num] = max(1.0, price * math.exp(movement))
         volatility[str(club_num)] = vol
         trends[str(club_num)] = trend
+        long_trends[str(club_num)] = long_trend
         components[club_num] = {**parts, "applied": movement}
 
     if event:
@@ -100,6 +106,6 @@ def next_tick(stocks, state, news, flows, rng):
 
     return prices, {
         "market": market, "market_volatility": market_vol,
-        "sectors": sectors, "volatility": volatility, "trends": trends,
+        "sectors": sectors, "volatility": volatility, "trends": trends, "long_trends": long_trends,
         "random_event": event,
     }, components

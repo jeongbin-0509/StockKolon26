@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import patch
 
 from app import create_app
-from app.logics.logic import (FLOW_LIQUIDITY_SHARES, FLOW_MAX_LOG_RETURN,
+from app.logics.logic import (FLOW_LIQUIDITY_SHARES, FLOW_MAX_LOG_RETURN, LONG_TREND_MEMORY,
                               MARKET_MEMORY, MAX_LOG_RETURN, NEWS_TICKS,
                               SECTOR_MEMORY, TREND_MEMORY, news_return, next_tick)
 from app.market_catalog import CLUBS
@@ -73,6 +73,32 @@ class EngineTests(unittest.TestCase):
             else:
                 self.assertIsNone(state['random_event'])
         self.assertGreater(prices[61], 10000)
+
+    def test_long_trend_survives_serialization_and_decays_without_shocks(self):
+        class NoShock:
+            @staticmethod
+            def gauss(mean, deviation):
+                return mean
+            @staticmethod
+            def random():
+                return 1.0
+        initial = {'long_trends': {'61': 0.00002, '62': -0.00002}}
+        restored = json.loads(json.dumps(initial))
+        prices, state, parts = next_tick({61: 12000, 62: 8000}, restored, {}, {}, NoShock())
+        self.assertAlmostEqual(state['long_trends']['61'], 0.00002 * LONG_TREND_MEMORY)
+        self.assertGreater(parts[61]['long_trend'], 0)
+        self.assertLess(parts[62]['long_trend'], 0)
+        self.assertGreater(prices[61], 12000)
+        self.assertLess(prices[62], 8000)
+
+    def test_week_of_market_flows_creates_varied_price_levels(self):
+        for seed in (7, 19, 42):
+            prices = {club: 10000 for club in CLUBS}
+            state, rng = {}, random.Random(seed)
+            for _ in range(7 * 24 * 120):
+                prices, state, _ = next_tick(prices, state, {}, {}, rng)
+            self.assertGreaterEqual(sum(price < 8000 or price > 12000 for price in prices.values()), 3)
+            self.assertTrue(all(math.isfinite(price) and price >= 1 for price in prices.values()))
 
     def test_random_events_are_reproducible_and_both_directions_occur(self):
         def simulate(seed):
