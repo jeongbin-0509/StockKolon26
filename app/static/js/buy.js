@@ -156,7 +156,7 @@ function updateSubmit() {
     const amount = Number(amountInput.value);
     const stock = stocks.find(item => item.club_num === selectedClub);
     currentPrice = stock ? (currentMode === 'buy' ? stock.buyPrice : stock.sellPrice) : 0;
-    const valid = Number.isInteger(amount) && amount >= 1 && amount <= 1000;
+    const valid = Number.isSafeInteger(amount) && amount >= 1;
     document.querySelector("#submit-count").textContent = `${amount}주`;
     document.querySelector("#submit-total").textContent = `(${formatWon(valid ? amount * currentPrice : 0)})`;
     document.querySelector("#submit-label").textContent = currentMode === "buy" ? "매수 주문하기" : "매도 주문하기";
@@ -310,9 +310,9 @@ document.querySelectorAll(".amount-btn, .shortcut-btn:not(:disabled)").forEach((
     button.addEventListener("click", () => {
         if (button.dataset.value === 'max') {
             const held = portfolio?.holdings.find(item => item.club_num === selectedClub)?.quantity || 0;
-            amountInput.value = Math.min(1000, currentMode === 'buy' ? Math.floor((portfolio?.user.cash || 0) / currentPrice) : held);
+            amountInput.value = currentMode === 'buy' ? (currentPrice ? Math.floor((portfolio?.user.cash || 0) / currentPrice) : 0) : held;
         } else {
-            amountInput.value = Math.min(1000, Math.max(1, Math.floor(Number(amountInput.value) || 0) + Number(button.dataset.step || button.dataset.value)));
+            amountInput.value = Math.min(Number.MAX_SAFE_INTEGER, Math.max(1, Math.floor(Number(amountInput.value) || 0) + Number(button.dataset.step || button.dataset.value)));
         }
         updateSubmit();
     });
@@ -320,11 +320,12 @@ document.querySelectorAll(".amount-btn, .shortcut-btn:not(:disabled)").forEach((
 amountInput.addEventListener("input", updateSubmit);
 async function loadPortfolio() {
     try {
-        const response = await fetch('/api/profile-data', {cache: 'no-store'});
+        const response = await fetch('/api/profile-data?view=trade', {cache: 'no-store'});
         if (!response.ok) throw new Error();
         const data = await response.json();
         if (!data.success) throw new Error();
         portfolio = data;
+        updateHeaderProfile(data.user);
         document.querySelector('#asset-total').textContent = data.summary.total_assets;
         document.querySelector('#asset-cost').textContent = data.summary.purchase_amount;
         document.querySelector('#asset-cash').textContent = data.summary.cash;

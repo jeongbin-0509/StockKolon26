@@ -7,7 +7,6 @@ from app.services.market_service import trade_quotes
 
 
 class TradingService:
-    MAX_QUANTITY = 1000
     MAX_CASH = 2147483647  # public.users.cash는 PostgreSQL integer다.
 
     def __init__(self, market):
@@ -37,8 +36,8 @@ class TradingService:
             raise ValueError('주문 식별자를 확인해주세요.') from None
         if type(club_num) is not int or club_num not in CLUBS or side not in ('buy', 'sell'):
             raise ValueError('종목과 주문 종류를 확인해주세요.')
-        if type(quantity) is not int or not 1 <= quantity <= self.MAX_QUANTITY:
-            raise ValueError(f'주문 수량은 1~{self.MAX_QUANTITY}주로 입력해주세요.')
+        if type(quantity) is not int or quantity < 1:
+            raise ValueError('주문 수량은 1주 이상의 정수로 입력해주세요.')
         user_id = str(user_id)
         with self.market.connection(write=True) as db:
             previous = db.execute('SELECT * FROM trade_orders WHERE order_id=?', (order_id,)).fetchone()

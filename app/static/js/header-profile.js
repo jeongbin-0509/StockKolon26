@@ -10,7 +10,7 @@ function updateHeaderProfile(user) {
 }
 
 if (document.currentScript.dataset.autoload === 'true') {
-    fetch('/api/profile-data')
+    fetch('/api/header-profile')
         .then(response => response.ok ? response.json() : null)
         .then(data => { if (data && data.success) updateHeaderProfile(data.user); })
         .catch(() => {});

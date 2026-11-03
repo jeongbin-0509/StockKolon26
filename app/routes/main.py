@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session, redirect, url_for, jsonify, current_app, send_from_directory
+from flask import Blueprint, render_template, session, redirect, url_for, jsonify, current_app, send_from_directory, request
 from app.services.supabase_client import supabase
 from app.market_catalog import CLUBS
 from app.routes.admin import csrf_token
@@ -170,6 +170,17 @@ def index_data():
     response.headers['Cache-Control'] = 'no-store'
     return response
 
+@main.get('/api/header-profile')
+def header_profile():
+    if 'user_id' not in session:
+        return jsonify(success=False, message='로그인이 필요합니다.'), 401
+    user = supabase.table('users').select('name,club_id').eq('id', session['user_id']).single().execute().data
+    profile_image, club_name = club_profile(user)
+    response = jsonify(success=True, user={'name': user['name'], 'profileImg': profile_image, 'clubName': club_name})
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
 @main.route("/api/profile-data")
 def profile_data():
     if "user_id" not in session:
@@ -181,13 +192,15 @@ def profile_data():
     user = result.data
     profile_image, club_name = club_profile(user)
     trading = current_app.extensions['trading']
-    market = current_app.extensions['market'].snapshot()
+    trade_view = request.args.get('view') == 'trade'
+    market = None if trade_view else current_app.extensions['market'].snapshot()
     portfolio = trading.portfolio(user_id, None if trading.market.store.postgres else user.get('cash', 0))
-    market_by_club = {stock['club_num']: stock for stock in market['stocks']}
-    for holding in portfolio['holdings']:
-        candles = market_by_club.get(holding['club_num'], {}).get('candles', [])[-7:]
-        holding['prices'] = [candle['close'] for candle in candles]
-        holding['timestamps'] = [candle['timestamp'] for candle in candles]
+    if not trade_view:
+        market_by_club = {stock['club_num']: stock for stock in market['stocks']}
+        for holding in portfolio['holdings']:
+            candles = market_by_club.get(holding['club_num'], {}).get('candles', [])[-7:]
+            holding['prices'] = [candle['close'] for candle in candles]
+            holding['timestamps'] = [candle['timestamp'] for candle in candles]
     cash = portfolio['cash']
     rate = (portfolio['profit'] / portfolio['cost'] * 100) if portfolio['cost'] else 0
 
@@ -217,7 +230,7 @@ def profile_data():
             "down_rate": "0.0%"
         },
         "holdings": portfolio['holdings'],
-        "orders": trading.history(user_id)
+        "orders": [] if trade_view else trading.history(user_id)
     })
     response.headers['Cache-Control'] = 'no-store'
     return response

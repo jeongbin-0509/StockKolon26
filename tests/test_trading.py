@@ -46,6 +46,27 @@ class TradingTests(unittest.TestCase):
         self.assertEqual(len(self.trade.history('member')), 2)
         self.assertEqual(self.trade.history('another'), [])
 
+    def test_large_orders_respect_funds_holdings_and_idempotency(self):
+        with self.market.connection(write=True) as db:
+            db.execute('UPDATE users SET cash=? WHERE id=?', (30000000, 'member'))
+        order_id = str(uuid.uuid4())
+        purchase = self.place(qty=1500, order_id=order_id)
+        self.assertTrue(purchase['success'])
+        self.assertTrue(self.place(qty=1500, order_id=order_id)['replayed'])
+        self.assertEqual(self.trade.portfolio('member')['holdings'][0]['quantity'], 1500)
+        with self.assertRaisesRegex(ValueError, '수량'):
+            self.place('sell', qty=1501)
+        sale = self.place('sell', qty=1500)
+        self.assertTrue(sale['success'])
+        self.assertEqual(self.trade.portfolio('member')['holdings'], [])
+
+    def test_invalid_or_unaffordable_large_order_is_rejected(self):
+        for quantity in (0, -1, 1.5, True, '1500'):
+            with self.subTest(quantity=quantity), self.assertRaises(ValueError):
+                self.place(qty=quantity)
+        with self.assertRaisesRegex(ValueError, '현금'):
+            self.place(qty=1500)
+
     def test_retry_is_idempotent_and_cannot_change_payload_or_owner(self):
         order_id = str(uuid.uuid4())
         first = self.place(order_id=order_id)

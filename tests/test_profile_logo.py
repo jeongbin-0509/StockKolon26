@@ -49,3 +49,26 @@ class ProfileLogoTests(unittest.TestCase):
         with self.client.session_transaction() as session:
             session.clear()
         self.assertEqual(self.client.get('/api/profile-data').status_code, 401)
+
+    def test_trade_view_skips_expensive_market_and_history_calls(self):
+        self.set_user('club-uuid', '세미콜론')
+        market = self.app.extensions['market']
+        trade = self.app.extensions['trading']
+        with patch('app.routes.main.supabase', new=self.fake), \
+                patch.object(market, 'snapshot', side_effect=AssertionError('unnecessary market snapshot')), \
+                patch.object(trade, 'history', side_effect=AssertionError('unnecessary order history')):
+            response = self.client.get('/api/profile-data?view=trade')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['user']['profileImg'], '/static/images/61.png')
+        self.assertEqual(response.json['user']['cash'], 100)
+        self.assertEqual(response.json['orders'], [])
+
+    def test_header_profile_does_not_load_portfolio_or_market(self):
+        self.set_user('club-uuid', '세미콜론')
+        with patch('app.routes.main.supabase', new=self.fake), \
+                patch.object(self.app.extensions['market'], 'snapshot', side_effect=AssertionError('unnecessary market snapshot')), \
+                patch.object(self.app.extensions['trading'], 'portfolio', side_effect=AssertionError('unnecessary portfolio')):
+            response = self.client.get('/api/header-profile')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['user']['profileImg'], '/static/images/61.png')
+        self.assertEqual(response.headers['Cache-Control'], 'no-store')
