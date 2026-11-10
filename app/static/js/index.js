@@ -91,18 +91,10 @@ class StockCard {
         const isUp = data.change > 0;
         this.change.textContent = `${isUp ? '+' : ''}${Number(data.change).toFixed(2)}% ${isUp ? '↗' : '↘'}`;
         this.change.classList.add(isUp ? 'up' : 'down');
-        if (!Array.isArray(data.prices) || data.prices.length < 2) return;
-
-        const times = Array.isArray(data.timestamps) ? data.timestamps : [];
-        const formatTime = timestamp => new Date(timestamp * 1000).toLocaleTimeString('ko-KR', {
-            timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false
-        });
-        StockolonCharts.renderLineChart(this.chart, {
-            prices: data.prices,
-            tone: isUp ? 'up' : 'down',
-            startLabel: times.length ? formatTime(times[0]) : '5분 전',
-            endLabel: times.length ? formatTime(times.at(-1)) : '현재',
-            ariaLabel: `${data.name} 최근 5분 가격 변화`
+        StockolonCharts.renderCandlestickChart(this.chart, {
+            candles: data.candles,
+            compact: true,
+            ariaLabel: `${data.name} 최근 1시간 5분봉 가격 차트`
         });
     }
 }

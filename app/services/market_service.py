@@ -193,8 +193,16 @@ class MarketService:
                                'timestamps': [point['timestamp'] for point in series]})
             rising = [stock for stock in movers if stock['change'] > 0]
             falling = [stock for stock in movers if stock['change'] < 0]
-            return {'up': max(rising, key=lambda stock: stock['change'], default=None),
-                    'down': min(falling, key=lambda stock: stock['change'], default=None)}
+            result = {'up': max(rising, key=lambda stock: stock['change'], default=None),
+                      'down': min(falling, key=lambda stock: stock['change'], default=None)}
+            # 상승·하락률은 정확히 5분 전 대비, 차트는 저장된 최근 1시간의 5분봉이다.
+            for stock in result.values():
+                if stock is not None:
+                    stock['candles'] = [dict(row) for row in db.execute(
+                        'SELECT timestamp, open, high, low, close, volume FROM market_candles '
+                        'WHERE club_num=? AND timestamp>=? ORDER BY timestamp',
+                        (stock['club_num'], timestamp // CANDLE_SECONDS * CANDLE_SECONDS - 11 * CANDLE_SECONDS))]
+            return result
 
     def _event_time(self, db, timestamp):
         now = self.clock()

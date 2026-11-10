@@ -95,6 +95,27 @@ class TradingTests(unittest.TestCase):
         self.assertEqual(result['order']['price'], 12376)
         self.assertEqual(result['order']['total'], 12376)
 
+    def test_filled_demand_updates_candle_prices_and_volume_on_next_tick(self):
+        import json
+        self.place(qty=3)
+        self.now += 30
+        self.market.snapshot()
+        self.place('sell', qty=2)
+        self.now += 30
+        snapshot = self.market.snapshot()
+        stock = next(stock for stock in snapshot['stocks'] if stock['club_num'] == 61)
+        candle = stock['candles'][-1]
+        with self.market.connection() as db:
+            rows = list(db.execute('SELECT price, volume, components FROM market_ticks '
+                                   'WHERE club_num=61 AND timestamp>=? AND timestamp<? ORDER BY timestamp',
+                                   (candle['timestamp'], candle['timestamp'] + 300)))
+        prices = [row['price'] for row in rows]
+        self.assertGreater(json.loads(rows[-2]['components'])['flow'], 0)
+        self.assertLess(json.loads(rows[-1]['components'])['flow'], 0)
+        self.assertEqual(candle['volume'], 5)
+        self.assertEqual((candle['open'], candle['high'], candle['low'], candle['close']),
+                         (prices[0], max(prices), min(prices), prices[-1]))
+
     def test_parallel_orders_cannot_overspend(self):
         def attempt(_):
             try:

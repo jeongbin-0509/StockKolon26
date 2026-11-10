@@ -19,6 +19,10 @@ class ProfileLogoTests(unittest.TestCase):
         self.user_table = MagicMock()
         self.club_table = MagicMock()
         self.fake.table.side_effect = lambda name: {'users': self.user_table, 'clubs': self.club_table}[name]
+        ranking = patch.object(self.app.extensions['ranking'], 'rankings',
+                               return_value={'me': {'rank': 7}, 'count': 42})
+        self.ranking = ranking.start()
+        self.addCleanup(ranking.stop)
 
     def set_user(self, club_id, club_name=None):
         self.user_table.select.return_value.eq.return_value.single.return_value.execute.return_value.data = {
@@ -34,6 +38,7 @@ class ProfileLogoTests(unittest.TestCase):
         self.assertEqual(index['profileImg'], '/static/images/61.png')
         self.assertEqual(profile['profileImg'], index['profileImg'])
         self.assertEqual(profile['clubName'], '세미콜론')
+        self.assertEqual(profile['rank'], '전교 7위 · 42명 중')
 
     def test_missing_club_or_logo_uses_existing_default(self):
         with patch('app.routes.main.supabase', new=self.fake):
@@ -54,6 +59,7 @@ class ProfileLogoTests(unittest.TestCase):
         self.set_user('club-uuid', '세미콜론')
         market = self.app.extensions['market']
         trade = self.app.extensions['trading']
+        self.ranking.side_effect = AssertionError('unnecessary ranking query')
         with patch('app.routes.main.supabase', new=self.fake), \
                 patch.object(market, 'snapshot', side_effect=AssertionError('unnecessary market snapshot')), \
                 patch.object(trade, 'history', side_effect=AssertionError('unnecessary order history')):
@@ -62,6 +68,17 @@ class ProfileLogoTests(unittest.TestCase):
         self.assertEqual(response.json['user']['profileImg'], '/static/images/61.png')
         self.assertEqual(response.json['user']['cash'], 100)
         self.assertEqual(response.json['orders'], [])
+        self.ranking.assert_not_called()
+
+    def test_ranking_failure_preserves_profile_and_portfolio(self):
+        self.set_user(None)
+        self.ranking.side_effect = RuntimeError('private connection details')
+        with patch('app.routes.main.supabase', new=self.fake):
+            response = self.client.get('/api/profile-data')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['user']['cash'], 100)
+        self.assertEqual(response.json['user']['rank'], '순위를 불러올 수 없습니다')
+        self.assertNotIn('private connection details', response.get_data(as_text=True))
 
     def test_header_profile_does_not_load_portfolio_or_market(self):
         self.set_user('club-uuid', '세미콜론')

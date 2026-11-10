@@ -7,7 +7,7 @@
     {% include '_pwa_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css', v='candles-1') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
 </head>
 <body>
@@ -25,7 +25,7 @@
                     <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="기본 프로필 이미지">
                 </div>
                 <span class="head2 user-name">회원</span>
-                <span class="user-rank">순위 준비 중</span>
+                <span class="user-rank">순위를 불러오는 중</span>
             </div>
             <!-- 버튼 -->
             <a id="ranking_btn" href="{{ url_for('main.rank') }}">
@@ -119,8 +119,8 @@
     </main>
 
     <script src="{{ url_for('static', filename='js/header-profile.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/charts.js', v='candles-1') }}"></script>
+    <script src="{{ url_for('static', filename='js/profile.js', v='candles-1') }}"></script>
 
 {% include '_pwa_script.html' %}
 </body>

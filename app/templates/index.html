@@ -7,7 +7,7 @@
     {% include '_pwa_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css', v='candles-1') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
 <body>
@@ -85,6 +85,7 @@
                     <span class="stock-change head2">—</span>
                 </div>
                 <div class="stock-chart"></div>
+                <p class="chart-caption">최근 1시간 · 5분봉</p>
             </section>
 
             <!-- 최근 가장 많이 하락한 주식 -->
@@ -103,6 +104,7 @@
                     <span class="stock-change head2">—</span>
                 </div>
                 <div class="stock-chart"></div>
+                <p class="chart-caption">최근 1시간 · 5분봉</p>
             </section>
 
         </section>
@@ -131,8 +133,8 @@
     </main>
 
     <script src="{{ url_for('static', filename='js/header-profile.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/charts.js', v='candles-1') }}"></script>
+    <script src="{{ url_for('static', filename='js/index.js', v='candles-1') }}"></script>
 {% include '_pwa_script.html' %}
 </body>
 </html>

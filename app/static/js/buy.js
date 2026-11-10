@@ -36,6 +36,7 @@ let refreshTimer;
 let loading = false;
 let lastTimestamp = null;
 let requestedTradeHandled = false;
+let chartInterval = 300;
 
 function formatWon(value) {
     return `${Math.round(value).toLocaleString("ko-KR")}원`;
@@ -49,23 +50,29 @@ function setClubImage(img, clubNum) {
     img.src = `${imageBase}${clubNum}.png`;
 }
 
-function timeLabel(timestamp) {
-    return new Date(timestamp * 1000).toLocaleTimeString("ko-KR", {
-        timeZone: "Asia/Seoul", hour: "2-digit", minute: "2-digit", hour12: false
+function renderStockChart(container, stock, compact = false) {
+    StockolonCharts.renderCandlestickChart(container, {
+        candles: stock.candles,
+        compact,
+        maxCandles: compact ? 36 : 60,
+        intervalSeconds: compact ? 300 : chartInterval,
+        timestamp: lastTimestamp,
+        ariaLabel: `${stock.club_name} ${compact ? 5 : chartInterval / 60}분봉 가격 차트`
     });
 }
 
-function renderStockChart(container, stock, compact = false) {
-    const candles = stock.candles || [];
-    StockolonCharts.renderLineChart(container, {
-        prices: candles.map(candle => candle.close),
-        tone: trendOf(stock),
-        compact,
-        startLabel: candles.length ? timeLabel(candles[0].timestamp) : '',
-        endLabel: candles.length ? timeLabel(candles.at(-1).timestamp) : '',
-        ariaLabel: `${stock.club_name} 최근 가격 변화`
+document.querySelectorAll('[data-chart-interval]').forEach(button => {
+    button.addEventListener('click', () => {
+        chartInterval = Number(button.dataset.chartInterval);
+        document.querySelectorAll('[data-chart-interval]').forEach(item => {
+            const active = item === button;
+            item.classList.toggle('active', active);
+            item.setAttribute('aria-pressed', String(active));
+        });
+        const stock = stocks.find(item => item.club_num === selectedClub);
+        if (stock) renderStockChart(document.querySelector('.modal-chart'), stock);
     });
-}
+});
 
 function trendOf(stock) {
     return stock.changeRate >= 0 ? "up" : "down";
@@ -101,6 +108,7 @@ function renderStockCards() {
         (selectedCategory === 'all' || stock.categoryKey === Number(selectedCategory)) &&
         (!favoritesOnly || favorites.has(stock.club_num)) &&
         stock.club_name.normalize('NFC').toLocaleLowerCase('ko-KR').replace(/\s+/g, '').includes(query));
+    stockGrid.querySelectorAll('.stock-chart').forEach(StockolonCharts.disposeChart);
     stockGrid.replaceChildren(...visible.map(createStockCard));
     if (stocks.length && (query || favoritesOnly || selectedCategory !== 'all')) {
         stockResults.textContent = visible.length ? `${visible.length}개 종목` : (favoritesOnly && !favorites.size ? '즐겨찾기한 종목이 없습니다. 종목의 별을 눌러 추가해보세요.' : '조건에 맞는 종목이 없습니다.');

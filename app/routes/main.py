@@ -3,10 +3,13 @@ from app.services.supabase_client import supabase
 from app.market_catalog import CLUBS
 from app.routes.admin import csrf_token
 from postgrest.exceptions import APIError
+from app.services.database import DatabaseError
 import httpx
+import sqlite3
 from pathlib import Path
 
 main = Blueprint("main", __name__)
+RANKING_ERRORS = (DatabaseError, sqlite3.Error, APIError, httpx.HTTPError, RuntimeError)
 
 
 @main.get("/manifest.webmanifest")
@@ -123,7 +126,14 @@ def rankings():
     try:
         result = current_app.extensions['ranking'].rankings(session['user_id'], request.args.get('scope', 'school'))
     except ValueError as exc:
-        return jsonify(success=False, message=str(exc)), 400
+        response = jsonify(success=False, message=str(exc))
+        response.headers['Cache-Control'] = 'no-store'
+        return response, 400
+    except RANKING_ERRORS:
+        current_app.logger.warning('랭킹 데이터베이스 조회에 실패했습니다.')
+        response = jsonify(success=False, message='랭킹 정보를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.')
+        response.headers['Cache-Control'] = 'no-store'
+        return response, 503
     for member in result.get('members', []) + ([result['me']] if result.get('me') else []):
         number = next((n for n, name in CLUBS.items() if name == member['club_name']), None)
         filename = f'images/{number}.png' if number is not None else 'images/default_stock_logo.png'
@@ -159,13 +169,14 @@ def index_data():
 
     def stock_card(stock):
         if stock is None:
-            return {'name': '데이터 없음', 'sub': '최근 5분 기준', 'change': None, 'prices': [], 'timestamps': [],
+            return {'name': '데이터 없음', 'sub': '최근 5분 기준', 'change': None, 'prices': [], 'timestamps': [], 'candles': [],
                     'logo': url_for('static', filename='images/default_stock_logo.png')}
         filename = f"images/{stock['club_num']}.png"
         if not (Path(current_app.static_folder) / filename).is_file():
             filename = 'images/default_stock_logo.png'
         return {'name': stock['name'], 'sub': f"{stock['price']:,.0f}원 · {stock['category']}",
                 'change': stock['change'], 'prices': stock['prices'], 'timestamps': stock['timestamps'],
+                'candles': stock['candles'],
                 'logo': url_for('static', filename=filename)}
 
     data = {
@@ -220,8 +231,17 @@ def profile_data():
             candles = market_by_club.get(holding['club_num'], {}).get('candles', [])[-7:]
             holding['prices'] = [candle['close'] for candle in candles]
             holding['timestamps'] = [candle['timestamp'] for candle in candles]
+            holding['candles'] = candles
     cash = portfolio['cash']
     rate = (portfolio['profit'] / portfolio['cost'] * 100) if portfolio['cost'] else 0
+    rank_text = None
+    if not trade_view:
+        try:
+            ranking = current_app.extensions['ranking'].rankings(user_id, 'school')
+            rank_text = f"전교 {ranking['me']['rank']:,}위 · {ranking['count']:,}명 중"
+        except (ValueError, *RANKING_ERRORS):
+            current_app.logger.warning('프로필 순위를 불러오지 못했습니다.')
+            rank_text = '순위를 불러올 수 없습니다'
 
     response = jsonify({
         "success": True,
@@ -231,7 +251,7 @@ def profile_data():
             "clubName": club_name,
             "cash": cash,
             "total_assets": portfolio['total'],
-            "rank": "전체 순위 준비중"
+            "rank": rank_text
         },
         "summary": {
             "total_assets": f"{portfolio['total']:,}원",

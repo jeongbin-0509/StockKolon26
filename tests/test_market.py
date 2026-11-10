@@ -190,6 +190,9 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(len(movers['up']['prices']), 11)
         self.assertGreater(movers['up']['change'], 0)
         self.assertLess(movers['down']['change'], 0)
+        snapshot = self.service.snapshot()
+        for mover in movers.values():
+            self.assertEqual(mover['candles'], self.stock(snapshot, mover['club_num'])['candles'])
 
     def test_same_tick_and_restart_are_idempotent(self):
         self.now += 300

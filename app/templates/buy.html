@@ -7,8 +7,8 @@
     {% include '_pwa_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/buy.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css', v='candles-1') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/buy.css', v='candles-1') }}">
 </head>
 <body>
     
@@ -74,7 +74,7 @@
         </nav>
 
         <p class="market-status" id="market-status" role="status" aria-live="polite">주가 데이터를 불러오는 중입니다.</p>
-        <p class="market-caption">등락·최고가·최저가는 오늘 00:00(한국시간) 기준 · 차트는 최근 최대 5시간의 5분봉 종가</p>
+        <p class="market-caption">등락·최고가·최저가는 오늘 00:00(한국시간) 기준 · 상세 차트는 최근 최대 5시간의 캔들·거래량</p>
         <p id="stock-results" class="stock-results" role="status" aria-live="polite"></p>
         <section class="stock-grid" aria-label="주식 목록" aria-busy="true" data-image-base="{{ url_for('static', filename='images/') }}"></section>
     </main>
@@ -117,7 +117,18 @@
                 </dl>
             </div>
 
-            <div class="modal-chart" aria-live="polite"></div>
+            <section class="market-chart-panel" aria-label="종목 캔들 차트">
+                <div class="chart-toolbar">
+                    <div class="chart-intervals" role="group" aria-label="봉 간격">
+                        <button type="button" class="active" data-chart-interval="300" aria-pressed="true">5분</button>
+                        <button type="button" data-chart-interval="900" aria-pressed="false">15분</button>
+                        <button type="button" data-chart-interval="3600" aria-pressed="false">1시간</button>
+                    </div>
+                    <span class="chart-unit">가격 (원)</span>
+                </div>
+                <div class="modal-chart"></div>
+                <p class="chart-guide">봉을 가리키거나 터치해 가격 확인 <span>몸통 시가·종가 / 꼬리 고가·저가</span></p>
+            </section>
 
             <p class="market-caption" id="order-balance">보유 현금 확인 중…</p>
             <form class="order-form" data-csrf="{{ csrf_token() }}">
@@ -173,8 +184,8 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/header-profile.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/buy.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/charts.js', v='candles-1') }}"></script>
+    <script src="{{ url_for('static', filename='js/buy.js', v='candles-1') }}"></script>
 {% include '_pwa_script.html' %}
 </body>
 </html>

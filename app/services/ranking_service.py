@@ -3,27 +3,62 @@ import re
 
 from app.logics.logic import TICK_SECONDS
 from app.services.market_service import trade_quotes
+from app.services.supabase_client import get_supabase
+
+
+def load_supabase_members():
+    """로컬 시장 DB와 함께 쓸 회원 정보를 서버에서만 조회한다."""
+    client = get_supabase()
+
+    def all_rows(table, columns):
+        rows = []
+        while True:
+            # 서버의 행 제한이 요청 크기보다 작아도 마지막 회원까지 읽는다.
+            page = (client.table(table).select(columns).order('id')
+                    .range(len(rows), len(rows) + 499).execute().data)
+            if not page:
+                return rows
+            rows.extend(page)
+
+    users = all_rows('users', 'id,name,usernum,club_id,cash')
+    clubs = {str(club['id']): club['name'] for club in all_rows('clubs', 'id,name')}
+    return [dict(user, club_name=clubs.get(str(user['club_id']))) for user in users]
 
 
 class RankingService:
-    def __init__(self, market):
+    def __init__(self, market, member_loader=None):
         self.market = market
+        self.member_loader = member_loader
 
     def rankings(self, user_id, scope):
         if scope not in ('school', 'class', 'club'):
             raise ValueError('랭킹 범위를 확인해주세요.')
+        # 원격 API 응답을 기다리는 동안 시장의 쓰기 잠금을 잡지 않는다.
+        users_from_api = self.member_loader() if self.member_loader else None
         users = 'public.users' if self.market.store.postgres else 'users'
         clubs = 'public.clubs' if self.market.store.postgres else 'clubs'
         with self.market.connection(write=True) as db:
             target = int(self.market.clock()) // TICK_SECONDS * TICK_SECONDS
             timestamp = self.market._advance(db, target)
-            rows = db.execute(
-                f'SELECT u.id,u.name,u.usernum,u.club_id,u.cash,c.name AS club_name,'
-                f'h.quantity,h.cost_basis,s.price FROM {users} u '
-                f'LEFT JOIN {clubs} c ON c.id=u.club_id '
-                'LEFT JOIN trade_holdings h ON h.user_id=CAST(u.id AS TEXT) AND h.quantity>0 '
-                'LEFT JOIN market_stocks s ON s.club_num=h.club_num'
-            ).fetchall()
+            if users_from_api is None:
+                # 배포 환경에서는 잔액과 보유 주식을 같은 트랜잭션에서 읽는다.
+                rows = db.execute(
+                    f'SELECT u.id,u.name,u.usernum,u.club_id,u.cash,c.name AS club_name,'
+                    f'h.quantity,h.cost_basis,s.price FROM {users} u '
+                    f'LEFT JOIN {clubs} c ON c.id=u.club_id '
+                    'LEFT JOIN trade_holdings h ON h.user_id=CAST(u.id AS TEXT) AND h.quantity>0 '
+                    'LEFT JOIN market_stocks s ON s.club_num=h.club_num'
+                ).fetchall()
+            else:
+                holdings = {}
+                for holding in db.execute(
+                    'SELECT h.user_id,h.quantity,h.cost_basis,s.price FROM trade_holdings h '
+                    'LEFT JOIN market_stocks s ON s.club_num=h.club_num WHERE h.quantity>0'
+                ):
+                    holdings.setdefault(holding['user_id'], []).append(dict(holding))
+                rows = [dict(user, **holding) for user in users_from_api
+                        for holding in holdings.get(str(user['id']),
+                            [{'quantity': None, 'cost_basis': None, 'price': None}])]
         members = {}
         for row in rows:
             key = str(row['id'])

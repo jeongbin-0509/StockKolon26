@@ -41,6 +41,7 @@ async function loadProfileData() {
     topRows[1].querySelector(".top-stock-pct").textContent = data.top.down_rate;
 
     const tbody = document.querySelector("#holdings-table tbody");
+    tbody.querySelectorAll('.mini-chart').forEach(StockolonCharts.disposeChart);
     tbody.innerHTML = "";
 
     if (data.holdings.length === 0) {
@@ -69,11 +70,10 @@ async function loadProfileData() {
             chartCell.className = 'chart-cell';
             const chart = document.createElement('div');
             chart.className = 'mini-chart';
-            StockolonCharts.renderLineChart(chart, {
-                prices: item.prices,
-                tone: item.prices?.at(-1) >= item.prices?.[0] ? 'up' : 'down',
+            StockolonCharts.renderCandlestickChart(chart, {
+                candles: item.candles,
                 compact: true,
-                ariaLabel: `${item.name} 최근 30분 가격 변화`
+                ariaLabel: `${item.name} 최근 30분 5분봉 가격 차트`
             });
             chartCell.append(chart);
             row.appendChild(chartCell);
