@@ -339,14 +339,14 @@ body {
     background-color: #121212;
 }
 
-.market-chart-panel { margin: 1.2rem 0; padding: 12px 14px 10px; border: 1px solid #30343b; border-radius: 14px; background: #101318; }
+.market-chart-panel { margin: 1.2rem 0; padding: 12px 14px 10px; border: 1px solid #2a313e; border-radius: 10px; background: #10151e; }
 .chart-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #ffffff0d; }
 .chart-intervals { display: flex; gap: 4px; }
 .chart-intervals button { min-height: 32px; padding: 4px 12px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: #8e97a5; font-size: 12px; font-weight: 600; cursor: pointer; }
-.chart-intervals button.active { background: #263039; border-color: #3a4c4b; color: #69e2ad; }
+.chart-intervals button.active { background: #263344; border-color: #3e526b; color: #e4edf9; }
 .chart-intervals button:hover { color: white; background: #232a33; }
 .chart-unit { font-size: 10px; color: #87919e; }
-.market-chart-panel .modal-chart { height: auto; min-height: 356px; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.market-chart-panel .modal-chart { height: auto; min-height: 440px; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
 .chart-guide { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 3px 12px; padding-top: 8px; border-top: 1px solid #ffffff0d; color: #8b95a2; font-size: 10px; }
 .chart-guide span { color: #66717e; }
 .trade-modal .modal-stock h2 { font-size: clamp(1.5rem, 2.6vw, 2rem); }

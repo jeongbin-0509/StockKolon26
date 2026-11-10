@@ -53,6 +53,7 @@ function setClubImage(img, clubNum) {
 function renderStockChart(container, stock, compact = false) {
     StockolonCharts.renderCandlestickChart(container, {
         candles: stock.candles,
+        seriesKey: stock.club_num,
         compact,
         maxCandles: compact ? 36 : 60,
         intervalSeconds: compact ? 300 : chartInterval,

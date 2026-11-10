@@ -7,8 +7,8 @@
     {% include '_pwa_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css', v='candles-1') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/buy.css', v='candles-1') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css', v='candles-2') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/buy.css', v='candles-2') }}">
 </head>
 <body>
     
@@ -127,7 +127,7 @@
                     <span class="chart-unit">가격 (원)</span>
                 </div>
                 <div class="modal-chart"></div>
-                <p class="chart-guide">봉을 가리키거나 터치해 가격 확인 <span>몸통 시가·종가 / 꼬리 고가·저가</span></p>
+                <p class="chart-guide">봉을 선택해 가격 확인 · 좌우로 드래그해 이동 <span>＋/− 확대·축소 · 전체 기록 보기</span></p>
             </section>
 
             <p class="market-caption" id="order-balance">보유 현금 확인 중…</p>
@@ -184,8 +184,8 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/header-profile.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/charts.js', v='candles-1') }}"></script>
-    <script src="{{ url_for('static', filename='js/buy.js', v='candles-1') }}"></script>
+    <script src="{{ url_for('static', filename='js/charts.js', v='candles-2') }}"></script>
+    <script src="{{ url_for('static', filename='js/buy.js', v='candles-2') }}"></script>
 {% include '_pwa_script.html' %}
 </body>
 </html>

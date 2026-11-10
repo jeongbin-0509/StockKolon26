@@ -38,3 +38,27 @@ test('invalid candles are omitted without distorting valid history', () => {
         candle(600, 100, 110, 0, 105), candle(900, 100, Infinity, 90, 105), null], 300), [valid]);
     assert.throws(() => aggregate([valid], 60), /5분/);
 });
+
+test('price axes use readable ticks and keep every real high and low in view', () => {
+    for (const [low, high] of [[9296.43, 9395.98], [1, 1], [10000, 10000], [9999.99, 10000.01], [1, 900000]]) {
+        const scale = context.window.StockolonCharts.priceScale(low, high);
+        assert.ok(scale.min >= 0 && scale.min <= low);
+        assert.ok(scale.max >= high && scale.max > scale.min);
+        assert.ok(scale.ticks.length >= 2 && scale.ticks.length <= 8);
+        const labels = scale.ticks.map(value => value.toFixed(scale.decimals));
+        assert.equal(new Set(labels).size, labels.length, 'adjacent price labels must stay distinct');
+    }
+    const scale = context.window.StockolonCharts.priceScale(9296.43, 9395.98);
+    assert.equal(scale.decimals, 0);
+    assert.ok(scale.ticks.every(value => Number.isInteger(value)));
+});
+
+test('zoom and pan keep the requested number of candles within available history', () => {
+    const range = (...args) => JSON.parse(JSON.stringify(context.window.StockolonCharts.candleWindow(...args)));
+    assert.deepEqual(range(60, 24), {start: 36, end: 60, count: 24, offset: 0});
+    assert.deepEqual(range(60, 24, 12), {start: 24, end: 48, count: 24, offset: 12});
+    assert.deepEqual(range(60, 24, 999), {start: 0, end: 24, count: 24, offset: 36});
+    assert.deepEqual(range(60, 24, -8), {start: 36, end: 60, count: 24, offset: 0});
+    assert.deepEqual(range(5, 32, 10), {start: 0, end: 5, count: 5, offset: 0});
+    assert.deepEqual(range(0, 32), {start: 0, end: 0, count: 0, offset: 0});
+});
