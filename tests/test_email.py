@@ -125,6 +125,19 @@ class EmailTests(unittest.TestCase):
             self.client.post('/auth/signup', data=form)
             self.assertEqual(supabase.table.return_value.insert.call_count, 1)
 
+    def test_verify_button_endpoint_checks_code_without_consuming_signup_code(self):
+        self.issue()
+        wrong = self.client.post('/auth/verify-code', json={
+            'email': 'student@goedu.kr', 'code': '000000'})
+        self.assertEqual(wrong.status_code, 400)
+        verified = self.client.post('/auth/verify-code', json={
+            'email': 'student@goedu.kr', 'code': '123456'})
+        self.assertEqual(verified.status_code, 200)
+        self.assertTrue(verified.get_json()['success'])
+        with self.client.session_transaction() as sess:
+            challenge = sess['email_challenge']
+        self.assertTrue(self.verification.consume(challenge, 'student@goedu.kr', '123456'))
+
     def test_club_code_creates_missing_club_and_supports_no_selection(self):
         from app.routes.auth import resolve_club_id
         fake = MagicMock()

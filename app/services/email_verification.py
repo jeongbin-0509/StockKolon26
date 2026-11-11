@@ -76,16 +76,24 @@ class EmailVerification:
             db.execute("UPDATE email_verifications SET status='failed' WHERE id=?", (challenge_id,))
 
     def consume(self, challenge_id, email, code):
+        return self._check(challenge_id, email, code, consume=True)
+
+    def verify(self, challenge_id, email, code):
+        """인증번호를 확인하되 회원가입에서 사용할 수 있도록 아직 소비하지 않는다."""
+        return self._check(challenge_id, email, code, consume=False)
+
+    def _check(self, challenge_id, email, code, consume):
         email = self.normalize(email)
         if not isinstance(challenge_id, str) or not isinstance(code, str) or not re.fullmatch(r'[0-9]{6}', code):
             return False
         now = int(self.clock())
         with self.market.connection(write=True) as db:
-            row = db.execute("SELECT * FROM email_verifications WHERE id=? AND status='sent'", (challenge_id,)).fetchone()
+            row = db.execute("SELECT * FROM email_verifications WHERE id=? AND status IN ('sent','verified')", (challenge_id,)).fetchone()
             if not row or row['email'] != email or row['expires_at'] <= now or row['attempts'] >= 5:
                 return False
             if not hmac.compare_digest(row['digest'], self._digest(challenge_id, email, code)):
                 db.execute('UPDATE email_verifications SET attempts=attempts+1 WHERE id=?', (challenge_id,))
                 return False
-            db.execute("UPDATE email_verifications SET status='used' WHERE id=?", (challenge_id,))
+            status = 'used' if consume else 'verified'
+            db.execute('UPDATE email_verifications SET status=? WHERE id=?', (status, challenge_id))
             return True
