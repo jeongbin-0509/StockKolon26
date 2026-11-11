@@ -271,6 +271,12 @@ class AdminService:
                        (now + AUTO_NEWS_INTERVAL, count + 1))
         return True
 
+    def latest_article_id(self):
+        with self.market.connection() as db:
+            row = db.execute('SELECT a.id FROM news_articles a JOIN market_news n ON n.event_id=a.id '
+                             'ORDER BY a.published_at DESC, a.id DESC LIMIT 1').fetchone()
+            return row['id'] if row else None
+
     def articles(self):
         with self.market.connection() as db:
             rows = db.execute('SELECT a.*, n.effective_at FROM news_articles a '

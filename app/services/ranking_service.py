@@ -1,5 +1,10 @@
 """회원의 실제 평가 자산을 기준으로 개인 순위를 계산한다."""
 import re
+import hashlib
+
+def profile_key(user_id):
+    return hashlib.sha256(("stockolon-profile:" + str(user_id)).encode()).hexdigest()
+
 
 from app.logics.logic import TICK_SECONDS
 from app.services.market_service import trade_quotes
@@ -30,7 +35,7 @@ class RankingService:
         self.market = market
         self.member_loader = member_loader
 
-    def rankings(self, user_id, scope):
+    def rankings(self, user_id, scope, public_key=None):
         if scope not in ('school', 'class', 'club'):
             raise ValueError('랭킹 범위를 확인해주세요.')
         # 원격 API 응답을 기다리는 동안 시장의 쓰기 잠금을 잡지 않는다.
@@ -74,6 +79,8 @@ class RankingService:
                 members[key]['value'] += value
                 members[key]['cost'] += row['cost_basis']
         me = members.get(str(user_id))
+        if public_key is not None:
+            me = next((u for u in members.values() if profile_key(u['id']) == public_key), None)
         if not me:
             raise ValueError('계정의 자산 정보를 확인할 수 없습니다.')
         if scope == 'class':
@@ -95,10 +102,10 @@ class RankingService:
             if member['assets'] != previous_assets:
                 rank = position
                 previous_assets = member['assets']
-            item = {'rank': rank, 'name': member['name'], 'club_name': member['club_name'],
+            item = {'profile_key': profile_key(member['id']), 'rank': rank, 'name': member['name'], 'club_name': member['club_name'],
                     'assets': member['assets'], 'rate': (member['value'] / member['cost'] - 1) * 100 if member['cost'] else None,
                     'is_me': member['id'] == str(user_id)}
-            if item['is_me']:
+            if member['id'] == me['id']:
                 my_rank = item
             if position <= 100:
                 result.append(item)

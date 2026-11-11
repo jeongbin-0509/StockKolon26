@@ -86,7 +86,8 @@
         wrap.append(trophy(tier));
         const identity = element('div', 'podium-identity');
         if (member) {
-            const person = element('div', 'podium-person');
+            const person = element('a', 'podium-person member-link');
+            person.href = '/members/' + encodeURIComponent(member.profile_key);
             person.append(avatar(member), element('span', 'rank-name', member.name || '이름 없음'));
             identity.append(person, element('span', 'rank-sub', member.club_name || '동아리 미선택'));
         } else identity.append(element('span', 'podium-empty-label', '아직 순위 없음'));
@@ -108,7 +109,8 @@
         const rank = element('span', 'rank-number');
         rank.append(document.createTextNode(member.rank), element('small', '', '위'));
         if ((rankCounts.get(member.rank) || 0) > 1) rank.title = rankLabel(member);
-        const person = element('div', 'rank-person');
+        const person = element('a', 'rank-person member-link');
+        person.href = '/members/' + encodeURIComponent(member.profile_key);
         const identity = element('div', 'rank-identity');
         const name = element('div', 'rank-name', member.name || '이름 없음');
         if (member.is_me) name.append(element('span', 'me-badge', 'ME'));

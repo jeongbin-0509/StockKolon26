@@ -7,7 +7,7 @@
     {% include '_pwa_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/rank.css', v='podium-2') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/rank.css', v='podium-light-1') }}">
 </head>
 <body class="leaderboard-page">
 <header class="buy-header">
@@ -50,8 +50,8 @@
         <div class="rank-footnote"><p>총자산 = 보유 현금 + 보유 주식의 현재 매도 평가액</p><p>같은 자산은 공동 순위 · 상위 100명 표시 · 수익률은 보유 주식의 매입금액 기준</p></div>
     </section>
 </main>
-<script src="{{ url_for('static', filename='js/header-profile.js') }}" data-autoload="true"></script>
-<script src="{{ url_for('static', filename='js/rank.js', v='podium-1') }}"></script>
+<script src="{{ url_for('static', filename='js/header-profile.js', v='refresh-3') }}" data-autoload="true"></script>
+<script src="{{ url_for('static', filename='js/rank.js', v='refresh-3') }}"></script>
 {% include '_pwa_script.html' %}
 </body>
 </html>

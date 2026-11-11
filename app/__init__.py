@@ -90,4 +90,34 @@ def create_app(test_config=None):
             return jsonify(status="unavailable"), 503
         return jsonify(status="ok")
 
+    @app.before_request
+    def optimized_static_image():
+        from flask import request, send_from_directory
+        if request.endpoint == 'static' and 'image/webp' in request.headers.get('Accept', '') and request.accept_mimetypes['image/webp'] > 0:
+            filename = (request.view_args or {}).get('filename', '')
+            # Only bundled top-level PNGs have lossless alternatives. Never use user paths.
+            if filename.startswith('images/') and filename.endswith('.png') and '/' not in filename[7:]:
+                alternate = Path(app.static_folder) / 'images' / 'optimized' / (Path(filename).stem + '.webp')
+                if alternate.is_file():
+                    response = send_from_directory(alternate.parent, alternate.name, mimetype='image/webp', max_age=86400)
+                    response.vary.add('Accept')
+                    return response
+
+    @app.after_request
+    def compress_market(response):
+        from flask import request
+        import gzip
+        if request.endpoint == 'static' and request.path.endswith('.png'):
+            response.vary.add('Accept')
+        if request.path == '/api/market' and response.status_code == 200 and not response.direct_passthrough:
+            response.vary.add('Accept-Encoding')
+            if request.accept_encodings['gzip'] > 0 and not response.headers.get('Content-Encoding'):
+                raw = response.get_data()
+                if len(raw) > 1500:
+                    packed = gzip.compress(raw, compresslevel=5)
+                    if len(packed) < len(raw):
+                        response.set_data(packed)
+                        response.headers['Content-Encoding'] = 'gzip'
+        return response
+
     return app

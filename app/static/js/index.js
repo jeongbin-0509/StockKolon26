@@ -85,15 +85,20 @@ class StockCard {
 
         this.change.textContent = '—';
         this.change.className = 'stock-change head2';
-        this.chart.replaceChildren();
-        if (data.change === undefined || data.change === null) return;
+        if (data.change === undefined || data.change === null) {
+            StockolonCharts.disposeChart(this.chart);
+            this.chart.replaceChildren();
+            return;
+        }
 
         const isUp = data.change > 0;
         this.change.textContent = `${isUp ? '+' : ''}${Number(data.change).toFixed(2)}% ${isUp ? '↗' : '↘'}`;
         this.change.classList.add(isUp ? 'up' : 'down');
         StockolonCharts.renderCandlestickChart(this.chart, {
             candles: data.candles,
-            compact: true,
+            compact: false,
+            seriesKey: data.name,
+            timestamp: data.timestamps?.at(-1),
             ariaLabel: `${data.name} 최근 1시간 5분봉 가격 차트`
         });
     }
@@ -111,9 +116,12 @@ function updateAllPageData(data) {
     topDownCard.update(data.topDownStock);
 }
 
+let indexLoading = false;
 async function loadIndexData() {
+    if (indexLoading || document.hidden) return;
+    indexLoading = true;
     try {
-        const response = await fetch("/api/index-data");
+        const response = await fetch("/api/index-data", {cache: "no-store", signal: AbortSignal.timeout(20000)});
         const data = await response.json();
 
         if (!data.success) {
@@ -126,8 +134,8 @@ async function loadIndexData() {
 
     } catch (error) {
         console.error(error);
-        alert("데이터를 불러오지 못했습니다.");
-    }
+        document.getElementById("total-assets").title = "연결 지연으로 다음 갱신 때 다시 시도합니다.";
+    } finally { indexLoading = false; }
 }
 
 loadIndexData();
