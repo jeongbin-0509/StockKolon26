@@ -2,6 +2,8 @@ const stockGrid = document.querySelector(".stock-grid");
 const categoryFilter = document.querySelector(".stock-category-filter");
 const stockSearch = document.querySelector('#stock-search');
 const favoritesFilter = document.querySelector('#favorites-filter');
+const stockSort = document.querySelector('.stock-sort');
+const stockSortLabel = document.querySelector('#stock-sort-label');
 const favoritesStatus = document.querySelector('#favorites-status');
 const stockResults = document.querySelector('#stock-results');
 const statusElement = document.querySelector("#market-status");
@@ -27,6 +29,7 @@ let stocks = [];
 let favorites = new Set();
 let favoritesLoaded = false;
 let favoritesOnly = false;
+let selectedSort = null;
 const favoriteRequests = new Set();
 let selectedCategory = "all";
 let selectedClub = null;
@@ -109,6 +112,13 @@ function renderStockCards() {
         (selectedCategory === 'all' || stock.categoryKey === Number(selectedCategory)) &&
         (!favoritesOnly || favorites.has(stock.club_num)) &&
         stock.club_name.normalize('NFC').toLocaleLowerCase('ko-KR').replace(/\s+/g, '').includes(query));
+    if (selectedSort === 'name') {
+        visible.sort((a, b) => a.club_name.localeCompare(b.club_name, 'ko-KR') || a.club_num - b.club_num);
+    } else if (selectedSort === 'price-asc') {
+        visible.sort((a, b) => a.price - b.price || a.club_name.localeCompare(b.club_name, 'ko-KR'));
+    } else if (selectedSort === 'price-desc') {
+        visible.sort((a, b) => b.price - a.price || a.club_name.localeCompare(b.club_name, 'ko-KR'));
+    }
     stockGrid.querySelectorAll('.stock-chart').forEach(StockolonCharts.disposeChart);
     stockGrid.replaceChildren(...visible.map(createStockCard));
     if (stocks.length && (query || favoritesOnly || selectedCategory !== 'all')) {
@@ -291,6 +301,17 @@ stockSearch.addEventListener('input', renderStockCards);
 favoritesFilter.addEventListener('click', () => {
     favoritesOnly = !favoritesOnly;
     favoritesFilter.setAttribute('aria-pressed', String(favoritesOnly));
+    renderStockCards();
+});
+
+stockSort.addEventListener('click', event => {
+    const button = event.target.closest('[data-sort]');
+    if (!button) return;
+    selectedSort = button.dataset.sort;
+    stockSort.querySelectorAll('[data-sort]').forEach(item =>
+        item.setAttribute('aria-pressed', String(item === button)));
+    stockSortLabel.textContent = button.textContent;
+    stockSort.open = false;
     renderStockCards();
 });
 stockGrid.addEventListener("click", (event) => {

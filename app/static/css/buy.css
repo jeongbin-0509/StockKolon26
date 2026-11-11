@@ -16,10 +16,19 @@ body {
 .favorites-filter { min-height: 48px; padding: .65rem 1rem; border: 1px solid #454545; border-radius: .75rem; background: #1a1a1a; color: var(--text-primary); font: inherit; font-weight: 700; cursor: pointer; }
 .favorites-filter[aria-pressed="true"] { border-color: #e0bd59; color: #f2d078; }
 .favorites-filter:disabled { opacity: .5; cursor: wait; }
+.stock-sort { position: relative; }
+.stock-sort summary { display: flex; align-items: center; min-height: 48px; padding: .65rem 2.4rem .65rem 1rem; border: 1px solid #454545; border-radius: .75rem; background: #1a1a1a; color: var(--text-primary); font-weight: 700; cursor: pointer; list-style: none; white-space: nowrap; }
+.stock-sort summary::-webkit-details-marker { display: none; }
+.stock-sort summary::after { content: "⌄"; position: absolute; right: 1rem; top: 50%; color: var(--text-secondary); transform: translateY(-55%); transition: transform .15s; }
+.stock-sort[open] summary { border-color: #f2d078; }
+.stock-sort[open] summary::after { transform: translateY(-35%) rotate(180deg); }
+.stock-sort-options { position: absolute; z-index: 20; top: calc(100% + .45rem); right: 0; display: grid; min-width: 190px; padding: .4rem; border: 1px solid #454545; border-radius: .75rem; background: #202020; box-shadow: 0 12px 28px rgba(0,0,0,.38); }
+.stock-sort-options button { padding: .75rem .85rem; border: 0; border-radius: .5rem; background: transparent; color: var(--text-primary); font: inherit; text-align: left; cursor: pointer; }
+.stock-sort-options button:hover, .stock-sort-options button[aria-pressed="true"] { background: #343434; color: #f2d078; }
 .favorites-status, .stock-results { margin-top: .65rem; color: var(--text-secondary); font-size: .9rem; }
 .favorites-status:empty, .stock-results:empty { display: none; }
 .favorites-status.error { color: #ff8c8c; }
-.stock-search input:focus-visible, .favorites-filter:focus-visible, .favorite-button:focus-visible, .stock-open:focus-visible { outline: 2px solid #f2d078; outline-offset: 3px; }
+.stock-search input:focus-visible, .favorites-filter:focus-visible, .stock-sort summary:focus-visible, .stock-sort-options button:focus-visible, .favorite-button:focus-visible, .stock-open:focus-visible { outline: 2px solid #f2d078; outline-offset: 3px; }
 .order-submit:disabled, .shortcut-btn:disabled { cursor: not-allowed; opacity: 0.45; }
 
 .asset-summary {

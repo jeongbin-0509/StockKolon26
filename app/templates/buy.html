@@ -58,6 +58,14 @@
         <div class="stock-tools">
             <label class="stock-search"><span>종목 검색</span><input id="stock-search" type="search" placeholder="동아리 이름을 검색하세요" autocomplete="off"></label>
             <button type="button" id="favorites-filter" class="favorites-filter" aria-pressed="false" disabled>☆ 즐겨찾기만 보기</button>
+            <details class="stock-sort">
+                <summary id="stock-sort-label">정렬</summary>
+                <div class="stock-sort-options" role="group" aria-labelledby="stock-sort-label">
+                    <button type="button" data-sort="name" aria-pressed="false">가나다순</button>
+                    <button type="button" data-sort="price-asc" aria-pressed="false">가격 오름차순</button>
+                    <button type="button" data-sort="price-desc" aria-pressed="false">가격 내림차순</button>
+                </div>
+            </details>
         </div>
         <p id="favorites-status" class="favorites-status" role="status" aria-live="polite"></p>
         <nav class="stock-category-filter" aria-label="종목 카테고리">
