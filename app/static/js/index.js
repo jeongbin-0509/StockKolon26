@@ -85,15 +85,20 @@ class StockCard {
 
         this.change.textContent = '—';
         this.change.className = 'stock-change head2';
-        this.chart.replaceChildren();
-        if (data.change === undefined || data.change === null) return;
+        if (data.change === undefined || data.change === null) {
+            StockolonCharts.disposeChart(this.chart);
+            this.chart.replaceChildren();
+            return;
+        }
 
         const isUp = data.change > 0;
         this.change.textContent = `${isUp ? '+' : ''}${Number(data.change).toFixed(2)}% ${isUp ? '↗' : '↘'}`;
         this.change.classList.add(isUp ? 'up' : 'down');
         StockolonCharts.renderCandlestickChart(this.chart, {
             candles: data.candles,
-            compact: true,
+            compact: false,
+            seriesKey: data.name,
+            timestamp: data.timestamps?.at(-1),
             ariaLabel: `${data.name} 최근 1시간 5분봉 가격 차트`
         });
     }
