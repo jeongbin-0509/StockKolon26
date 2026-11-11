@@ -122,14 +122,31 @@ signupForm.addEventListener('submit', event => {
 
 (() => {
     const select = document.getElementById('club_id');
+    const wrap = select.closest('.select-wrap');
+    const trigger = document.createElement('button');
+    trigger.type = 'button'; trigger.id = 'club-picker-toggle'; trigger.className = 'club-picker-toggle';
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.setAttribute('aria-controls', 'club-picker-options');
+    trigger.setAttribute('aria-describedby', select.getAttribute('aria-describedby'));
     const picker = document.createElement('div');
-    picker.className = 'club-picker';
+    picker.className = 'club-picker'; picker.id = 'club-picker-options'; picker.hidden = true;
     picker.setAttribute('role', 'group');
     picker.setAttribute('aria-label', '동아리 로고로 선택');
+    function setOpen(open, restoreFocus = false) {
+        picker.hidden = !open;
+        trigger.setAttribute('aria-expanded', String(open));
+        wrap.classList.toggle('is-open', open);
+        if (restoreFocus) trigger.focus();
+    }
+    function syncSelection() {
+        trigger.textContent = select.selectedOptions[0]?.textContent || '동아리를 선택하세요';
+        for (const button of picker.children) button.setAttribute('aria-pressed', String(button.dataset.value === select.value));
+    }
     for (const option of select.options) {
         if (!option.value) continue;
         const button = document.createElement('button');
         button.type = 'button'; button.className = 'club-choice';
+        button.dataset.value = option.value;
         button.setAttribute('aria-pressed', 'false');
         const logo = document.createElement('img');
         logo.src = option.value === '00' ? '/static/images/default_stock_logo.png' : `/static/images/${Number(option.value)}.png`;
@@ -137,9 +154,39 @@ signupForm.addEventListener('submit', event => {
         logo.addEventListener('error', () => { logo.src = '/static/images/default_stock_logo.png'; }, {once:true});
         const name = document.createElement('span'); name.textContent = option.textContent;
         button.append(logo, name);
-        button.addEventListener('click', () => { select.value = option.value; select.dispatchEvent(new Event('change', {bubbles:true})); });
-        select.addEventListener('change', () => button.setAttribute('aria-pressed', String(select.value === option.value)));
+        button.addEventListener('click', () => {
+            select.value = option.value;
+            select.dispatchEvent(new Event('change', {bubbles:true}));
+            setOpen(false, true);
+        });
         picker.append(button);
     }
-    select.closest('.select-wrap').after(picker);
+    wrap.append(trigger, picker);
+    select.classList.add('club-select-source');
+    select.tabIndex = -1;
+    select.setAttribute('aria-hidden', 'true');
+    document.querySelector('label[for="club_id"]').htmlFor = trigger.id;
+    select.addEventListener('focus', () => trigger.focus());
+    select.addEventListener('change', syncSelection);
+    trigger.addEventListener('click', () => setOpen(picker.hidden));
+    trigger.addEventListener('blur', () => validate(select));
+    trigger.addEventListener('keydown', event => {
+        if (event.key !== 'ArrowDown') return;
+        event.preventDefault(); setOpen(true);
+        (picker.querySelector('[aria-pressed="true"]') || picker.firstElementChild).focus();
+    });
+    wrap.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && !picker.hidden) { event.preventDefault(); setOpen(false, true); }
+    });
+    wrap.addEventListener('focusout', event => {
+        if (!wrap.contains(event.relatedTarget)) setOpen(false);
+    });
+    document.addEventListener('pointerdown', event => {
+        if (!wrap.contains(event.target)) setOpen(false);
+    });
+    new MutationObserver(() => trigger.setAttribute('aria-invalid', select.getAttribute('aria-invalid') || 'false'))
+        .observe(select, {attributes:true, attributeFilter:['aria-invalid']});
+    window.addEventListener('pageshow', () => { syncSelection(); setOpen(false); });
+    signupForm.addEventListener('reset', () => setTimeout(() => { syncSelection(); setOpen(false); }, 0));
+    syncSelection();
 })();
