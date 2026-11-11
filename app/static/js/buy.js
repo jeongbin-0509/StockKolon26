@@ -108,8 +108,12 @@ function renderStockCards() {
     const focusedClub = document.activeElement?.closest(".stock-card")?.dataset.club;
     const focusedFavorite = document.activeElement?.classList.contains('favorite-button');
     const query = stockSearch.value.trim().normalize('NFC').toLocaleLowerCase('ko-KR').replace(/\s+/g, '');
+    const heldClubs = new Set((portfolio?.holdings || [])
+        .filter(holding => holding.quantity > 0)
+        .map(holding => holding.club_num));
     const visible = stocks.filter((stock) =>
-        (selectedCategory === 'all' || stock.categoryKey === Number(selectedCategory)) &&
+        (selectedCategory === 'all' ||
+            (selectedCategory === 'holdings' ? heldClubs.has(stock.club_num) : stock.categoryKey === Number(selectedCategory))) &&
         (!favoritesOnly || favorites.has(stock.club_num)) &&
         stock.club_name.normalize('NFC').toLocaleLowerCase('ko-KR').replace(/\s+/g, '').includes(query));
     if (selectedSort === 'name') {
@@ -122,7 +126,10 @@ function renderStockCards() {
     stockGrid.querySelectorAll('.stock-chart').forEach(StockolonCharts.disposeChart);
     stockGrid.replaceChildren(...visible.map(createStockCard));
     if (stocks.length && (query || favoritesOnly || selectedCategory !== 'all')) {
-        stockResults.textContent = visible.length ? `${visible.length}개 종목` : (favoritesOnly && !favorites.size ? '즐겨찾기한 종목이 없습니다. 종목의 별을 눌러 추가해보세요.' : '조건에 맞는 종목이 없습니다.');
+        if (selectedCategory === 'holdings' && !portfolio) stockResults.textContent = '보유 주식을 불러오는 중입니다.';
+        else if (visible.length) stockResults.textContent = `${visible.length}개 종목`;
+        else if (selectedCategory === 'holdings' && !heldClubs.size) stockResults.textContent = '현재 보유한 주식이 없습니다.';
+        else stockResults.textContent = favoritesOnly && !favorites.size ? '즐겨찾기한 종목이 없습니다. 종목의 별을 눌러 추가해보세요.' : '조건에 맞는 종목이 없습니다.';
     } else stockResults.textContent = '';
     if (focusedClub) stockGrid.querySelector(`[data-club="${focusedClub}"] ${focusedFavorite ? '.favorite-button' : '.stock-open'}`)?.focus({ preventScroll: true });
 }
@@ -359,10 +366,12 @@ async function loadPortfolio() {
         document.querySelector('#asset-total').textContent = data.summary.total_assets;
         document.querySelector('#asset-cost').textContent = data.summary.purchase_amount;
         document.querySelector('#asset-cash').textContent = data.summary.cash;
+        renderStockCards();
         updateSubmit();
         openRequestedTrade();
     } catch (_) {
         portfolio = null;
+        renderStockCards();
         document.querySelector('#order-balance').textContent = '잔액을 불러오지 못했습니다. 새로고침해주세요.';
         updateSubmit();
     }

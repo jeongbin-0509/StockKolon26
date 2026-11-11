@@ -74,7 +74,6 @@ body {
     gap: 0.55rem;
     margin-top: clamp(1rem, 2vw, 1.5rem);
 }
-
 .category-btn {
     border: 1px solid #303030;
     border-radius: 0.65rem;
@@ -93,6 +92,9 @@ body {
     background: var(--border-card);
     border-color: #505050;
 }
+
+.category-btn.holdings-btn { border-color: #4d6f62; color: var(--color-brand-mint); }
+.category-btn.holdings-btn.active { border-color: var(--color-brand-mint); background: rgba(0, 217, 111, .13); color: var(--color-brand-mint); }
 
 .stock-grid {
     display: grid;
