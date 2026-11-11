@@ -44,6 +44,55 @@ class RankingTests(unittest.TestCase):
         self.assertNotIn('club_id', str(data))
         self.assertEqual(self.client.get('/api/rankings').headers['Cache-Control'], 'no-store')
 
+    def test_header_rank_is_viewer_specific(self):
+        first = self.client.get('/api/my-rank').get_json()
+        self.assertEqual(first['rank'], 2)
+        with self.client.session_transaction() as session:
+            session['user_id'] = 'd'
+        self.assertEqual(self.client.get('/api/my-rank').get_json()['rank'], 4)
+        self.assertEqual(self.client.get('/api/my-rank').headers['Cache-Control'], 'no-store')
+
+    def test_public_profile_is_limited_and_requires_login(self):
+        data = self.client.get('/api/rankings').get_json()
+        target = next(m for m in data['members'] if m['name'] == '나')
+        url = '/members/' + target['profile_key']
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        body = response.get_data(as_text=True)
+        self.assertIn('나의 프로필', body)
+        self.assertIn('14,975', body)
+        for private in ('10102', 'password', 'email', 'trade_holdings'):
+            self.assertNotIn(private, body)
+        self.assertEqual(self.client.get('/members/' + '0' * 64).status_code, 404)
+        self.assertEqual(self.client.get('/members/bad').status_code, 404)
+        with self.client.session_transaction() as session:
+            session.clear()
+        self.assertEqual(self.client.get(url).status_code, 302)
+        self.assertEqual(self.client.get('/api/my-rank').status_code, 401)
+
+    def test_market_compression_preserves_every_value(self):
+        import gzip, json
+        plain = self.client.get('/api/market').get_json()
+        packed = self.client.get('/api/market', headers={'Accept-Encoding': 'gzip'})
+        self.assertEqual(packed.headers['Content-Encoding'], 'gzip')
+        self.assertEqual(json.loads(gzip.decompress(packed.data)), plain)
+        refused = self.client.get('/api/market', headers={'Accept-Encoding': 'gzip;q=0'})
+        self.assertNotIn('Content-Encoding', refused.headers)
+
+    def test_lossless_image_content_negotiation(self):
+        png = self.client.get('/static/images/news_icon.png')
+        webp = self.client.get('/static/images/news_icon.png', headers={'Accept':'image/webp'})
+        self.addCleanup(png.close)
+        self.addCleanup(webp.close)
+        self.assertEqual(png.mimetype, 'image/png')
+        self.assertEqual(webp.mimetype, 'image/webp')
+        self.assertLess(len(webp.data), len(png.data))
+        self.assertIn('Accept', png.headers['Vary'])
+        self.assertIn('Accept', webp.headers['Vary'])
+        refused = self.client.get('/static/images/news_icon.png', headers={'Accept':'image/webp;q=0,image/png'})
+        self.addCleanup(refused.close)
+        self.assertEqual(refused.mimetype, 'image/png')
+
     def test_scopes(self):
         data = self.client.get('/api/rankings?scope=class').get_json()
         self.assertEqual({x['name'] for x in data['members']}, {'가', '나', '라'})

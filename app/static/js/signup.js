@@ -118,3 +118,28 @@ signupForm.addEventListener('submit', event => {
         codeInput.focus();
     }
 });
+
+
+(() => {
+    const select = document.getElementById('club_id');
+    const picker = document.createElement('div');
+    picker.className = 'club-picker';
+    picker.setAttribute('role', 'group');
+    picker.setAttribute('aria-label', '동아리 로고로 선택');
+    for (const option of select.options) {
+        if (!option.value) continue;
+        const button = document.createElement('button');
+        button.type = 'button'; button.className = 'club-choice';
+        button.setAttribute('aria-pressed', 'false');
+        const logo = document.createElement('img');
+        logo.src = option.value === '00' ? '/static/images/default_stock_logo.png' : `/static/images/${Number(option.value)}.png`;
+        logo.alt = ''; logo.width = 36; logo.height = 36; logo.loading = 'lazy'; logo.decoding = 'async';
+        logo.addEventListener('error', () => { logo.src = '/static/images/default_stock_logo.png'; }, {once:true});
+        const name = document.createElement('span'); name.textContent = option.textContent;
+        button.append(logo, name);
+        button.addEventListener('click', () => { select.value = option.value; select.dispatchEvent(new Event('change', {bubbles:true})); });
+        select.addEventListener('change', () => button.setAttribute('aria-pressed', String(select.value === option.value)));
+        picker.append(button);
+    }
+    select.closest('.select-wrap').after(picker);
+})();

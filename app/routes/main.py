@@ -7,6 +7,8 @@ from app.services.database import DatabaseError
 import httpx
 import sqlite3
 from pathlib import Path
+from flask import abort
+import re
 
 main = Blueprint("main", __name__)
 RANKING_ERRORS = (DatabaseError, sqlite3.Error, APIError, httpx.HTTPError, RuntimeError)
@@ -40,14 +42,29 @@ def offline():
     return render_template("offline.html")
 
 
+def display_user(user_id):
+    market = current_app.extensions['market']
+    if market.store.postgres:
+        with market.connection() as db:
+            row = db.execute('SELECT u.name,u.cash,u.club_id,c.name AS club_name FROM public.users u '
+                             'LEFT JOIN public.clubs c ON c.id=u.club_id WHERE u.id=?', (user_id,)).fetchone()
+            if not row:
+                abort(401)
+            return dict(row)
+    return supabase.table('users').select('name,club_id,cash').eq('id', user_id).single().execute().data
+
+
 def club_profile(user):
     default = url_for('static', filename='images/default_stock_logo.png')
     club_id = user.get('club_id')
     if not club_id:
         return default, None
     try:
-        result = supabase.table('clubs').select('name').eq('id', club_id).limit(1).execute()
-        club_name = result.data[0]['name'] if result.data else None
+        if 'club_name' in user:
+            club_name = user['club_name']
+        else:
+            result = supabase.table('clubs').select('name').eq('id', club_id).limit(1).execute()
+            club_name = result.data[0]['name'] if result.data else None
     except (APIError, httpx.HTTPError, RuntimeError):
         current_app.logger.warning('동아리 프로필을 불러오지 못했습니다.')
         return default, None
@@ -98,8 +115,7 @@ def latest_news():
     admin = current_app.extensions['admin']
     if current_app.config['AUTO_NEWS_ENABLED']:
         admin.publish_due_automatic_news()
-    articles = admin.articles()
-    response = jsonify(success=True, latest_id=articles[0]['id'] if articles else None)
+    response = jsonify(success=True, latest_id=admin.latest_article_id())
     response.headers['Cache-Control'] = 'no-store'
     return response
 
@@ -159,8 +175,7 @@ def index_data():
 
     user_id = session["user_id"]
 
-    result = supabase.table("users").select("*").eq("id", user_id).single().execute()
-    user = result.data
+    user = display_user(user_id)
     profile_image, club_name = club_profile(user)
     trading = current_app.extensions['trading']
     movers = current_app.extensions['market'].five_minute_movers()
@@ -204,7 +219,7 @@ def index_data():
 def header_profile():
     if 'user_id' not in session:
         return jsonify(success=False, message='로그인이 필요합니다.'), 401
-    user = supabase.table('users').select('name,club_id').eq('id', session['user_id']).single().execute().data
+    user = display_user(session['user_id'])
     profile_image, club_name = club_profile(user)
     response = jsonify(success=True, user={'name': user['name'], 'profileImg': profile_image, 'clubName': club_name})
     response.headers['Cache-Control'] = 'no-store'
@@ -218,8 +233,7 @@ def profile_data():
 
     user_id = session["user_id"]
 
-    result = supabase.table("users").select("*").eq("id", user_id).single().execute()
-    user = result.data
+    user = display_user(user_id)
     profile_image, club_name = club_profile(user)
     trading = current_app.extensions['trading']
     trade_view = request.args.get('view') == 'trade'
@@ -271,5 +285,42 @@ def profile_data():
         "holdings": portfolio['holdings'],
         "orders": [] if trade_view else trading.history(user_id)
     })
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
+@main.get('/api/my-rank')
+def my_rank():
+    if 'user_id' not in session:
+        return jsonify(success=False), 401
+    try:
+        data = current_app.extensions['ranking'].rankings(session['user_id'], 'school')
+        response = jsonify(success=True, rank=data['me']['rank'], count=data['count'])
+    except (ValueError, *RANKING_ERRORS):
+        response = jsonify(success=False, message='순위를 불러오지 못했습니다.')
+        response.status_code = 503
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
+@main.get('/members/<key>')
+def member_profile(key):
+    if 'user_id' not in session:
+        return redirect(url_for('auth.login'))
+    if not re.fullmatch(r'[a-f0-9]{64}', key):
+        abort(404)
+    try:
+        result = current_app.extensions['ranking'].rankings(session['user_id'], 'school', public_key=key)
+    except ValueError:
+        abort(404)
+    except RANKING_ERRORS:
+        return '프로필을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.', 503
+    member = result['me']
+    number = next((n for n, name in CLUBS.items() if name == member['club_name']), None)
+    filename = f'images/{number}.png'
+    if not (Path(current_app.static_folder) / filename).is_file():
+        filename = 'images/default_stock_logo.png'
+    response = current_app.make_response(render_template('member.html', member=member,
+        count=result['count'], image=url_for('static', filename=filename)))
     response.headers['Cache-Control'] = 'no-store'
     return response

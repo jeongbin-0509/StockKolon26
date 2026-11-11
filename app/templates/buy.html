@@ -25,7 +25,7 @@
                     <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="기본 프로필 이미지">
                 </div>
                 <span class="head2 user-name">세미님</span>
-                <span class="user-rank">전체 1위</span>
+                <span class="user-rank">순위 확인 중</span>
             </div>
             <!-- 버튼 -->
             <a id="ranking_btn" href="{{ url_for('main.rank') }}">
@@ -183,7 +183,7 @@
         <button type="button" id="execution-close" aria-label="체결 알림 닫기">×</button>
     </div>
 
-    <script src="{{ url_for('static', filename='js/header-profile.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/header-profile.js', v='refresh-3') }}"></script>
     <script src="{{ url_for('static', filename='js/charts.js', v='candles-2') }}"></script>
     <script src="{{ url_for('static', filename='js/buy.js', v='candles-2') }}"></script>
 {% include '_pwa_script.html' %}
