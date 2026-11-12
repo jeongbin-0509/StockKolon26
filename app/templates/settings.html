@@ -19,8 +19,9 @@
 </div>
 <p id="photo-status" role="status" aria-live="polite">사진을 불러오는 중입니다.</p>
 </section>
+{% include '_cosmetic_collection.html' %}
 <section class="settings-section"><h2>내 계정</h2><a href="{{ url_for('main.profile') }}" class="settings-row"><span>내 포트폴리오 · 거래 내역</span><span>→</span></a><a href="{{ url_for('auth.forgot_password') }}" class="settings-row"><span>비밀번호 재설정</span><span>→</span></a></section>
 <section class="settings-section"><h2>화면</h2><label class="settings-row" for="reduce-effects"><span>애니메이션 줄이기<small>시상대와 화면의 움직임을 줄입니다.</small></span><input type="checkbox" id="reduce-effects"></label><p class="settings-note">설정은 현재 브라우저에 저장됩니다.</p><p id="settings-status" role="status"></p></section>
 <section class="settings-section"><h2>앱 안내</h2><p class="settings-note">STOCKOLON 26 · 운정고 동아리 모의주식투자<br>브라우저 메뉴의 ‘홈 화면에 추가’ 또는 ‘앱 설치’로 더 편하게 이용하세요.</p></section>
 <div class="settings-logout">{% include '_logout_form.html' %}</div></main>
-<script src="{{ url_for('static',filename='js/header-profile.js',v='avatar-1') }}" data-autoload="true"></script><script src="{{ url_for('static',filename='js/settings.js',v='mobile-1') }}"></script><script src="{{ url_for('static',filename='js/photo-crop.js',v='crop-1') }}"></script><script src="{{ url_for('static',filename='js/profile-image.js',v='crop-1') }}"></script>{% include '_mobile_nav.html' %}{% include '_pwa_script.html' %}</body></html>
+<script src="{{ url_for('static',filename='js/header-profile.js',v='signatures-1') }}" data-autoload="true"></script><script src="{{ url_for('static',filename='js/settings.js',v='mobile-1') }}"></script><script src="{{ url_for('static',filename='js/photo-crop.js',v='crop-1') }}"></script><script src="{{ url_for('static',filename='js/profile-image.js',v='signatures-1') }}"></script>{% include '_mobile_nav.html' %}{% include '_pwa_script.html' %}</body></html>

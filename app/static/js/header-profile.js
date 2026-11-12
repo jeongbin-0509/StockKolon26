@@ -7,6 +7,10 @@ function updateHeaderProfile(user) {
         avatar.alt = '프로필 사진';
     }
     if (name && (user.name || user.username)) name.textContent = `${user.name || user.username}님`;
+    if (user.cosmetics && window.StockCosmetics) {
+        StockCosmetics.frame(avatar, user.cosmetics.frame);
+        StockCosmetics.label(name, user.cosmetics);
+    }
 }
 
 if (document.currentScript.dataset.autoload === 'true') {

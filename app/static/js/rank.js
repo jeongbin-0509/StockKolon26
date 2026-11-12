@@ -27,7 +27,7 @@
         image.src = member.profileImg || '/static/images/default_stock_logo.png';
         image.alt = '';
         image.addEventListener('error', () => { image.src = '/static/images/default_stock_logo.png'; }, {once: true});
-        return image;
+        return window.StockCosmetics ? StockCosmetics.frame(image, member.cosmetics?.frame) : image;
     }
     function money(value, cls) {
         const node = element('strong', cls);
@@ -90,6 +90,7 @@
             person.href = '/members/' + encodeURIComponent(member.profile_key);
             person.append(avatar(member), element('span', 'rank-name', member.name || '이름 없음'));
             identity.append(person, element('span', 'rank-sub', member.club_name || '동아리 미선택'));
+            if (window.StockCosmetics) identity.append(StockCosmetics.badge(member.cosmetics));
         } else identity.append(element('span', 'podium-empty-label', '아직 순위 없음'));
         const step = element('div', 'podium-step');
         if (member) {
@@ -115,6 +116,7 @@
         const name = element('div', 'rank-name', member.name || '이름 없음');
         if (member.is_me) name.append(element('span', 'me-badge', 'ME'));
         identity.append(name, element('span', 'rank-sub', member.club_name || '동아리 미선택'));
+        if (window.StockCosmetics) identity.append(StockCosmetics.badge(member.cosmetics));
         person.append(avatar(member), identity);
         const assets = element('div', 'rank-assets');
         assets.append(element('span', 'rank-label', '총자산'), money(member.assets, ''));

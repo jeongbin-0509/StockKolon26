@@ -99,6 +99,7 @@
             current = data;
             clearSelection();
             updateHeaderProfile({name: data.name, profileImg: data.image});
+            document.dispatchEvent(new CustomEvent('profile-image-changed', {detail:{profileImg:data.image}}));
             message(method === 'POST' ? '프로필 사진을 저장했습니다.' : method === 'DELETE'
                 ? '동아리 로고로 변경했습니다.' : data.hasCustom ? '내 사진을 사용 중입니다.' : '동아리 로고를 사용 중입니다.');
         } catch (error) {

@@ -71,6 +71,13 @@ def create_app(test_config=None):
     trading = TradingService(service)
     trading.initialize()
     app.extensions["trading"] = trading
+    from app.services.cosmetics import Cosmetics
+    from app.routes.cosmetics import cosmetics
+    achievements = Cosmetics(service)
+    achievements.initialize()
+    service.cosmetics = achievements
+    app.extensions['cosmetics'] = achievements
+    app.register_blueprint(cosmetics)
     from app.services.profile_images import ProfileImages
     from app.routes.profile_images import photos
     images = ProfileImages(service)
@@ -93,6 +100,7 @@ def create_app(test_config=None):
             with service.connection() as db:
                 db.execute("SELECT last_tick FROM market_state WHERE id=1").fetchone()
                 db.execute("SELECT revision FROM profile_images LIMIT 1").fetchone()
+                db.execute("SELECT user_id FROM cosmetic_profiles LIMIT 1").fetchone()
         except (sqlite3.Error, DatabaseError):
             return jsonify(status="unavailable"), 503
         return jsonify(status="ok")
