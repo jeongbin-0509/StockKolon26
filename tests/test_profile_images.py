@@ -144,3 +144,39 @@ class ProfileImagesTests(unittest.TestCase):
     def test_excessive_dimensions_rejected_before_decode(self):
         with patch('app.services.profile_images.MAX_PIXELS', 100):
             self.assertEqual(self.upload(picture(size=(11, 10))).status_code, 400)
+
+    def prepare(self, raw):
+        return self.client.post('/api/profile-image/prepare',
+            data={'photo': (io.BytesIO(raw), 'image.jpg')}, headers={'X-CSRF-Token':'test-token'})
+
+    def test_editor_conversion_preserves_full_image_and_does_not_save(self):
+        original = self.upload().json['image']
+        for fmt in ['JPEG','PNG','WEBP']:
+            response = self.prepare(picture(fmt=fmt, size=(800,400)))
+            self.assertEqual(response.status_code,200)
+            self.assertEqual(response.mimetype,'image/png')
+            result = Image.open(io.BytesIO(response.data))
+            self.assertEqual(result.size,(800,400))
+            self.assertFalse(result.getexif())
+            self.assertEqual(response.headers['Cache-Control'],'no-store')
+        self.assertEqual(self.client.get('/api/profile-image').json['image'], original)
+
+    def test_editor_conversion_applies_orientation_and_bounds_dimensions(self):
+        raw = io.BytesIO()
+        exif = Image.Exif()
+        exif[274] = 6
+        exif[270] = 'private metadata'
+        Image.new('RGB',(3000,1500),'blue').save(raw,format='JPEG',exif=exif)
+        response = self.prepare(raw.getvalue())
+        result = Image.open(io.BytesIO(response.data))
+        self.assertEqual(result.size,(1024,2048))
+        self.assertFalse(result.getexif())
+        self.assertNotIn(b'private metadata',response.data)
+
+    def test_editor_conversion_rejects_invalid_files_and_requires_auth_csrf(self):
+        for raw in [b'',b'not an image',b'<svg onload="alert(1)"></svg>']:
+            self.assertEqual(self.prepare(raw).status_code,400)
+        self.assertEqual(self.prepare(b'x'*(MAX_UPLOAD_BYTES+100000)).status_code,413)
+        self.assertEqual(self.client.post('/api/profile-image/prepare').status_code,403)
+        self.login(None)
+        self.assertEqual(self.prepare(picture()).status_code,401)

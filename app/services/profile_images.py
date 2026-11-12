@@ -14,7 +14,7 @@ MAX_PIXELS = 20_000_000
 _image_decode = BoundedSemaphore(1)
 
 
-def normalize_image(raw):
+def normalize_image(raw, *, for_editor=False):
     if not raw or len(raw) > MAX_UPLOAD_BYTES:
         raise ValueError('5MB 이하의 사진을 선택해주세요.')
     try:
@@ -24,16 +24,22 @@ def normalize_image(raw):
                 if source.width * source.height > MAX_PIXELS:
                     raise ValueError('사진 해상도가 너무 큽니다. 2천만 화소 이하로 줄여주세요.')
                 source.load()
-                source.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
+                edge = 2048 if for_editor else 1024
+                source.thumbnail((edge, edge), Image.Resampling.LANCZOS)
                 picture = ImageOps.exif_transpose(source).convert('RGBA')
-                picture = ImageOps.fit(picture, (256, 256), method=Image.Resampling.LANCZOS)
+                if not for_editor:
+                    picture = ImageOps.fit(picture, (256, 256), method=Image.Resampling.LANCZOS)
                 # A new image strips EXIF, GPS and other uploaded metadata.
                 clean = Image.new('RGBA', picture.size)
                 clean.paste(picture)
                 output = BytesIO()
-                clean.save(output, format='WEBP', quality=85, method=4)
+                if for_editor:
+                    # Preserve the whole image and orientation so the user can still choose a crop.
+                    clean.save(output, format='PNG', compress_level=3)
+                else:
+                    clean.save(output, format='WEBP', quality=85, method=4)
                 data = output.getvalue()
-                if len(data) > 128 * 1024:
+                if not for_editor and len(data) > 128 * 1024:
                     raise ValueError('사진을 처리하지 못했습니다. 다른 사진을 선택해주세요.')
                 return data
     except (UnidentifiedImageError, OSError, SyntaxError, Image.DecompressionBombError,

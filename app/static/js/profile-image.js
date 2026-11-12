@@ -17,7 +17,7 @@
     const zoomIn = document.getElementById('photo-zoom-in');
     const smallPreview = document.createElement('canvas');
     smallPreview.width = smallPreview.height = 88;
-    let current = null, selected = null, objectUrl = null, busy = false;
+    let current = null, selected = null, busy = false;
     let source = null, crop = null, drag = null, renderFrame = null;
 
     function draw(target) {
@@ -62,8 +62,6 @@
         panel.setAttribute('aria-busy', String(busy));
     }
     function clearSelection() {
-        if (objectUrl) URL.revokeObjectURL(objectUrl);
-        objectUrl = null;
         selected = null;
         source = crop = drag = null;
         if (renderFrame !== null) cancelAnimationFrame(renderFrame);
@@ -114,33 +112,31 @@
     input.addEventListener('change', async () => {
         const file = input.files[0];
         if (!file) return;
-        if (file.size > 5 * 1024 * 1024 || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-            input.value = '';
-            message('5MB 이하의 JPG, PNG 또는 WebP 사진을 선택해주세요.', true);
-            return;
-        }
+        if (busy) return;
         busy = true;
         controls();
         message('편집할 사진을 불러오는 중입니다.');
-        const nextUrl = URL.createObjectURL(file);
         try {
-            const image = new Image();
-            image.src = nextUrl;
-            await image.decode();
-            if (image.naturalWidth * image.naturalHeight > 20_000_000) {
-                throw new Error('사진 해상도가 너무 큽니다. 2천만 화소 이하로 줄여주세요.');
-            }
-            if (objectUrl) URL.revokeObjectURL(objectUrl);
-            objectUrl = nextUrl;
+            const image = await PhotoSource.open(file, async original => {
+                message('호환되는 이미지로 변환하는 중입니다.');
+                const body = new FormData();
+                body.append('photo', original, original.name || 'photo');
+                const response = await fetch('/api/profile-image/prepare', {method:'POST', body,
+                    headers:{'X-CSRF-Token':panel.dataset.csrf}, signal:AbortSignal.timeout(30000)});
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.message || '사진을 변환하지 못했습니다. JPG 또는 PNG로 다시 저장해주세요.');
+                }
+                return response.blob();
+            });
             selected = file;
             source = image;
             crop = PhotoCrop.fit(image.naturalWidth, image.naturalHeight);
             renderCrop();
             message('사진을 옮기고 확대해 원하는 부분을 맞춘 뒤 저장해주세요.');
         } catch (error) {
-            URL.revokeObjectURL(nextUrl);
             input.value = '';
-            message(error.name === 'EncodingError' ? '사진을 열지 못했습니다. 다른 사진을 선택해주세요.' : error.message, true);
+            message(error.name === 'TimeoutError' ? '사진 처리 응답이 늦어지고 있습니다. 다시 선택해주세요.' : error.message, true);
         } finally {
             busy = false;
             controls();
@@ -194,6 +190,5 @@
     save.addEventListener('click', () => { if (selected) requestPhoto('POST'); });
     cancel.addEventListener('click', () => { clearSelection(); message('사진 변경을 취소했습니다.'); });
     reset.addEventListener('click', () => requestPhoto('DELETE'));
-    window.addEventListener('pagehide', () => { if (objectUrl) URL.revokeObjectURL(objectUrl); });
     requestPhoto();
 })();

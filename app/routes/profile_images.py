@@ -8,7 +8,7 @@ from flask import Blueprint, current_app, jsonify, request, session, url_for
 from werkzeug.exceptions import RequestEntityTooLarge
 
 from app.services.database import DatabaseError
-from app.services.profile_images import MAX_UPLOAD_BYTES
+from app.services.profile_images import MAX_UPLOAD_BYTES, normalize_image
 from app.services.ranking_service import profile_key
 
 
@@ -80,3 +80,25 @@ def image(key, revision):
     response.headers['Cache-Control'] = 'private, no-cache'
     response.set_etag(revision)
     return response.make_conditional(request)
+
+
+@photos.post('/api/profile-image/prepare')
+def prepare_image():
+    """Compatibility fallback only: normalize for the editor without saving a profile."""
+    if 'user_id' not in session:
+        return jsonify(success=False, message='로그인이 필요합니다.'), 401
+    expected = session.get('admin_csrf', '')
+    supplied = request.headers.get('X-CSRF-Token', '')
+    if not expected or not hmac.compare_digest(expected.encode(), supplied.encode()):
+        return jsonify(success=False, message='화면을 새로고침한 후 다시 시도해주세요.'), 403
+    try:
+        request.max_content_length = MAX_UPLOAD_BYTES + 64 * 1024
+        uploaded = request.files.get('photo')
+        if uploaded is None:
+            raise ValueError('사진을 선택해주세요.')
+        raw = normalize_image(uploaded.stream.read(MAX_UPLOAD_BYTES + 1), for_editor=True)
+        return current_app.response_class(raw, mimetype='image/png')
+    except RequestEntityTooLarge:
+        return jsonify(success=False, message='5MB 이하의 사진을 선택해주세요.'), 413
+    except ValueError as error:
+        return jsonify(success=False, message=str(error)), 400
