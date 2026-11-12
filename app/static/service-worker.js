@@ -1,4 +1,4 @@
-const CACHE_NAME = 'stockolon26-pwa-v15';
+const CACHE_NAME = 'stockolon26-pwa-v16';
 const APP_SHELL = [
   '/offline',
   '/manifest.webmanifest',
@@ -37,7 +37,8 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     caches.match(request).then((cached) => {
-      const refreshed = fetch(request).then((response) => {
+      // A new app cache must not inherit outdated images from the HTTP cache.
+      const refreshed = fetch(request, {cache: cached ? 'default' : 'reload'}).then((response) => {
         if (response.ok) {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
