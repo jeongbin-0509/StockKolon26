@@ -8,6 +8,7 @@ import httpx
 import sqlite3
 from pathlib import Path
 from flask import abort
+from app.services.ranking_service import profile_key
 import re
 
 main = Blueprint("main", __name__)
@@ -166,7 +167,53 @@ def settings():
     if "user_id" not in session:
         return redirect(url_for("auth.login"))
 
-    return render_template("settings.html")
+    return render_template("settings.html", csrf_token=csrf_token)
+
+
+def mover_card(stock):
+    if stock is None:
+        return {'name': '데이터 없음', 'sub': '최근 5분 기준', 'change': None, 'candles': [], 'timestamps': [],
+                'logo': url_for('static', filename='images/default_stock_logo.png'), 'club_num': None}
+    filename = f"images/{stock['club_num']}.png"
+    if not (Path(current_app.static_folder) / filename).is_file():
+        filename = 'images/default_stock_logo.png'
+    return dict(stock, sub=f"{stock['price']:,.0f}원 · {stock['category']}",
+                logo=url_for('static', filename=filename))
+
+
+@main.get('/api/market/movers')
+def market_movers():
+    if 'user_id' not in session:
+        return jsonify(success=False), 401
+    try:
+        movers = current_app.extensions['market'].five_minute_movers()
+        response = jsonify(success=True, up=mover_card(movers['up']), down=mover_card(movers['down']))
+    except RANKING_ERRORS:
+        response = jsonify(success=False, message='등락 종목을 불러오지 못했습니다.')
+        response.status_code = 503
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
+@main.get('/api/portfolio')
+def my_portfolio():
+    if 'user_id' not in session:
+        return jsonify(success=False), 401
+    try:
+        result = current_app.extensions['ranking'].rankings(
+            session['user_id'], 'school', public_key=profile_key(session['user_id']))
+        number = next((n for n, name in CLUBS.items() if name == result['me']['club_name']), None)
+        filename = f'images/{number}.png'
+        if not (Path(current_app.static_folder) / filename).is_file():
+            filename = 'images/default_stock_logo.png'
+        result['me']['profileImg'] = url_for('static', filename=filename)
+        response = jsonify(success=True, user=result['me'], portfolio=result['portfolio'],
+                           count=result['count'], timestamp=result['timestamp'], catching_up=result['catching_up'])
+    except (ValueError, *RANKING_ERRORS):
+        response = jsonify(success=False, message='포트폴리오를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.')
+        response.status_code = 503
+    response.headers['Cache-Control'] = 'no-store'
+    return response
 
 @main.route("/api/index-data")
 def index_data():
@@ -321,6 +368,8 @@ def member_profile(key):
     if not (Path(current_app.static_folder) / filename).is_file():
         filename = 'images/default_stock_logo.png'
     response = current_app.make_response(render_template('member.html', member=member,
-        count=result['count'], image=url_for('static', filename=filename)))
+        count=result['count'], image=url_for('static', filename=filename), portfolio_data={
+            'success': True, 'user': member, 'portfolio': result['portfolio'], 'count': result['count'],
+            'timestamp': result['timestamp'], 'catching_up': result['catching_up']}))
     response.headers['Cache-Control'] = 'no-store'
     return response

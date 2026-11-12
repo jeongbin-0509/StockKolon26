@@ -40,6 +40,7 @@
     </nav>
 
     <main class="buy-page">
+<div class="mobile-only mobile-market-heading"><p>MARKET</p><h1>주식 구입하기</h1></div>
         <section class="asset-summary" aria-label="자산 요약">
             <article class="summary-card">
                 <span class="summary-label">총 자산</span>
@@ -55,6 +56,7 @@
             </article>
         </section>
 
+        {% include "_mobile_movers.html" %}
         <div class="stock-tools">
             <label class="stock-search"><span>종목 검색</span><input id="stock-search" type="search" placeholder="동아리 이름을 검색하세요" autocomplete="off"></label>
             <button type="button" id="favorites-filter" class="favorites-filter" aria-pressed="false" disabled>☆ 즐겨찾기만 보기</button>
@@ -195,6 +197,8 @@
     <script src="{{ url_for('static', filename='js/header-profile.js', v='refresh-3') }}"></script>
     <script src="{{ url_for('static', filename='js/charts.js', v='candles-2') }}"></script>
     <script src="{{ url_for('static', filename='js/buy.js', v='holdings-1') }}"></script>
+<script src="{{ url_for('static', filename='js/mobile-movers.js', v='mobile-1') }}"></script>
+{% include '_mobile_nav.html' %}
 {% include '_pwa_script.html' %}
 </body>
 </html>

@@ -9,8 +9,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css', v='candles-2') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css', v='detail-chart-1') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/portfolio.css', v='mobile-1') }}">
 </head>
-<body>
+<body class="mobile-home">
 
     <!-- 헤더 -->
     <header>
@@ -36,6 +37,7 @@
     </header>
 
     <main>
+<section class="mobile-only">{% set portfolio_mode = "own" %}{% include "_portfolio_panel.html" %}</section>
 
         <!-- 프로필 섹션 -->
         <section id="profile-section">
@@ -134,7 +136,9 @@
 
     <script src="{{ url_for('static', filename='js/header-profile.js', v='refresh-3') }}"></script>
     <script src="{{ url_for('static', filename='js/charts.js', v='candles-2') }}"></script>
-    <script src="{{ url_for('static', filename='js/index.js', v='detail-chart-1') }}"></script>
+    <script src="{{ url_for('static', filename='js/index.js', v='mobile-1') }}"></script>
+<script src="{{ url_for('static', filename='js/portfolio.js', v='mobile-1') }}"></script>
+{% include '_mobile_nav.html' %}
 {% include '_pwa_script.html' %}
 </body>
 </html>

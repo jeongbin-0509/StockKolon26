@@ -118,7 +118,7 @@ function updateAllPageData(data) {
 
 let indexLoading = false;
 async function loadIndexData() {
-    if (indexLoading || document.hidden) return;
+    if (indexLoading || document.hidden || matchMedia('(max-width: 760px)').matches) return;
     indexLoading = true;
     try {
         const response = await fetch("/api/index-data", {cache: "no-store", signal: AbortSignal.timeout(20000)});
@@ -140,3 +140,5 @@ async function loadIndexData() {
 
 loadIndexData();
 setInterval(loadIndexData, 30000);
+
+matchMedia('(max-width: 760px)').addEventListener('change', loadIndexData);

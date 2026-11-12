@@ -318,6 +318,30 @@ class ApiTests(unittest.TestCase):
 
     def test_market_requires_login(self):
         self.assertEqual(self.client.get('/api/market').status_code, 401)
+        self.assertEqual(self.client.get('/api/market/movers').status_code, 401)
+
+    def test_movers_api_preserves_actual_candles(self):
+        with self.client.session_transaction() as sess:
+            sess['user_id'] = 'test-user'
+        market = self.app.extensions['market']
+        before = market.five_minute_movers()
+        with patch.object(market, 'five_minute_movers', return_value=before):
+            response = self.client.get('/api/market/movers')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers['Cache-Control'], 'no-store')
+        for side in ('up', 'down'):
+            self.assertEqual(response.json[side]['candles'], before[side]['candles'] if before[side] else [])
+            self.assertEqual(response.json[side]['change'], before[side]['change'] if before[side] else None)
+
+    def test_settings_page_and_mobile_navigation(self):
+        self.assertEqual(self.client.get('/settings').status_code, 302)
+        with self.client.session_transaction() as sess:
+            sess['user_id'] = 'test-user'
+        for route in ['/', '/buy', '/rank', '/settings', '/profile']:
+            page = self.client.get(route)
+            self.assertEqual(page.status_code, 200)
+            self.assertIn('aria-label="주요 메뉴"', page.text)
+        self.assertIn('csrf_token', self.client.get('/settings').text)
 
     def test_authenticated_quotes_and_buy_page(self):
         with self.client.session_transaction() as sess:
