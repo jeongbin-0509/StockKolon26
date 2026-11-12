@@ -191,7 +191,3 @@
 .member-stat span{display:block;color:#8ea79b;font-size:12px;margin-bottom:10px;}
 .member-stat strong{font-size:clamp(18px,5vw,30px);color:#a3f5cc;overflow-wrap:anywhere;}
 .rank-card {position:relative;}.rank-card .member-link::after {content:"";position:absolute;inset:0;z-index:2;border-radius:inherit;}
-
-/* Keep the champion light without a yellow box around the step. */
-.podium-card.tier-1 .podium-step { border-color: transparent; background: transparent; box-shadow: none; }
-.tier-1 .podium-step::before { display: none; }
