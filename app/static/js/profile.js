@@ -30,16 +30,6 @@ async function loadProfileData() {
     document.querySelector("#card-purchase .summary-sub .summary-value").textContent =
         data.summary.cash;
 
-    const topRows = document.querySelectorAll("#card-top .top-row");
-
-    topRows[0].querySelector(".top-stock-name").textContent = data.top.up_name;
-    topRows[0].querySelector(".top-stock-info").textContent = data.top.up_info;
-    topRows[0].querySelector(".top-stock-pct").textContent = data.top.up_rate;
-
-    topRows[1].querySelector(".top-stock-name").textContent = data.top.down_name;
-    topRows[1].querySelector(".top-stock-info").textContent = data.top.down_info;
-    topRows[1].querySelector(".top-stock-pct").textContent = data.top.down_rate;
-
     const tbody = document.querySelector("#holdings-table tbody");
     tbody.querySelectorAll('.mini-chart').forEach(StockolonCharts.disposeChart);
     tbody.innerHTML = "";
@@ -102,7 +92,17 @@ async function loadProfileData() {
     if (!data.orders.length) {
         history.textContent = '아직 거래 내역이 없습니다.';
     } else {
-        for (const order of data.orders) {
+        const more = document.createElement('details');
+        more.className = 'trade-history-more';
+        const toggle = document.createElement('summary');
+        const remaining = data.orders.length - 3;
+        const updateToggle = () => {
+            toggle.textContent = more.open ? '거래 내역 접기' : `이전 거래 ${remaining}개 펼쳐보기`;
+        };
+        updateToggle();
+        more.addEventListener('toggle', updateToggle);
+        more.append(toggle);
+        for (const [index, order] of data.orders.entries()) {
             const row = document.createElement('div');
             row.className = 'trade-history-row';
             const date = new Date(order.timestamp * 1000).toLocaleString('ko-KR', {timeZone: 'Asia/Seoul'});
@@ -111,8 +111,9 @@ async function loadProfileData() {
             const detail = document.createElement('span');
             detail.textContent = `${order.price.toLocaleString('ko-KR')}원 · 총 ${order.total.toLocaleString('ko-KR')}원 · ${date}`;
             row.append(title, detail);
-            history.appendChild(row);
+            (index < 3 ? history : more).appendChild(row);
         }
+        if (remaining > 0) history.append(more);
     }
 }
 
