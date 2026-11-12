@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>설정 · STOCKOLON 26</title>{% include '_pwa_head.html' %}<link rel="stylesheet" href="{{ url_for('static',filename='css/base.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/header.css', v='settings-1') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/settings.css',v='avatar-1') }}"></head>
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>설정 · STOCKOLON 26</title>{% include '_pwa_head.html' %}<link rel="stylesheet" href="{{ url_for('static',filename='css/base.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/header.css', v='settings-1') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/settings.css',v='crop-1') }}"></head>
 <body><header><a class="logo-link" href="{{ url_for('main.index') }}"><img id="logo" src="{{ url_for('static',filename='images/stockolon_logo.png') }}" alt="STOCKOLON 26"></a><nav id="header-nav"><div class="user-info"><div class="user-avatar"><img src="{{ url_for('static',filename='images/default_stock_logo.png') }}" alt="프로필 이미지"></div><span class="user-name">회원</span></div><a id="ranking_btn" class="nav-icon" href="{{ url_for('main.rank') }}" aria-label="랭킹"><img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt=""></a>
 {% include '_settings_button.html' %}
 </nav></header>
@@ -8,11 +8,19 @@
 <div class="photo-editor"><img id="photo-preview" src="{{ url_for('static',filename='images/default_stock_logo.png') }}" alt="프로필 사진 미리보기" width="88" height="88">
 <div class="photo-options"><p>사진을 설정하지 않으면 소속 동아리 로고가 표시됩니다.</p><p class="settings-note">JPG · PNG · WebP / 최대 5MB</p>
 <input type="file" id="photo-file" accept="image/jpeg,image/png,image/webp" aria-label="프로필 사진 선택" hidden>
-<div class="photo-actions"><button type="button" id="photo-choose" disabled>사진 선택</button><button type="button" id="photo-reset" disabled>동아리 로고로 되돌리기</button><button type="button" id="photo-save" hidden>저장</button><button type="button" id="photo-cancel" hidden>취소</button></div></div></div>
+<div class="photo-actions"><button type="button" id="photo-choose" disabled>사진 선택</button><button type="button" id="photo-reset" disabled>동아리 로고로 되돌리기</button></div></div></div>
+<div id="photo-crop-editor" class="photo-crop-editor" hidden>
+<p id="photo-crop-help">원을 기준으로 사진을 드래그해 위치를 맞춰주세요.</p>
+<canvas id="photo-crop-canvas" width="512" height="512" tabindex="0" aria-label="프로필 사진 자르기. 방향키로 이동, 더하기와 빼기로 확대 및 축소" aria-describedby="photo-crop-help"></canvas>
+<div class="photo-zoom-label"><label for="photo-zoom">확대</label><output id="photo-zoom-value" for="photo-zoom">1.00×</output></div>
+<div class="photo-zoom-controls"><button type="button" id="photo-zoom-out" aria-label="사진 축소">−</button><input id="photo-zoom" type="range" min="1" max="4" step="0.01" value="1"><button type="button" id="photo-zoom-in" aria-label="사진 확대">+</button></div>
+<button type="button" id="photo-crop-reset">위치 · 배율 초기화</button>
+<div class="photo-actions photo-crop-actions"><button type="button" id="photo-save" hidden>저장</button><button type="button" id="photo-cancel" hidden>취소</button></div>
+</div>
 <p id="photo-status" role="status" aria-live="polite">사진을 불러오는 중입니다.</p>
 </section>
 <section class="settings-section"><h2>내 계정</h2><a href="{{ url_for('main.profile') }}" class="settings-row"><span>내 포트폴리오 · 거래 내역</span><span>→</span></a><a href="{{ url_for('auth.forgot_password') }}" class="settings-row"><span>비밀번호 재설정</span><span>→</span></a></section>
 <section class="settings-section"><h2>화면</h2><label class="settings-row" for="reduce-effects"><span>애니메이션 줄이기<small>시상대와 화면의 움직임을 줄입니다.</small></span><input type="checkbox" id="reduce-effects"></label><p class="settings-note">설정은 현재 브라우저에 저장됩니다.</p><p id="settings-status" role="status"></p></section>
 <section class="settings-section"><h2>앱 안내</h2><p class="settings-note">STOCKOLON 26 · 운정고 동아리 모의주식투자<br>브라우저 메뉴의 ‘홈 화면에 추가’ 또는 ‘앱 설치’로 더 편하게 이용하세요.</p></section>
 <div class="settings-logout">{% include '_logout_form.html' %}</div></main>
-<script src="{{ url_for('static',filename='js/header-profile.js',v='avatar-1') }}" data-autoload="true"></script><script src="{{ url_for('static',filename='js/settings.js',v='mobile-1') }}"></script><script src="{{ url_for('static',filename='js/profile-image.js',v='avatar-1') }}"></script>{% include '_mobile_nav.html' %}{% include '_pwa_script.html' %}</body></html>
+<script src="{{ url_for('static',filename='js/header-profile.js',v='avatar-1') }}" data-autoload="true"></script><script src="{{ url_for('static',filename='js/settings.js',v='mobile-1') }}"></script><script src="{{ url_for('static',filename='js/photo-crop.js',v='crop-1') }}"></script><script src="{{ url_for('static',filename='js/profile-image.js',v='crop-1') }}"></script>{% include '_mobile_nav.html' %}{% include '_pwa_script.html' %}</body></html>
