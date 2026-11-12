@@ -1,6 +1,6 @@
 # Signatures and frames
 
-Nine permanent achievements each unlock a matching avatar frame. Settings can equip one signature and one frame independently, or unequip either. PROLOGUE / ORIGIN is the default for every account. English display names are uppercase; the three Korean names follow the supplied names.
+Nine permanent achievements each unlock a matching leaderboard card frame. Settings can equip one signature and one frame independently, or unequip either. Frames decorate ranking cards (including My Position) and podium pedestal boxes, never avatar images. Settings previews use the same box decorations. PROLOGUE / ORIGIN is the default for every account. English display names are uppercase; the three Korean names follow the supplied names.
 
 The private `cosmetic_profiles` table is created idempotently at app startup. It uses the existing persistent database, schema lock and transaction adapter. PostgreSQL RLS is enabled and PUBLIC / anon / authenticated privileges are revoked. Only the Flask session owner can equip unlocked items, with CSRF validation. Public member payloads expose only equipped style IDs and label, never tracking state or internal user IDs.
 

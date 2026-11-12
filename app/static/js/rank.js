@@ -27,7 +27,7 @@
         image.src = member.profileImg || '/static/images/default_stock_logo.png';
         image.alt = '';
         image.addEventListener('error', () => { image.src = '/static/images/default_stock_logo.png'; }, {once: true});
-        return window.StockCosmetics ? StockCosmetics.frame(image, member.cosmetics?.frame) : image;
+        return image;
     }
     function money(value, cls) {
         const node = element('strong', cls);
@@ -100,6 +100,7 @@
             place.append(document.createTextNode(member.rank), element('small', '', '위'));
             step.append(place);
         } else step.append(element('div', 'podium-rank', '—'));
+        if (member && window.StockCosmetics) StockCosmetics.frame(step, member.cosmetics?.frame);
         card.append(wrap, identity, step);
         return card;
     }
@@ -123,6 +124,7 @@
         const returns = element('div', 'rank-rate');
         returns.append(element('span', 'rank-label', '보유 주식 수익률'), rate(member));
         article.append(rank, person, assets, returns);
+        if (window.StockCosmetics) StockCosmetics.frame(article, member.cosmetics?.frame);
         return article;
     }
     async function load(showLoading = true) {

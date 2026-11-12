@@ -12,16 +12,17 @@
         if (!node.hidden) node.dataset.style = value.signature;
         return node;
     }
-    function frame(image, id) {
-        if (!image) return document.createDocumentFragment();
-        let wrap = image.parentElement?.classList.contains('cosmetic-avatar') ? image.parentElement : null;
-        if (!wrap) {
-            wrap = el('span', 'cosmetic-avatar');
-            if (image.parentNode) image.replaceWith(wrap);
-            wrap.append(image);
-        }
-        wrap.dataset.style = ids.has(id) ? id : 'none';
-        return wrap;
+    function frame(box, id) {
+        if (!box) return;
+        box.querySelector(':scope > .frame-ornament')?.remove();
+        box.classList.toggle('cosmetic-frame', ids.has(id));
+        if (ids.has(id)) {
+            box.dataset.style = id;
+            const ornament = el('span', 'frame-ornament');
+            ornament.setAttribute('aria-hidden', 'true');
+            box.append(ornament);
+        } else delete box.dataset.style;
+        return box;
     }
     function label(name, value) {
         if (!name) return;
@@ -58,7 +59,6 @@
         if (memberData) {
             try {
                 const user = JSON.parse(memberData.textContent).user;
-                frame(document.querySelector('.member-logo'), user.cosmetics?.frame);
                 label(document.querySelector('.member-hero h1'), user.cosmetics);
             } catch (_) {}
         }
@@ -81,18 +81,21 @@
         }
         function render() {
             count.textContent = `${collection.items.filter(item => item.unlocked).length} / ${collection.items.length} UNLOCKED`;
-            const img = el('img'); img.src = photo; img.alt = '장착한 프레임 미리보기';
+            const img = el('img'); img.src = photo; img.alt = '프로필 사진';
             const identity = el('div', 'collection-identity');
             identity.append(el('small', '', 'EQUIPPED'), el('strong', '', userName), badge(collection.equipped));
-            preview.replaceChildren(frame(img, collection.equipped.frame), identity);
+            preview.replaceChildren(img, identity);
+            frame(preview, collection.equipped.frame);
             grid.replaceChildren(...collection.items.map((item, index) => {
                 const card = el('article', 'cosmetic-card'); card.dataset.style = item.id;
                 card.dataset.locked = String(!item.unlocked);
                 const top = el('div', 'cosmetic-card-top');
                 top.append(el('span', '', item.tier), el('span', '', String(index+1).padStart(2,'0')));
                 const artwork = el('div', 'cosmetic-artwork');
-                const avatar = el('img'); avatar.src = photo; avatar.alt = `${item.frame} 프레임`;
-                artwork.append(frame(avatar, item.id), badge({signature:item.id, name:item.name}));
+                const avatar = el('img'); avatar.src = photo; avatar.alt = '프로필 사진';
+                artwork.setAttribute('aria-label', `${item.frame} 리더보드 카드 프레임 미리보기`);
+                artwork.append(avatar, badge({signature:item.id, name:item.name}));
+                frame(artwork, item.id);
                 const frameName = el('p', 'cosmetic-frame-name', item.frame + ' FRAME');
                 const condition = el('p', 'cosmetic-condition', item.condition);
                 const progress = el('progress'); progress.max = item.goal; progress.value = item.unlocked ? item.goal : item.progress;
