@@ -281,10 +281,12 @@ async function loadMarket() {
         const updated = new Date(data.timestamp * 1000).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
         statusElement.textContent = data.catchingUp
             ? `중단된 기간의 주가를 복구하고 있습니다. 현재 ${updated}`
-            : `최근 갱신 ${updated} · 가격 30초마다 갱신 · 5분봉에는 진행 중인 구간 포함`;
+            : '';
+        statusElement.hidden = !data.catchingUp;
         statusElement.classList.remove("error");
         if (data.catchingUp) retryDelay = 1000;
     } catch (error) {
+        statusElement.hidden = false;
         statusElement.textContent = stocks.length
             ? "연결이 끊겨 마지막으로 받은 주가를 표시하고 있습니다. 자동으로 다시 연결합니다."
             : "주가를 불러오지 못했습니다. 잠시 후 자동으로 다시 시도합니다.";

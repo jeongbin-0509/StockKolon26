@@ -6,8 +6,8 @@
     <title>랭킹 - STOCKOLON 26</title>
     {% include '_pwa_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/rank.css', v='podium-light-1') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css', v='settings-1') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/rank.css', v='clean-2') }}">
 </head>
 <body class="leaderboard-page">
 <header class="buy-header">
@@ -15,12 +15,14 @@
     <nav id="header-nav">
         <a href="{{ url_for('main.profile') }}" class="user-pill"><span class="user-avatar"><img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="프로필 이미지"></span><span class="user-name">내 프로필</span></a>
         <a href="{{ url_for('main.rank') }}" class="nav-icon active" aria-label="랭킹"><img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt=""></a>
+{% include '_settings_button.html' %}
+
     </nav>
 </header>
 <nav class="page-back-nav" aria-label="페이지 이동"><a class="page-back-link" href="{{ url_for('main.index') }}">← 메인으로</a></nav>
 <main class="rank-page">
     <div class="rank-heading">
-        <div><p class="rank-eyebrow"><span></span> STOCKOLON 26</p><h1>리더보드<span class="heading-dot">.</span></h1><p class="rank-intro">쌓아 올린 자산, 한눈에 보는 나의 순위.</p></div>
+        <div><p class="rank-eyebrow"><span></span> STOCKOLON 26</p><h1>리더보드<span class="heading-dot">.</span></h1></div>
         <button id="refresh" class="refresh-btn" type="button" aria-label="랭킹 새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 3M4 15l2 3a7 7 0 0 0 12-1"/></svg><span>새로고침</span></button>
     </div>
     <div class="rank-filter-bar">
@@ -29,12 +31,12 @@
         <button type="button" data-scope="class" aria-pressed="false">내 학급</button>
         <button type="button" data-scope="club" aria-pressed="false">내 동아리</button>
     </nav>
-        <span class="rank-update" id="rank-update">30초마다 갱신</span>
+
     </div>
     <div id="status" class="rank-status" role="status" aria-live="polite">랭킹을 불러오는 중입니다.</div>
     <section id="ranking-content" hidden>
         <section class="rank-arena" aria-labelledby="list-title">
-            <div class="arena-heading"><div><p class="section-eyebrow">THE PODIUM</p><h2 id="list-title">전교 랭킹</h2></div><span id="member-count" class="member-count"></span></div>
+            <div class="arena-heading"><div><h2 id="list-title">전교 랭킹</h2></div><span id="member-count" class="member-count"></span></div>
             <div id="podium" class="podium" aria-label="상위 세 명 시상대"></div>
             <div class="arena-footer"><span class="arena-line"></span><span>자산으로 빛나는 순간</span><span class="arena-line"></span></div>
         </section>
@@ -47,11 +49,11 @@
             <div class="rank-table-labels" aria-hidden="true"><span>순위</span><span>투자자</span><span>총자산</span><span>보유 주식 수익률</span></div>
             <div id="rank-list" class="rank-list" role="list"></div>
         </section>
-        <div class="rank-footnote"><p>총자산 = 보유 현금 + 보유 주식의 현재 매도 평가액</p><p>같은 자산은 공동 순위 · 상위 100명 표시 · 수익률은 보유 주식의 매입금액 기준</p></div>
+
     </section>
 </main>
 <script src="{{ url_for('static', filename='js/header-profile.js', v='refresh-3') }}" data-autoload="true"></script>
-<script src="{{ url_for('static', filename='js/rank.js', v='refresh-3') }}"></script>
+<script src="{{ url_for('static', filename='js/rank.js', v='clean-1') }}"></script>
 {% include '_mobile_nav.html' %}
 {% include '_pwa_script.html' %}
 </body>

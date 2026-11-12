@@ -141,7 +141,6 @@
                 content.hidden = true;
                 status.hidden = false;
                 status.textContent = data.message;
-                document.getElementById('rank-update').textContent = '30초마다 갱신';
                 return;
             }
             rankCounts = new Map();
@@ -156,8 +155,6 @@
                 list.append(element('p', 'rank-list-empty', '현재 참가자 모두 시상대에 올랐어요.'));
             }
             document.querySelector('.rank-table-labels').hidden = data.members.length <= 3;
-            const updated = Number.isFinite(data.timestamp) ? new Date(data.timestamp * 1000).toLocaleTimeString('ko-KR', {timeZone: 'Asia/Seoul', hour12: false}) : '';
-            document.getElementById('rank-update').textContent = updated ? `시세 기준 ${updated} · 30초마다 갱신` : '30초마다 갱신';
             content.hidden = false;
             status.hidden = !data.catching_up;
             if (data.catching_up) status.textContent = '시장 가격을 갱신하는 중입니다. 잠시 후 다시 확인해주세요.';

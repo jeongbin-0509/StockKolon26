@@ -6,7 +6,7 @@
     <title>Buy - STOCKOLON 26</title>
     {% include '_pwa_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css', v='settings-1') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css', v='candles-2') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/buy.css', v='holdings-1') }}">
 </head>
@@ -31,6 +31,8 @@
             <a id="ranking_btn" href="{{ url_for('main.rank') }}">
                 <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="랭킹">
             </a>
+{% include '_settings_button.html' %}
+
             {% include '_logout_form.html' %}
         </nav>
     </header>
@@ -86,7 +88,6 @@
         </nav>
 
         <p class="market-status" id="market-status" role="status" aria-live="polite">주가 데이터를 불러오는 중입니다.</p>
-        <p class="market-caption">등락·최고가·최저가는 오늘 00:00(한국시간) 기준 · 상세 차트는 최근 최대 5시간의 캔들·거래량</p>
         <p id="stock-results" class="stock-results" role="status" aria-live="polite"></p>
         <section class="stock-grid" aria-label="주식 목록" aria-busy="true" data-image-base="{{ url_for('static', filename='images/') }}"></section>
     </main>
@@ -163,7 +164,6 @@
                     <strong id="submit-label">매수 주문하기</strong>
                 </button>
             </form>
-            <p class="market-caption">시장가 주문은 확인하는 순간의 최신 가격으로 즉시 체결됩니다. 매수가는 기준가보다 0.25% 높고 매도가는 0.25% 낮으며 1원 단위로 반올림합니다.</p>
             <p class="market-caption" id="order-status" role="status" aria-live="polite"></p>
         </section>
     </div>
@@ -197,7 +197,7 @@
 
     <script src="{{ url_for('static', filename='js/header-profile.js', v='refresh-3') }}"></script>
     <script src="{{ url_for('static', filename='js/charts.js', v='candles-2') }}"></script>
-    <script src="{{ url_for('static', filename='js/buy.js', v='sort-2') }}"></script>
+    <script src="{{ url_for('static', filename='js/buy.js', v='clean-1') }}"></script>
 <script src="{{ url_for('static', filename='js/mobile-movers.js', v='mobile-1') }}"></script>
 {% include '_mobile_nav.html' %}
 {% include '_pwa_script.html' %}

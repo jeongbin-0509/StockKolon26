@@ -6,7 +6,7 @@
     <title>STOCKOLON 26</title>
     {% include '_pwa_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css', v='settings-1') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css', v='candles-2') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css', v='detail-chart-1') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/portfolio.css', v='mobile-1') }}">
@@ -32,6 +32,8 @@
             <a id="ranking_btn" href="{{ url_for('main.rank') }}">
                 <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="랭킹">
             </a>
+{% include '_settings_button.html' %}
+
             {% include '_logout_form.html' %}
         </nav>
     </header>
