@@ -13,7 +13,7 @@ class ProfileSection {
 
         if (data.profileImg) {
             this.profileImg.src = data.profileImg;
-            this.profileImg.alt = data.clubName ? `${data.clubName} 로고` : '기본 프로필 이미지';
+            this.profileImg.alt = '프로필 사진';
         }
         updateHeaderProfile(data);
     }
