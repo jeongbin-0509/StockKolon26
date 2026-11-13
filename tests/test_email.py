@@ -115,6 +115,7 @@ class EmailTests(unittest.TestCase):
         form = {'name': '학생', 'usernum': '12345', 'email_id': 'student', 'email_code': '123456',
                 'password': 'valid-password', 'password_check': 'valid-password', 'club_id': '61'}
         with patch('app.routes.auth.supabase', new=MagicMock()) as supabase:
+            supabase.table.return_value.select.return_value.ilike.return_value.limit.return_value.execute.return_value.data = []
             supabase.table.return_value.select.return_value.eq.return_value.limit.return_value.execute.return_value.data = [
                 {'id': '12345678-1234-4234-8234-123456789abc'}]
             response = self.client.post('/auth/signup', data=form)
@@ -124,6 +125,19 @@ class EmailTests(unittest.TestCase):
             self.assertEqual(payload['club_id'], '12345678-1234-4234-8234-123456789abc')
             self.client.post('/auth/signup', data=form)
             self.assertEqual(supabase.table.return_value.insert.call_count, 1)
+
+    def test_signup_rejects_existing_email_case_insensitively_before_consuming_code(self):
+        challenge = self.issue()
+        form = {'name': '학생', 'usernum': '12345', 'email_id': 'STUDENT', 'email_code': '123456',
+                'password': 'valid-password', 'password_check': 'valid-password', 'club_id': '61'}
+        with patch('app.routes.auth.supabase', new=MagicMock()) as supabase:
+            query = supabase.table.return_value.select.return_value.ilike
+            query.return_value.limit.return_value.execute.return_value.data = [{'id': 'existing'}]
+            response = self.client.post('/auth/signup', data=form, follow_redirects=True)
+            self.assertIn('이미 가입된 이메일', response.get_data(as_text=True))
+            query.assert_called_once_with('email', 'student@goedu.kr')
+            supabase.table.return_value.insert.assert_not_called()
+        self.assertTrue(self.verification.consume(challenge, 'student@goedu.kr', '123456'))
 
     def test_verify_button_endpoint_checks_code_without_consuming_signup_code(self):
         self.issue()

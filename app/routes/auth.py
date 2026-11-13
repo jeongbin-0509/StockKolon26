@@ -196,6 +196,10 @@ def signup():
                 raise ValueError("6~128자의 비밀번호와 비밀번호 확인을 확인해주세요.")
             if club_id not in {"00", "82", *(f"{number:02}" for number in CLUBS)}:
                 raise ValueError("소속 동아리를 선택해주세요.")
+            email_pattern = email.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+            existing = supabase.table('users').select('id').ilike('email', email_pattern).limit(1).execute()
+            if existing.data:
+                raise ValueError('이미 가입된 이메일입니다. 로그인하거나 비밀번호 찾기를 이용해주세요.')
             verified = current_app.extensions["email_verification"].consume(
                 session.get("email_challenge"), email, request.form.get("email_code", ""))
             if not verified:
@@ -203,8 +207,8 @@ def signup():
         except ValueError as exc:
             flash(str(exc))
             return redirect(url_for("auth.signup"))
-        except (sqlite3.Error, DatabaseError):
-            flash("인증 서비스를 일시적으로 이용할 수 없습니다. 잠시 후 다시 시도해주세요.")
+        except (sqlite3.Error, DatabaseError, APIError, httpx.HTTPError, RuntimeError):
+            flash("가입 정보를 확인할 수 없습니다. 잠시 후 다시 시도해주세요.")
             return redirect(url_for("auth.signup"))
         session.pop("email_challenge", None)
         try:
@@ -213,7 +217,13 @@ def signup():
                 "name": name, "usernum": usernum, "email": email,
                 "password": generate_password_hash(password), "club_id": selected_club_id,
             }).execute()
-        except (APIError, httpx.HTTPError, RuntimeError):
+        except APIError as exc:
+            if getattr(exc, 'code', None) == '23505' and 'users_email_normalized_unique' in str(exc):
+                flash("이미 가입된 이메일입니다. 로그인하거나 비밀번호 찾기를 이용해주세요.")
+            else:
+                flash("가입하지 못했습니다. 기존 가입 여부를 확인하고 새 인증번호로 다시 시도해주세요.")
+            return redirect(url_for("auth.signup"))
+        except (httpx.HTTPError, RuntimeError):
             flash("가입하지 못했습니다. 기존 가입 여부를 확인하고 새 인증번호로 다시 시도해주세요.")
             return redirect(url_for("auth.signup"))
         flash("회원가입이 완료되었습니다.")
