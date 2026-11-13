@@ -101,6 +101,8 @@ class MarketService:
         for event in db.execute("SELECT * FROM market_flows WHERE effective_at>? AND effective_at<=? ORDER BY event_id", (last_tick, end)):
             flows_by_tick.setdefault(event["effective_at"], []).append(event)
         rows = []
+        tracker = getattr(self, 'cosmetics', None)
+        batch = tracker.batch(db) if tracker else None
         for tick in range(last_tick + TICK_SECONDS, end + 1, TICK_SECONDS):
             effects = {}
             for event in events:
@@ -120,9 +122,13 @@ class MarketService:
                 volumes[club_num] = volumes.get(club_num, 0) + abs(quantity)
             rng_seed = hashlib.sha256(f"{row['seed']}:{tick}".encode()).digest()
             prices, state, parts = next_tick(prices, state, effects, flows, random.Random(rng_seed))
+            if batch:
+                batch.observe(prices, tick)
             rows.extend((club_num, tick, price, volumes.get(club_num, 0), json.dumps(parts[club_num]))
                         for club_num, price in prices.items())
         self._save_rows(db, rows)
+        if batch:
+            batch.save(db)
         db.executemany("UPDATE market_stocks SET price=? WHERE club_num=?", [(price, club) for club, price in prices.items()])
         db.execute("UPDATE market_state SET last_tick=?, state=? WHERE id=1", (end, json.dumps(state)))
         if end // 3600 != last_tick // 3600:
@@ -196,8 +202,16 @@ class MarketService:
                                'timestamps': [point['timestamp'] for point in series]})
             rising = [stock for stock in movers if stock['change'] > 0]
             falling = [stock for stock in movers if stock['change'] < 0]
-            return {'up': max(rising, key=lambda stock: stock['change'], default=None),
-                    'down': min(falling, key=lambda stock: stock['change'], default=None)}
+            result = {'up': max(rising, key=lambda stock: stock['change'], default=None),
+                      'down': min(falling, key=lambda stock: stock['change'], default=None)}
+            # 상승·하락률은 정확히 5분 전 대비, 차트는 저장된 최근 1시간의 5분봉이다.
+            for stock in result.values():
+                if stock is not None:
+                    stock['candles'] = [dict(row) for row in db.execute(
+                        'SELECT timestamp, open, high, low, close, volume FROM market_candles '
+                        'WHERE club_num=? AND timestamp>=? ORDER BY timestamp',
+                        (stock['club_num'], timestamp // CANDLE_SECONDS * CANDLE_SECONDS - 11 * CANDLE_SECONDS))]
+            return result
 
     def _event_time(self, db, timestamp):
         now = self.clock()

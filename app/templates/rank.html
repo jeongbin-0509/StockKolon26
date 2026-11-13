@@ -1,42 +1,60 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" class="leaderboard-root">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>랭킹 - STOCKOLON 26</title>
     {% include '_pwa_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/rank.css', v=2) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css', v='settings-1') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/rank.css', v='pedestal-restore-1') }}">
 </head>
-<body>
+<body class="leaderboard-page">
 <header class="buy-header">
     <a href="{{ url_for('main.index') }}" class="logo-link"><img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo" alt="STOCKOLON 26"></a>
     <nav id="header-nav">
         <a href="{{ url_for('main.profile') }}" class="user-pill"><span class="user-avatar"><img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="프로필 이미지"></span><span class="user-name">내 프로필</span></a>
         <a href="{{ url_for('main.rank') }}" class="nav-icon active" aria-label="랭킹"><img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt=""></a>
+{% include '_settings_button.html' %}
+
     </nav>
 </header>
 <nav class="page-back-nav" aria-label="페이지 이동"><a class="page-back-link" href="{{ url_for('main.index') }}">← 메인으로</a></nav>
 <main class="rank-page">
-    <div class="rank-heading"><div><h1>랭킹</h1><p>총자산을 기준으로 순위가 정해져요.</p></div><button id="refresh" class="refresh-btn" type="button">↻ 새로고침</button></div>
+    <div class="rank-heading">
+        <div><p class="rank-eyebrow"><span></span> STOCKOLON 26</p><h1>리더보드<span class="heading-dot">.</span></h1></div>
+        <button id="refresh" class="refresh-btn" type="button" aria-label="랭킹 새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 3M4 15l2 3a7 7 0 0 0 12-1"/></svg><span>새로고침</span></button>
+    </div>
+    <div class="rank-filter-bar">
     <nav class="rank-filters" aria-label="랭킹 범위">
         <button type="button" class="active" data-scope="school" aria-pressed="true">전교</button>
         <button type="button" data-scope="class" aria-pressed="false">내 학급</button>
         <button type="button" data-scope="club" aria-pressed="false">내 동아리</button>
     </nav>
-    <p class="rank-description">총자산 = 보유 현금 + 보유 주식의 현재 매도 평가액 · 같은 자산은 공동 순위</p>
+
+    </div>
     <div id="status" class="rank-status" role="status" aria-live="polite">랭킹을 불러오는 중입니다.</div>
     <section id="ranking-content" hidden>
-        <h2>내 순위</h2><div id="my-rank"></div>
-        <div class="list-heading"><h2 id="list-title">전교 랭킹</h2><span id="member-count"></span></div>
-        <div id="podium" class="podium"></div>
-        <div id="rank-list" class="rank-list"></div>
-        <p class="rank-footnote">상위 100명까지 표시합니다. 보유 주식 수익률은 매입금액 대비 현재 매도 평가액 기준입니다.</p>
+        <section class="rank-arena" aria-labelledby="list-title">
+            <div class="arena-heading"><div><h2 id="list-title">전교 랭킹</h2></div><span id="member-count" class="member-count"></span></div>
+            <div id="podium" class="podium" aria-label="상위 세 명 시상대"></div>
+            <div class="arena-footer"><span class="arena-line"></span><span>자산으로 빛나는 순간</span><span class="arena-line"></span></div>
+        </section>
+        <section class="my-rank-section" aria-labelledby="my-rank-heading">
+            <div class="list-heading"><h2 id="my-rank-heading"><span class="section-accent"></span>나의 현재 위치</h2><span class="section-eyebrow">MY POSITION</span></div>
+            <div id="my-rank"></div>
+        </section>
+        <section class="rank-table" aria-labelledby="rank-table-heading">
+            <div class="list-heading"><h2 id="rank-table-heading">순위 목록</h2><span class="rank-sort">총자산 순</span></div>
+            <div class="rank-table-labels" aria-hidden="true"><span>순위</span><span>투자자</span><span>총자산</span><span>보유 주식 수익률</span></div>
+            <div id="rank-list" class="rank-list" role="list"></div>
+        </section>
+
     </section>
 </main>
-<script src="{{ url_for('static', filename='js/header-profile.js') }}" data-autoload="true"></script>
-<script src="{{ url_for('static', filename='js/rank.js') }}"></script>
+<script src="{{ url_for('static', filename='js/header-profile.js', v='box-frames-1') }}" data-autoload="true"></script>
+<script src="{{ url_for('static', filename='js/rank.js', v='box-frames-1') }}"></script>
+{% include '_mobile_nav.html' %}
 {% include '_pwa_script.html' %}
 </body>
 </html>

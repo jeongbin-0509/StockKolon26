@@ -6,8 +6,8 @@
     <title>News - STOCKOLON 26</title>
     {% include '_pwa_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/news.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css', v='settings-1') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/news.css', v='refresh-3') }}">
 </head>
 <body>
 
@@ -24,12 +24,14 @@
                     <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="기본 프로필 이미지">
                 </div>
                 <span class="head2 user-name">세미님</span>
-                <span class="user-rank">전체 1위</span>
+                <span class="user-rank">순위 확인 중</span>
             </div>
             <!-- 버튼 -->
             <a id="ranking_btn" href="{{ url_for('main.rank') }}">
                 <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="랭킹">
             </a>
+{% include '_settings_button.html' %}
+
             {% include '_logout_form.html' %}
         </nav>
     </header>
@@ -50,7 +52,8 @@
                     <span class="news-column-caption">{{ '긍정적인 소식' if sentiment == '호재' else '부정적인 소식' }}</span>
                 </div>
                 {% for article in articles if article.sentiment == sentiment %}
-                <article class="news-card">
+                <article class="news-card {{ 'news-current' if loop.first else 'news-history' }}">
+                    <span class="news-edition">{{ 'LATEST · 최신 소식' if loop.first else '이전 소식' }}</span>
                     <div class="news-meta"><span class="news-tag {{ 'up' if sentiment == '호재' else 'down' }}">{{ article.sentiment }}</span><span>{{ article.target_name }}</span><time>{{ article.published_at|kst_time }}</time></div>
                     <h3>{{ article.title }}</h3>
                     <p class="news-body">{{ article.body }}</p>
@@ -63,8 +66,9 @@
     <footer>
 
     </footer>
-<script src="{{ url_for('static', filename='js/header-profile.js') }}" data-autoload="true"></script>
+<script src="{{ url_for('static', filename='js/header-profile.js', v='box-frames-1') }}" data-autoload="true"></script>
 <script src="{{ url_for('static', filename='js/news.js') }}"></script>
+{% include '_mobile_nav.html' %}
 {% include '_pwa_script.html' %}
 </body>
 </html>

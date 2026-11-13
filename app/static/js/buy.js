@@ -2,6 +2,8 @@ const stockGrid = document.querySelector(".stock-grid");
 const categoryFilter = document.querySelector(".stock-category-filter");
 const stockSearch = document.querySelector('#stock-search');
 const favoritesFilter = document.querySelector('#favorites-filter');
+const stockSort = document.querySelector('.stock-sort');
+const stockSortLabel = document.querySelector('#stock-sort-label');
 const favoritesStatus = document.querySelector('#favorites-status');
 const stockResults = document.querySelector('#stock-results');
 const statusElement = document.querySelector("#market-status");
@@ -27,6 +29,7 @@ let stocks = [];
 let favorites = new Set();
 let favoritesLoaded = false;
 let favoritesOnly = false;
+let selectedSort = 'default';
 const favoriteRequests = new Set();
 let selectedCategory = "all";
 let selectedClub = null;
@@ -36,6 +39,7 @@ let refreshTimer;
 let loading = false;
 let lastTimestamp = null;
 let requestedTradeHandled = false;
+let chartInterval = 300;
 
 function formatWon(value) {
     return `${Math.round(value).toLocaleString("ko-KR")}원`;
@@ -49,23 +53,30 @@ function setClubImage(img, clubNum) {
     img.src = `${imageBase}${clubNum}.png`;
 }
 
-function timeLabel(timestamp) {
-    return new Date(timestamp * 1000).toLocaleTimeString("ko-KR", {
-        timeZone: "Asia/Seoul", hour: "2-digit", minute: "2-digit", hour12: false
+function renderStockChart(container, stock, compact = false) {
+    StockolonCharts.renderCandlestickChart(container, {
+        candles: stock.candles,
+        seriesKey: stock.club_num,
+        compact,
+        maxCandles: compact ? 36 : 60,
+        intervalSeconds: compact ? 300 : chartInterval,
+        timestamp: lastTimestamp,
+        ariaLabel: `${stock.club_name} ${compact ? 5 : chartInterval / 60}분봉 가격 차트`
     });
 }
 
-function renderStockChart(container, stock, compact = false) {
-    const candles = stock.candles || [];
-    StockolonCharts.renderLineChart(container, {
-        prices: candles.map(candle => candle.close),
-        tone: trendOf(stock),
-        compact,
-        startLabel: candles.length ? timeLabel(candles[0].timestamp) : '',
-        endLabel: candles.length ? timeLabel(candles.at(-1).timestamp) : '',
-        ariaLabel: `${stock.club_name} 최근 가격 변화`
+document.querySelectorAll('[data-chart-interval]').forEach(button => {
+    button.addEventListener('click', () => {
+        chartInterval = Number(button.dataset.chartInterval);
+        document.querySelectorAll('[data-chart-interval]').forEach(item => {
+            const active = item === button;
+            item.classList.toggle('active', active);
+            item.setAttribute('aria-pressed', String(active));
+        });
+        const stock = stocks.find(item => item.club_num === selectedClub);
+        if (stock) renderStockChart(document.querySelector('.modal-chart'), stock);
     });
-}
+});
 
 function trendOf(stock) {
     return stock.changeRate >= 0 ? "up" : "down";
@@ -97,13 +108,28 @@ function renderStockCards() {
     const focusedClub = document.activeElement?.closest(".stock-card")?.dataset.club;
     const focusedFavorite = document.activeElement?.classList.contains('favorite-button');
     const query = stockSearch.value.trim().normalize('NFC').toLocaleLowerCase('ko-KR').replace(/\s+/g, '');
+    const heldClubs = new Set((portfolio?.holdings || [])
+        .filter(holding => holding.quantity > 0)
+        .map(holding => holding.club_num));
     const visible = stocks.filter((stock) =>
-        (selectedCategory === 'all' || stock.categoryKey === Number(selectedCategory)) &&
+        (selectedCategory === 'all' ||
+            (selectedCategory === 'holdings' ? heldClubs.has(stock.club_num) : stock.categoryKey === Number(selectedCategory))) &&
         (!favoritesOnly || favorites.has(stock.club_num)) &&
         stock.club_name.normalize('NFC').toLocaleLowerCase('ko-KR').replace(/\s+/g, '').includes(query));
+    if (selectedSort === 'name') {
+        visible.sort((a, b) => a.club_name.localeCompare(b.club_name, 'ko-KR') || a.club_num - b.club_num);
+    } else if (selectedSort === 'price-asc') {
+        visible.sort((a, b) => a.price - b.price || a.club_name.localeCompare(b.club_name, 'ko-KR'));
+    } else if (selectedSort === 'price-desc') {
+        visible.sort((a, b) => b.price - a.price || a.club_name.localeCompare(b.club_name, 'ko-KR'));
+    }
+    stockGrid.querySelectorAll('.stock-chart').forEach(StockolonCharts.disposeChart);
     stockGrid.replaceChildren(...visible.map(createStockCard));
     if (stocks.length && (query || favoritesOnly || selectedCategory !== 'all')) {
-        stockResults.textContent = visible.length ? `${visible.length}개 종목` : (favoritesOnly && !favorites.size ? '즐겨찾기한 종목이 없습니다. 종목의 별을 눌러 추가해보세요.' : '조건에 맞는 종목이 없습니다.');
+        if (selectedCategory === 'holdings' && !portfolio) stockResults.textContent = '보유 주식을 불러오는 중입니다.';
+        else if (visible.length) stockResults.textContent = `${visible.length}개 종목`;
+        else if (selectedCategory === 'holdings' && !heldClubs.size) stockResults.textContent = '현재 보유한 주식이 없습니다.';
+        else stockResults.textContent = favoritesOnly && !favorites.size ? '즐겨찾기한 종목이 없습니다. 종목의 별을 눌러 추가해보세요.' : '조건에 맞는 종목이 없습니다.';
     } else stockResults.textContent = '';
     if (focusedClub) stockGrid.querySelector(`[data-club="${focusedClub}"] ${focusedFavorite ? '.favorite-button' : '.stock-open'}`)?.focus({ preventScroll: true });
 }
@@ -255,10 +281,12 @@ async function loadMarket() {
         const updated = new Date(data.timestamp * 1000).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
         statusElement.textContent = data.catchingUp
             ? `중단된 기간의 주가를 복구하고 있습니다. 현재 ${updated}`
-            : `최근 갱신 ${updated} · 가격 30초마다 갱신 · 5분봉에는 진행 중인 구간 포함`;
+            : '';
+        statusElement.hidden = !data.catchingUp;
         statusElement.classList.remove("error");
         if (data.catchingUp) retryDelay = 1000;
     } catch (error) {
+        statusElement.hidden = false;
         statusElement.textContent = stocks.length
             ? "연결이 끊겨 마지막으로 받은 주가를 표시하고 있습니다. 자동으로 다시 연결합니다."
             : "주가를 불러오지 못했습니다. 잠시 후 자동으로 다시 시도합니다.";
@@ -282,6 +310,17 @@ stockSearch.addEventListener('input', renderStockCards);
 favoritesFilter.addEventListener('click', () => {
     favoritesOnly = !favoritesOnly;
     favoritesFilter.setAttribute('aria-pressed', String(favoritesOnly));
+    renderStockCards();
+});
+
+stockSort.addEventListener('click', event => {
+    const button = event.target.closest('[data-sort]');
+    if (!button) return;
+    selectedSort = button.dataset.sort;
+    stockSort.querySelectorAll('[data-sort]').forEach(item =>
+        item.setAttribute('aria-pressed', String(item === button)));
+    stockSortLabel.textContent = button.textContent;
+    stockSort.open = false;
     renderStockCards();
 });
 stockGrid.addEventListener("click", (event) => {
@@ -329,10 +368,12 @@ async function loadPortfolio() {
         document.querySelector('#asset-total').textContent = data.summary.total_assets;
         document.querySelector('#asset-cost').textContent = data.summary.purchase_amount;
         document.querySelector('#asset-cash').textContent = data.summary.cash;
+        renderStockCards();
         updateSubmit();
         openRequestedTrade();
     } catch (_) {
         portfolio = null;
+        renderStockCards();
         document.querySelector('#order-balance').textContent = '잔액을 불러오지 못했습니다. 새로고침해주세요.';
         updateSubmit();
     }

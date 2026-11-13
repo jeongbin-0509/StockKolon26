@@ -56,7 +56,7 @@ def create_app(test_config=None):
     from app.services.market_service import MarketService
     from app.services.admin_service import AdminService
     from app.services.trading_service import TradingService
-    from app.services.ranking_service import RankingService
+    from app.services.ranking_service import RankingService, load_supabase_members
     from app.services.email_verification import EmailVerification
     from app.services.database import DatabaseError
     import sqlite3
@@ -71,7 +71,21 @@ def create_app(test_config=None):
     trading = TradingService(service)
     trading.initialize()
     app.extensions["trading"] = trading
-    app.extensions["ranking"] = RankingService(service)
+    from app.services.cosmetics import Cosmetics
+    from app.routes.cosmetics import cosmetics
+    achievements = Cosmetics(service)
+    achievements.initialize()
+    service.cosmetics = achievements
+    app.extensions['cosmetics'] = achievements
+    app.register_blueprint(cosmetics)
+    from app.services.profile_images import ProfileImages
+    from app.routes.profile_images import photos
+    images = ProfileImages(service)
+    images.initialize()
+    app.extensions['profile_images'] = images
+    app.register_blueprint(photos)
+    app.extensions["ranking"] = RankingService(
+        service, member_loader=None if service.store.postgres else load_supabase_members)
     admin_service = AdminService(service)
     admin_service.initialize()
     app.extensions["admin"] = admin_service
@@ -85,8 +99,40 @@ def create_app(test_config=None):
         try:
             with service.connection() as db:
                 db.execute("SELECT last_tick FROM market_state WHERE id=1").fetchone()
+                db.execute("SELECT revision FROM profile_images LIMIT 1").fetchone()
+                db.execute("SELECT user_id FROM cosmetic_profiles LIMIT 1").fetchone()
         except (sqlite3.Error, DatabaseError):
             return jsonify(status="unavailable"), 503
         return jsonify(status="ok")
+
+    @app.before_request
+    def optimized_static_image():
+        from flask import request, send_from_directory
+        if request.endpoint == 'static' and 'image/webp' in request.headers.get('Accept', '') and request.accept_mimetypes['image/webp'] > 0:
+            filename = (request.view_args or {}).get('filename', '')
+            # Only bundled top-level PNGs have lossless alternatives. Never use user paths.
+            if filename.startswith('images/') and filename.endswith('.png') and '/' not in filename[7:]:
+                alternate = Path(app.static_folder) / 'images' / 'optimized' / (Path(filename).stem + '.webp')
+                if alternate.is_file():
+                    response = send_from_directory(alternate.parent, alternate.name, mimetype='image/webp', max_age=86400)
+                    response.vary.add('Accept')
+                    return response
+
+    @app.after_request
+    def compress_market(response):
+        from flask import request
+        import gzip
+        if request.endpoint == 'static' and request.path.endswith('.png'):
+            response.vary.add('Accept')
+        if request.path == '/api/market' and response.status_code == 200 and not response.direct_passthrough:
+            response.vary.add('Accept-Encoding')
+            if request.accept_encodings['gzip'] > 0 and not response.headers.get('Content-Encoding'):
+                raw = response.get_data()
+                if len(raw) > 1500:
+                    packed = gzip.compress(raw, compresslevel=5)
+                    if len(packed) < len(raw):
+                        response.set_data(packed)
+                        response.headers['Content-Encoding'] = 'gzip'
+        return response
 
     return app

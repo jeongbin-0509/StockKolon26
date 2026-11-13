@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ko" class="leaderboard-root">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ member.name }}의 프로필 · STOCKOLON26</title>
+{% include '_pwa_head.html' %}
+<link rel="stylesheet" href="{{ url_for('static',filename='css/base.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/rank.css',v='pedestal-restore-1') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/portfolio.css',v='mobile-1') }}">
+</head>
+<body class="leaderboard-page"><main class="member-page member-portfolio">
+<a class="page-back-link" href="{{ url_for('main.rank') }}">← 리더보드</a>
+<section class="member-hero"><img class="member-logo" src="{{ image }}" alt="프로필 사진"><h1>{{ member.name }}의 프로필</h1><p>{{ member.club_name or '동아리 미선택' }} · 전교 {{ count }}명 중 {{ member.rank }}위</p></section>
+{% set portfolio_mode = 'public' %}{% include '_portfolio_panel.html' %}
+<script type="application/json" id="member-portfolio-data">{{ portfolio_data|tojson }}</script>
+<noscript><section class="pf-card"><h2>포트폴리오</h2><p>총자산 {{ '{:,}'.format(member.assets) }}원</p>{% for holding in portfolio_data.portfolio.holdings %}<p>{{ holding.name }} · {{ holding.quantity }}주 · 평가금액 {{ '{:,}'.format(holding.value) }}원</p>{% else %}<p>아직 보유한 주식이 없습니다.</p>{% endfor %}</section></noscript>
+</main>
+<script src="{{ url_for('static',filename='js/portfolio.js',v='mobile-1') }}"></script>
+{% include '_mobile_nav.html' %}{% include '_pwa_script.html' %}
+</body></html>

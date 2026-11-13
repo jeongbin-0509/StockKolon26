@@ -251,6 +251,23 @@ def send_code():
     return jsonify(success=True, message="인증번호가 전송되었습니다.")
 
 
+@auth.post('/verify-code')
+def verify_code():
+    data = request.get_json(silent=True)
+    try:
+        email = EmailVerification.normalize(data.get('email') if isinstance(data, dict) else None)
+        code = data.get('code') if isinstance(data, dict) else None
+        verified = current_app.extensions['email_verification'].verify(
+            session.get('email_challenge'), email, code)
+        if not verified:
+            return jsonify(success=False, message='인증번호가 올바르지 않거나 만료되었습니다. 다시 확인해주세요.'), 400
+    except ValueError as exc:
+        return jsonify(success=False, message=str(exc)), 400
+    except (sqlite3.Error, DatabaseError):
+        return jsonify(success=False, message='인증 서비스를 일시적으로 이용할 수 없습니다.'), 503
+    return jsonify(success=True, message='학교 이메일 인증이 완료되었습니다.')
+
+
 # 로그아웃
 @auth.route("/logout", methods=["POST"])
 def logout():

@@ -1,0 +1,11 @@
+<section class="portfolio-panel" data-portfolio-mode="{{ portfolio_mode }}" aria-label="{{ '내 포트폴리오' if portfolio_mode == 'own' else '투자자 포트폴리오' }}">
+    <div class="pf-heading"><div><p class="pf-eyebrow">{{ 'MY PORTFOLIO' if portfolio_mode == 'own' else 'INVESTOR PORTFOLIO' }}</p><h1>{{ '내 포트폴리오' if portfolio_mode == 'own' else member.name ~ '의 포트폴리오' }}</h1><p class="pf-intro">{{ '나의 투자, 한눈에 모아보기' if portfolio_mode == 'own' else '보유 종목과 자산 배분을 살펴보세요.' }}</p></div>{% if portfolio_mode == 'own' %}<button type="button" class="pf-refresh" aria-label="포트폴리오 새로고침">↻</button>{% endif %}</div>
+    <p class="pf-status" role="status">포트폴리오를 불러오는 중입니다.</p>
+    <div class="pf-content" hidden>
+        <section class="pf-hero" aria-label="자산 요약"><div class="pf-hero-top"><span>총자산</span><span class="pf-rank"></span></div><strong class="pf-total">—</strong><div class="pf-profit-line"><span>평가손익</span><strong class="pf-profit">—</strong><span class="pf-rate"></span></div><div class="pf-metrics"><div><span>보유 현금</span><strong class="pf-cash">—</strong></div><div><span>주식 평가액</span><strong class="pf-stock-value">—</strong></div></div></section>
+        <section class="pf-allocation pf-card" aria-label="자산 비중"><div class="pf-section-title"><h2>자산 비중</h2><span class="pf-count"></span></div><div class="pf-allocation-body"><div class="pf-donut" role="img" aria-label="자산 비중"><div><span>주식 비중</span><strong class="pf-stock-ratio">—</strong></div></div><ul class="pf-legend"></ul></div></section>
+        <section class="pf-holdings" aria-label="보유 종목"><div class="pf-section-title"><h2>보유 종목</h2>{% if portfolio_mode == 'own' %}<a href="{{ url_for('main.buy') }}">종목 둘러보기 →</a>{% else %}<span>현재 매도 평가 기준</span>{% endif %}</div><div class="pf-holding-list"></div></section>
+        {% if portfolio_mode == 'own' %}<a class="pf-history-link" href="{{ url_for('main.profile') }}">최근 거래 내역 확인 <span>→</span></a>{% endif %}
+        <p class="pf-footnote">총자산 = 보유 현금 + 주식의 현재 매도 평가액<br>평가손익은 보유 주식의 매입금액 기준입니다.</p><p class="pf-time"></p>
+    </div>
+</section>
