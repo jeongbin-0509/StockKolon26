@@ -20,13 +20,13 @@
 
         <nav id="header-nav">
             <!-- 유저 정보 -->
-            <div class="user-info">
+            <a class="user-info" href="{{ url_for('main.profile') }}">
                 <div class="user-avatar">
                     <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="기본 프로필 이미지">
                 </div>
                 <span class="head2 user-name">세미님</span>
                 <span class="user-rank">순위 확인 중</span>
-            </div>
+            </a>
             <!-- 버튼 -->
             <a id="ranking_btn" href="{{ url_for('main.rank') }}">
                 <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="랭킹">
