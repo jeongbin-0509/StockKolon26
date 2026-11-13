@@ -13,7 +13,10 @@ class ProfileSection {
 
         if (data.profileImg) {
             this.profileImg.src = data.profileImg;
-            this.profileImg.alt = data.clubName ? `${data.clubName} 로고` : '기본 프로필 이미지';
+            this.profileImg.alt = '프로필 사진';
+        }
+        if (data.cosmetics && window.StockCosmetics) {
+            StockCosmetics.label(this.username, data.cosmetics);
         }
         updateHeaderProfile(data);
     }
@@ -118,7 +121,7 @@ function updateAllPageData(data) {
 
 let indexLoading = false;
 async function loadIndexData() {
-    if (indexLoading || document.hidden) return;
+    if (indexLoading || document.hidden || matchMedia('(max-width: 760px)').matches) return;
     indexLoading = true;
     try {
         const response = await fetch("/api/index-data", {cache: "no-store", signal: AbortSignal.timeout(20000)});
@@ -140,3 +143,5 @@ async function loadIndexData() {
 
 loadIndexData();
 setInterval(loadIndexData, 30000);
+
+matchMedia('(max-width: 760px)').addEventListener('change', loadIndexData);

@@ -6,11 +6,12 @@
     <title>STOCKOLON 26</title>
     {% include '_pwa_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css', v='settings-1') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css', v='candles-2') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css', v='detail-chart-1') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/portfolio.css', v='mobile-1') }}">
 </head>
-<body>
+<body class="mobile-home">
 
     <!-- 헤더 -->
     <header>
@@ -31,11 +32,14 @@
             <a id="ranking_btn" href="{{ url_for('main.rank') }}">
                 <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="랭킹">
             </a>
+{% include '_settings_button.html' %}
+
             {% include '_logout_form.html' %}
         </nav>
     </header>
 
     <main>
+<section class="mobile-only">{% set portfolio_mode = "own" %}{% include "_portfolio_panel.html" %}</section>
 
         <!-- 프로필 섹션 -->
         <section id="profile-section">
@@ -132,9 +136,11 @@
 
     </main>
 
-    <script src="{{ url_for('static', filename='js/header-profile.js', v='refresh-3') }}"></script>
+    <script src="{{ url_for('static', filename='js/header-profile.js', v='box-frames-1') }}"></script>
     <script src="{{ url_for('static', filename='js/charts.js', v='candles-2') }}"></script>
-    <script src="{{ url_for('static', filename='js/index.js', v='detail-chart-1') }}"></script>
+    <script src="{{ url_for('static', filename='js/index.js', v='box-frames-1') }}"></script>
+<script src="{{ url_for('static', filename='js/portfolio.js', v='mobile-1') }}"></script>
+{% include '_mobile_nav.html' %}
 {% include '_pwa_script.html' %}
 </body>
 </html>

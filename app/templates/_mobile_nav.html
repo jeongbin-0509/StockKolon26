@@ -1,0 +1,16 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-shell.css', v='mobile-1') }}">
+<script src="{{ url_for('static', filename='js/display-preferences.js', v='mobile-1') }}"></script>
+{% set page = request.endpoint %}
+<nav class="mobile-bottom-nav" aria-label="주요 메뉴">
+    {% for endpoint, label, icon in [
+        ('main.index', '홈', 'M3 10 12 3l9 7M5 9v12h5v-7h4v7h5V9'),
+        ('main.buy', '주식 구입하기', 'M4 20V10m8 10V4m8 16V8M2 20h20M2 10h4m4-6h4m4 4h4'),
+        ('main.news', '뉴스창', 'M4 3h16v18H4zM8 7h8M8 11h8M8 15h3m3 0h2M8 18h8'),
+        ('main.rank', '리더보드', 'M8 3h8v6a4 4 0 0 1-8 0zM8 5H4v3a4 4 0 0 0 4 4m8-7h4v3a4 4 0 0 1-4 4M12 13v5m-4 3h8m-8-3h8'),
+        ('main.settings', '설정', 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2') ] %}
+    {% set active = page == endpoint or (endpoint == 'main.index' and page == 'main.profile') or (endpoint == 'main.rank' and page == 'main.member_profile') %}
+    <a href="{{ url_for(endpoint) }}" {% if active %}aria-current="page"{% endif %}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="{{ icon }}"/></svg><span>{{ label }}</span>
+    </a>
+    {% endfor %}
+</nav>

@@ -90,6 +90,7 @@
             person.href = '/members/' + encodeURIComponent(member.profile_key);
             person.append(avatar(member), element('span', 'rank-name', member.name || '이름 없음'));
             identity.append(person, element('span', 'rank-sub', member.club_name || '동아리 미선택'));
+            if (window.StockCosmetics) identity.append(StockCosmetics.badge(member.cosmetics));
         } else identity.append(element('span', 'podium-empty-label', '아직 순위 없음'));
         const step = element('div', 'podium-step');
         if (member) {
@@ -99,6 +100,7 @@
             place.append(document.createTextNode(member.rank), element('small', '', '위'));
             step.append(place);
         } else step.append(element('div', 'podium-rank', '—'));
+        if (member && window.StockCosmetics) StockCosmetics.frame(step, member.cosmetics?.frame);
         card.append(wrap, identity, step);
         return card;
     }
@@ -115,12 +117,14 @@
         const name = element('div', 'rank-name', member.name || '이름 없음');
         if (member.is_me) name.append(element('span', 'me-badge', 'ME'));
         identity.append(name, element('span', 'rank-sub', member.club_name || '동아리 미선택'));
+        if (window.StockCosmetics) identity.append(StockCosmetics.badge(member.cosmetics));
         person.append(avatar(member), identity);
         const assets = element('div', 'rank-assets');
         assets.append(element('span', 'rank-label', '총자산'), money(member.assets, ''));
         const returns = element('div', 'rank-rate');
         returns.append(element('span', 'rank-label', '보유 주식 수익률'), rate(member));
         article.append(rank, person, assets, returns);
+        if (window.StockCosmetics) StockCosmetics.frame(article, member.cosmetics?.frame);
         return article;
     }
     async function load(showLoading = true) {
@@ -141,7 +145,6 @@
                 content.hidden = true;
                 status.hidden = false;
                 status.textContent = data.message;
-                document.getElementById('rank-update').textContent = '30초마다 갱신';
                 return;
             }
             rankCounts = new Map();
@@ -156,8 +159,6 @@
                 list.append(element('p', 'rank-list-empty', '현재 참가자 모두 시상대에 올랐어요.'));
             }
             document.querySelector('.rank-table-labels').hidden = data.members.length <= 3;
-            const updated = Number.isFinite(data.timestamp) ? new Date(data.timestamp * 1000).toLocaleTimeString('ko-KR', {timeZone: 'Asia/Seoul', hour12: false}) : '';
-            document.getElementById('rank-update').textContent = updated ? `시세 기준 ${updated} · 30초마다 갱신` : '30초마다 갱신';
             content.hidden = false;
             status.hidden = !data.catching_up;
             if (data.catching_up) status.textContent = '시장 가격을 갱신하는 중입니다. 잠시 후 다시 확인해주세요.';

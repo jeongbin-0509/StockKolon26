@@ -6,9 +6,9 @@
     <title>Buy - STOCKOLON 26</title>
     {% include '_pwa_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css', v='settings-1') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css', v='candles-2') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/buy.css', v='candles-2') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/buy.css', v='holdings-1') }}">
 </head>
 <body>
     
@@ -31,6 +31,8 @@
             <a id="ranking_btn" href="{{ url_for('main.rank') }}">
                 <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="랭킹">
             </a>
+{% include '_settings_button.html' %}
+
             {% include '_logout_form.html' %}
         </nav>
     </header>
@@ -40,6 +42,7 @@
     </nav>
 
     <main class="buy-page">
+<div class="mobile-only mobile-market-heading"><p>MARKET</p><h1>주식 구입하기</h1></div>
         <section class="asset-summary" aria-label="자산 요약">
             <article class="summary-card">
                 <span class="summary-label">총 자산</span>
@@ -55,12 +58,14 @@
             </article>
         </section>
 
+        {% include "_mobile_movers.html" %}
         <div class="stock-tools">
             <label class="stock-search"><span>종목 검색</span><input id="stock-search" type="search" placeholder="동아리 이름을 검색하세요" autocomplete="off"></label>
             <button type="button" id="favorites-filter" class="favorites-filter" aria-pressed="false" disabled>☆ 즐겨찾기만 보기</button>
             <details class="stock-sort">
-                <summary id="stock-sort-label">정렬</summary>
+                <summary id="stock-sort-label">기본 정렬</summary>
                 <div class="stock-sort-options" role="group" aria-labelledby="stock-sort-label">
+                    <button type="button" data-sort="default" aria-pressed="true">기본 정렬</button>
                     <button type="button" data-sort="name" aria-pressed="false">가나다순</button>
                     <button type="button" data-sort="price-asc" aria-pressed="false">가격 오름차순</button>
                     <button type="button" data-sort="price-desc" aria-pressed="false">가격 내림차순</button>
@@ -83,7 +88,6 @@
         </nav>
 
         <p class="market-status" id="market-status" role="status" aria-live="polite">주가 데이터를 불러오는 중입니다.</p>
-        <p class="market-caption">등락·최고가·최저가는 오늘 00:00(한국시간) 기준 · 상세 차트는 최근 최대 5시간의 캔들·거래량</p>
         <p id="stock-results" class="stock-results" role="status" aria-live="polite"></p>
         <section class="stock-grid" aria-label="주식 목록" aria-busy="true" data-image-base="{{ url_for('static', filename='images/') }}"></section>
     </main>
@@ -160,7 +164,6 @@
                     <strong id="submit-label">매수 주문하기</strong>
                 </button>
             </form>
-            <p class="market-caption">시장가 주문은 확인하는 순간의 최신 가격으로 즉시 체결됩니다. 매수가는 기준가보다 0.25% 높고 매도가는 0.25% 낮으며 1원 단위로 반올림합니다.</p>
             <p class="market-caption" id="order-status" role="status" aria-live="polite"></p>
         </section>
     </div>
@@ -192,9 +195,11 @@
         <button type="button" id="execution-close" aria-label="체결 알림 닫기">×</button>
     </div>
 
-    <script src="{{ url_for('static', filename='js/header-profile.js', v='refresh-3') }}"></script>
+    <script src="{{ url_for('static', filename='js/header-profile.js', v='box-frames-1') }}"></script>
     <script src="{{ url_for('static', filename='js/charts.js', v='candles-2') }}"></script>
-    <script src="{{ url_for('static', filename='js/buy.js', v='candles-2') }}"></script>
+    <script src="{{ url_for('static', filename='js/buy.js', v='box-frames-1') }}"></script>
+<script src="{{ url_for('static', filename='js/mobile-movers.js', v='mobile-1') }}"></script>
+{% include '_mobile_nav.html' %}
 {% include '_pwa_script.html' %}
 </body>
 </html>

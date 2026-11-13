@@ -8,6 +8,7 @@ def profile_key(user_id):
 
 from app.logics.logic import TICK_SECONDS
 from app.services.market_service import trade_quotes
+from app.market_catalog import CLUBS, CATEGORIES
 from app.services.supabase_client import get_supabase
 
 
@@ -49,7 +50,7 @@ class RankingService:
                 # 배포 환경에서는 잔액과 보유 주식을 같은 트랜잭션에서 읽는다.
                 rows = db.execute(
                     f'SELECT u.id,u.name,u.usernum,u.club_id,u.cash,c.name AS club_name,'
-                    f'h.quantity,h.cost_basis,s.price FROM {users} u '
+                    f'h.club_num,h.quantity,h.cost_basis,s.price FROM {users} u '
                     f'LEFT JOIN {clubs} c ON c.id=u.club_id '
                     'LEFT JOIN trade_holdings h ON h.user_id=CAST(u.id AS TEXT) AND h.quantity>0 '
                     'LEFT JOIN market_stocks s ON s.club_num=h.club_num'
@@ -57,7 +58,7 @@ class RankingService:
             else:
                 holdings = {}
                 for holding in db.execute(
-                    'SELECT h.user_id,h.quantity,h.cost_basis,s.price FROM trade_holdings h '
+                    'SELECT h.user_id,h.club_num,h.quantity,h.cost_basis,s.price FROM trade_holdings h '
                     'LEFT JOIN market_stocks s ON s.club_num=h.club_num WHERE h.quantity>0'
                 ):
                     holdings.setdefault(holding['user_id'], []).append(dict(holding))
@@ -72,12 +73,20 @@ class RankingService:
             if key not in members:
                 members[key] = {'id': key, 'name': row['name'], 'usernum': str(row['usernum'] or ''),
                                 'club_id': str(row['club_id']) if row['club_id'] else None,
-                                'club_name': row['club_name'], 'assets': int(row['cash']), 'value': 0, 'cost': 0}
+                                'club_name': row['club_name'], 'assets': int(row['cash']), 'value': 0, 'cost': 0,
+                                'holdings': []}
             if row['quantity'] and row['price'] is not None:
                 value = trade_quotes(row['price'])[1] * row['quantity']
                 members[key]['assets'] += value
                 members[key]['value'] += value
                 members[key]['cost'] += row['cost_basis']
+                if public_key is not None and profile_key(key) == public_key:
+                    number, basis = row['club_num'], row['cost_basis']
+                    members[key]['holdings'].append({
+                        'club_num': number, 'name': CLUBS[number], 'category': CATEGORIES[number // 10],
+                        'quantity': row['quantity'], 'price': trade_quotes(row['price'])[1],
+                        'value': value, 'cost': basis, 'profit': value - basis,
+                        'rate': (value / basis - 1) * 100 if basis else 0})
         me = members.get(str(user_id))
         if public_key is not None:
             me = next((u for u in members.values() if profile_key(u['id']) == public_key), None)
@@ -109,5 +118,11 @@ class RankingService:
                 my_rank = item
             if position <= 100:
                 result.append(item)
-        return {'available': True, 'members': result, 'me': my_rank, 'count': len(selected),
-                'timestamp': timestamp, 'catching_up': timestamp < target}
+        response = {'available': True, 'members': result, 'me': my_rank, 'count': len(selected),
+                    'timestamp': timestamp, 'catching_up': timestamp < target}
+        if public_key is not None:
+            response['portfolio'] = {
+                'cash': me['assets'] - me['value'], 'value': me['value'], 'cost': me['cost'],
+                'total': me['assets'], 'profit': me['value'] - me['cost'],
+                'holdings': sorted(me['holdings'], key=lambda h: (-h['value'], h['club_num']))}
+        return response

@@ -4,9 +4,12 @@ function updateHeaderProfile(user) {
     const name = document.querySelector('.user-name');
     if (avatar && user.profileImg) {
         avatar.src = user.profileImg;
-        avatar.alt = user.clubName ? `${user.clubName} 로고` : '기본 프로필 이미지';
+        avatar.alt = '프로필 사진';
     }
     if (name && (user.name || user.username)) name.textContent = `${user.name || user.username}님`;
+    if (user.cosmetics && window.StockCosmetics) {
+        StockCosmetics.label(name, user.cosmetics);
+    }
 }
 
 if (document.currentScript.dataset.autoload === 'true') {

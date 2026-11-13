@@ -23,7 +23,7 @@ main {
 
 #summary {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(0.75rem, 2vw, 1.25rem);
 }
 
@@ -60,61 +60,6 @@ main {
 .summary-change-pct {
   font-size: clamp(0.75rem, 1.2vw, 0.95rem);
 }
-
-/* top */
-#card-top {
-  gap: 0;
-}
-
-.top-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.7rem 0;
-}
-
-.top-stock {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  flex-wrap: wrap;
-}
-
-.top-stock-name {
-  font-size: clamp(1.4rem, 2.3vw, 2rem);
-}
-
-.top-stock-info {
-  font-size: clamp(0.8rem, 1.2vw, 1rem);
-  color: var(--text-secondary) !important;
-}
-
-.top-stock-pct {
-  font-size: clamp(1.4rem, 2vw, 1.5rem);
-  font-weight: 700;
-  margin-left: auto;
-}
-
-.arrow-up,
-.arrow-down {
-  font-size: clamp(1.1rem, 1.8vw, 1.5rem);
-  line-height: 1;
-}
-
-.arrow-up {
-  color: var(--color-stock-up);
-}
-
-.arrow-down {
-  color: var(--color-stock-down);
-}
-
-.divider {
-  border: none;
-  border-top: 1px solid var(--border-card);
-  margin: 0;
-}
-
 
 /* stock */
 
@@ -288,7 +233,8 @@ main {
   .mini-chart { width: 110px; }
 }
 
-@media (min-width: 761px) and (max-width: 1050px) {
-  #summary { grid-template-columns: repeat(2, 1fr); }
-  #card-top { grid-column: 1 / -1; }
-}
+.trade-history-more { margin-top: .75rem; }
+.trade-history-more summary { padding: .8rem 1rem; border: 1px solid var(--border-card); border-radius: .65rem; background: rgba(0, 217, 111, .06); color: #8ae7be; cursor: pointer; font-weight: 700; }
+.trade-history-more summary:hover { background: rgba(0, 217, 111, .12); }
+.trade-history-more summary:focus-visible { outline: 2px solid #8ae7be; outline-offset: 3px; }
+.trade-history-more[open] summary { margin-bottom: .35rem; }

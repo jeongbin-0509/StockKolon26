@@ -79,6 +79,9 @@ class TradingService:
                 if cash_after > self.MAX_CASH:
                     raise ValueError('보유 현금이 허용 범위를 초과합니다.')
                 basis_after = 0 if quantity_after == 0 else basis - (basis * quantity // held)
+            tracker = getattr(self.market, 'cosmetics', None)
+            if tracker:
+                tracker.observe_now(db, int(self.market.clock()))
             changed = db.execute(f'UPDATE {self._users_table()} SET cash=? WHERE id=? AND cash=?',
                                  (cash_after, user_id, cash))
             if changed.rowcount != 1:
@@ -92,6 +95,9 @@ class TradingService:
             effective = self.market._event_time(db, None)
             db.execute('INSERT INTO market_flows VALUES (?, ?, ?, ?)',
                        ('order:' + order_id, club_num, quantity if side == 'buy' else -quantity, effective))
+            if tracker:
+                tracker.after_trade(db, user_id, club_num, side,
+                                    total - (basis - basis_after) if side == 'sell' else 0, now, timestamp)
             row = db.execute('SELECT * FROM trade_orders WHERE order_id=?', (order_id,)).fetchone()
             return {'success': True, 'replayed': False, 'order': self._order(row)}
 
