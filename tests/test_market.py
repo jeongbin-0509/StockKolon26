@@ -25,6 +25,12 @@ class EngineTests(unittest.TestCase):
             self.assertEqual(news_return(impact, -1), 0)
             self.assertEqual(news_return(impact, NEWS_TICKS), 0)
 
+    def test_news_tail_remains_meaningful_after_half_hour(self):
+        impact = 0.03
+        self.assertGreater(sum(news_return(impact, age) for age in range(60, NEWS_TICKS)),
+                           math.log1p(impact) * 0.1)
+        self.assertAlmostEqual(sum(news_return(impact, age, 1) for age in range(NEWS_TICKS)), math.log1p(impact))
+
     def test_news_and_flows_only_affect_target(self):
         prices = {61: 10000, 62: 10000, 31: 10000}
         base, _, _ = next_tick(prices, {}, {}, {}, random.Random(42))
@@ -165,6 +171,33 @@ class ServiceTests(unittest.TestCase):
 
     def stock(self, data, club=61):
         return next(s for s in data['stocks'] if s['club_num'] == club)
+
+    def test_opposite_news_overlap_and_expire_independently(self):
+        self.service.add_news('good', 'club', 61, 0.03)
+        self.now += 1800
+        self.service.snapshot()
+        self.service.add_news('bad', 'club', 61, -0.02)
+        self.now += 30
+        self.service.snapshot()
+        with self.service.connection() as db:
+            row = db.execute('SELECT components FROM market_ticks WHERE club_num=? AND timestamp=?', (61, self.now)).fetchone()
+        effect = json.loads(row['components'])['news']
+        self.assertAlmostEqual(effect, news_return(0.03, 60) + news_return(-0.02, 0))
+        self.now += 1800
+        self.service.snapshot()
+        with self.service.connection() as db:
+            row = db.execute('SELECT components FROM market_ticks WHERE club_num=? AND timestamp=?', (61, self.now)).fetchone()
+        self.assertAlmostEqual(json.loads(row['components'])['news'], news_return(-0.02, 60))
+
+    def test_existing_news_keeps_legacy_profile(self):
+        self.service.add_news('old', 'club', 61, 0.03)
+        with self.service.connection(write=True) as db:
+            db.execute('DELETE FROM market_news_profiles WHERE event_id=?', ('old',))
+        self.now += 60
+        self.service.snapshot()
+        with self.service.connection() as db:
+            row = db.execute('SELECT components FROM market_ticks WHERE club_num=? AND timestamp=?', (61, self.now)).fetchone()
+        self.assertAlmostEqual(json.loads(row['components'])['news'], news_return(0.03, 1, 1))
 
     def test_initial_snapshot_has_no_fabricated_past(self):
         data = self.service.snapshot()

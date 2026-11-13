@@ -28,14 +28,14 @@ RANDOM_EVENT_MIN_RETURN = 0.02
 RANDOM_EVENT_MAX_RETURN = 0.04
 
 
-def news_return(impact, age):
-    """한 이벤트의 유한한 로그수익률 예산: 첫 틱 60%, 이후 119틱 40%."""
+def news_return(impact, age, profile=2):
+    """첫 틱 60%, 이후 119틱 40%; 기존 기사는 기존 감쇠를 유지한다."""
     if age < 0 or age >= NEWS_TICKS:
         return 0.0
     budget = math.log1p(impact)
     if age == 0:
         return budget * 0.6
-    decay = 0.94
+    decay = 0.94 if profile == 1 else 0.985
     normalizer = (1 - decay ** (NEWS_TICKS - 1)) / (1 - decay)
     return budget * 0.4 * decay ** (age - 1) / normalizer
 
