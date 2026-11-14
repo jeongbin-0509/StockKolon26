@@ -2,9 +2,15 @@ body {
     background: var(--bg-main);
 }
 
+.buy-header + .page-back-nav,
 .buy-page {
     width: min(1720px, calc(100% - 2rem));
     margin: 0 auto 5rem;
+}
+
+.buy-header + .page-back-nav {
+    margin: 1rem auto;
+    padding-inline: 0;
 }
 
 .market-status { margin-top: 1.2rem; color: var(--text-secondary); }
@@ -699,6 +705,7 @@ body {
 
 /* 화면 크기별 정보 밀도를 일정하게 유지한다. */
 @media (max-width: 900px) {
+    .buy-header + .page-back-nav,
     .buy-page { width: min(100% - 2rem, 720px); }
     .asset-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; padding: 1rem; border-width: 1px; border-radius: 1.2rem; }
     .summary-label { font-size: clamp(.72rem, 2.2vw, .9rem); }
@@ -708,7 +715,9 @@ body {
 }
 
 @media (max-width: 620px) {
-    .buy-page { width: calc(100% - 2rem); margin-bottom: 3rem; }
+    .buy-header + .page-back-nav,
+    .buy-page { width: calc(100% - 2rem); }
+    .buy-page { margin-bottom: 3rem; }
     .asset-summary { padding: .85rem .65rem; }
     .summary-card { gap: .15rem; min-width: 0; }
     .summary-label { line-height: 1.35; }
