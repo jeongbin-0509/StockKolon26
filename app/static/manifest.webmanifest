@@ -41,8 +41,8 @@
       "url": "/news"
     },
     {
-      "name": "내 포트폴리오",
-      "short_name": "포트폴리오",
+      "name": "내 프로필",
+      "short_name": "프로필",
       "url": "/profile"
     }
   ]

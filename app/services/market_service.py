@@ -48,6 +48,7 @@ class MarketService:
                 "CREATE TABLE IF NOT EXISTS market_news (event_id TEXT PRIMARY KEY, "
                 "target_kind TEXT NOT NULL, target INTEGER NOT NULL, impact REAL NOT NULL, "
                 "effective_at INTEGER NOT NULL)",
+                "CREATE TABLE IF NOT EXISTS market_news_profiles (event_id TEXT PRIMARY KEY, profile INTEGER NOT NULL)",
                 "CREATE TABLE IF NOT EXISTS market_flows (event_id TEXT PRIMARY KEY, "
                 "club_num INTEGER NOT NULL, quantity INTEGER NOT NULL, effective_at INTEGER NOT NULL)",
                 "CREATE INDEX IF NOT EXISTS market_news_time ON market_news(effective_at)",
@@ -91,18 +92,22 @@ class MarketService:
         prices = {r["club_num"]: r["price"] for r in db.execute("SELECT * FROM market_stocks")}
         end = min(target, last_tick + TICK_SECONDS * self.max_catchup)
         events = list(db.execute(
-            "SELECT * FROM market_news WHERE effective_at<=? AND effective_at>? ORDER BY event_id",
+            "SELECT n.*, COALESCE(p.profile, 1) AS profile FROM market_news n "
+            "LEFT JOIN market_news_profiles p ON p.event_id=n.event_id "
+            "WHERE n.effective_at<=? AND n.effective_at>? ORDER BY n.event_id",
             (end, last_tick - NEWS_TICKS * TICK_SECONDS),
         ))
         flows_by_tick = {}
         for event in db.execute("SELECT * FROM market_flows WHERE effective_at>? AND effective_at<=? ORDER BY event_id", (last_tick, end)):
             flows_by_tick.setdefault(event["effective_at"], []).append(event)
         rows = []
+        tracker = getattr(self, 'cosmetics', None)
+        batch = tracker.batch(db) if tracker else None
         for tick in range(last_tick + TICK_SECONDS, end + 1, TICK_SECONDS):
             effects = {}
             for event in events:
                 age = (tick - event["effective_at"]) // TICK_SECONDS
-                effect = news_return(event["impact"], age)
+                effect = news_return(event["impact"], age, event["profile"])
                 if not effect:
                     continue
                 for club_num in prices:
@@ -117,9 +122,13 @@ class MarketService:
                 volumes[club_num] = volumes.get(club_num, 0) + abs(quantity)
             rng_seed = hashlib.sha256(f"{row['seed']}:{tick}".encode()).digest()
             prices, state, parts = next_tick(prices, state, effects, flows, random.Random(rng_seed))
+            if batch:
+                batch.observe(prices, tick)
             rows.extend((club_num, tick, price, volumes.get(club_num, 0), json.dumps(parts[club_num]))
                         for club_num, price in prices.items())
         self._save_rows(db, rows)
+        if batch:
+            batch.save(db)
         db.executemany("UPDATE market_stocks SET price=? WHERE club_num=?", [(price, club) for club, price in prices.items()])
         db.execute("UPDATE market_state SET last_tick=?, state=? WHERE id=1", (end, json.dumps(state)))
         if end // 3600 != last_tick // 3600:
@@ -235,6 +244,7 @@ class MarketService:
         effective = self._event_time(db, timestamp)
         db.execute("INSERT INTO market_news VALUES (?, ?, ?, ?, ?)",
                    (event_id, target_kind, target, impact, effective))
+        db.execute("INSERT INTO market_news_profiles VALUES (?, ?)", (event_id, 2))
         return True
 
     def record_flow(self, event_id, club_num, signed_quantity, timestamp=None):

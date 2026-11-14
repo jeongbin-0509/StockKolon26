@@ -25,6 +25,12 @@ class EngineTests(unittest.TestCase):
             self.assertEqual(news_return(impact, -1), 0)
             self.assertEqual(news_return(impact, NEWS_TICKS), 0)
 
+    def test_news_tail_remains_meaningful_after_half_hour(self):
+        impact = 0.03
+        self.assertGreater(sum(news_return(impact, age) for age in range(60, NEWS_TICKS)),
+                           math.log1p(impact) * 0.1)
+        self.assertAlmostEqual(sum(news_return(impact, age, 1) for age in range(NEWS_TICKS)), math.log1p(impact))
+
     def test_news_and_flows_only_affect_target(self):
         prices = {61: 10000, 62: 10000, 31: 10000}
         base, _, _ = next_tick(prices, {}, {}, {}, random.Random(42))
@@ -165,6 +171,33 @@ class ServiceTests(unittest.TestCase):
 
     def stock(self, data, club=61):
         return next(s for s in data['stocks'] if s['club_num'] == club)
+
+    def test_opposite_news_overlap_and_expire_independently(self):
+        self.service.add_news('good', 'club', 61, 0.03)
+        self.now += 1800
+        self.service.snapshot()
+        self.service.add_news('bad', 'club', 61, -0.02)
+        self.now += 30
+        self.service.snapshot()
+        with self.service.connection() as db:
+            row = db.execute('SELECT components FROM market_ticks WHERE club_num=? AND timestamp=?', (61, self.now)).fetchone()
+        effect = json.loads(row['components'])['news']
+        self.assertAlmostEqual(effect, news_return(0.03, 60) + news_return(-0.02, 0))
+        self.now += 1800
+        self.service.snapshot()
+        with self.service.connection() as db:
+            row = db.execute('SELECT components FROM market_ticks WHERE club_num=? AND timestamp=?', (61, self.now)).fetchone()
+        self.assertAlmostEqual(json.loads(row['components'])['news'], news_return(-0.02, 60))
+
+    def test_existing_news_keeps_legacy_profile(self):
+        self.service.add_news('old', 'club', 61, 0.03)
+        with self.service.connection(write=True) as db:
+            db.execute('DELETE FROM market_news_profiles WHERE event_id=?', ('old',))
+        self.now += 60
+        self.service.snapshot()
+        with self.service.connection() as db:
+            row = db.execute('SELECT components FROM market_ticks WHERE club_num=? AND timestamp=?', (61, self.now)).fetchone()
+        self.assertAlmostEqual(json.loads(row['components'])['news'], news_return(0.03, 1, 1))
 
     def test_initial_snapshot_has_no_fabricated_past(self):
         data = self.service.snapshot()
@@ -318,6 +351,30 @@ class ApiTests(unittest.TestCase):
 
     def test_market_requires_login(self):
         self.assertEqual(self.client.get('/api/market').status_code, 401)
+        self.assertEqual(self.client.get('/api/market/movers').status_code, 401)
+
+    def test_movers_api_preserves_actual_candles(self):
+        with self.client.session_transaction() as sess:
+            sess['user_id'] = 'test-user'
+        market = self.app.extensions['market']
+        before = market.five_minute_movers()
+        with patch.object(market, 'five_minute_movers', return_value=before):
+            response = self.client.get('/api/market/movers')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers['Cache-Control'], 'no-store')
+        for side in ('up', 'down'):
+            self.assertEqual(response.json[side]['candles'], before[side]['candles'] if before[side] else [])
+            self.assertEqual(response.json[side]['change'], before[side]['change'] if before[side] else None)
+
+    def test_settings_page_and_mobile_navigation(self):
+        self.assertEqual(self.client.get('/settings').status_code, 302)
+        with self.client.session_transaction() as sess:
+            sess['user_id'] = 'test-user'
+        for route in ['/', '/buy', '/rank', '/settings', '/profile']:
+            page = self.client.get(route)
+            self.assertEqual(page.status_code, 200)
+            self.assertIn('aria-label="주요 메뉴"', page.text)
+        self.assertIn('csrf_token', self.client.get('/settings').text)
 
     def test_authenticated_quotes_and_buy_page(self):
         with self.client.session_transaction() as sess:

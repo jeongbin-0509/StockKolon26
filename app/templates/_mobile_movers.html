@@ -1,0 +1,7 @@
+<section class="mobile-only mobile-movers" aria-label="최근 5분 급등락 종목">
+    <h2>지금 움직이는 종목</h2><p>전체 종목 중 최근 5분 상승·하락 TOP</p>
+    <p class="movers-status" role="status">등락 종목을 불러오는 중입니다.</p>
+    {% for side, label in [('up','가장 많이 상승한 주식'),('down','가장 많이 하락한 주식')] %}
+    <article class="mover-card" data-mover="{{ side }}"><h3>{{ label }}</h3><div class="mover-info"><img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt=""><div><strong class="mover-name">—</strong><small class="mover-sub">최근 5분 기준</small></div><span class="mover-change">—</span></div><details class="mover-chart-details"><summary>캔들 차트 보기</summary><div class="mover-chart"></div><p>최근 1시간 · 5분봉</p></details><div class="mover-footer"><span>5분 전 대비</span><a class="mover-link" hidden>종목 보기 →</a></div></article>
+    {% endfor %}
+</section>

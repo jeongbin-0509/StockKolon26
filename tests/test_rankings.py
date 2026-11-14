@@ -1,4 +1,5 @@
 import tempfile
+import sqlite3
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -51,6 +52,42 @@ class RankingTests(unittest.TestCase):
             session['user_id'] = 'd'
         self.assertEqual(self.client.get('/api/my-rank').get_json()['rank'], 4)
         self.assertEqual(self.client.get('/api/my-rank').headers['Cache-Control'], 'no-store')
+
+    def test_portfolio_uses_viewer_and_same_valuation_as_ranking(self):
+        data = self.client.get('/api/portfolio').json
+        self.assertEqual(data['portfolio'], self.app.extensions['trading'].portfolio('a'))
+        self.assertEqual(data['user']['assets'], data['portfolio']['total'])
+        self.assertEqual(data['portfolio']['holdings'][0]['name'], '온에어')
+        self.assertEqual(self.client.get('/api/portfolio').headers['Cache-Control'], 'no-store')
+        with self.client.session_transaction() as session:
+            session['user_id'] = 'd'
+        other = self.client.get('/api/portfolio').json
+        self.assertEqual(other['portfolio']['holdings'], [])
+        self.assertEqual(other['portfolio']['cash'], 1000)
+        with self.client.session_transaction() as session:
+            session.clear()
+        self.assertEqual(self.client.get('/api/portfolio').status_code, 401)
+
+    def test_public_portfolio_shows_selected_investor_not_viewer(self):
+        import json, re
+        from app.services.ranking_service import profile_key
+        with self.client.session_transaction() as session:
+            session['user_id'] = 'd'
+        page = self.client.get('/members/' + profile_key('a'))
+        data = json.loads(re.search(r'id="member-portfolio-data">(.*?)</script>', page.text, re.S).group(1))
+        self.assertEqual(data['portfolio'], self.app.extensions['trading'].portfolio('a'))
+        self.assertEqual(data['user']['name'], '가')
+        for private in ('usernum', 'email', 'password', 'orders', 'user_id', 'club_id'):
+            self.assertNotIn(private, str(data))
+        self.assertNotIn('portfolio', self.client.get('/api/rankings').json)
+        self.assertEqual(page.headers['Cache-Control'], 'no-store')
+
+    def test_portfolio_failure_is_retryable_without_private_details(self):
+        with patch.object(self.app.extensions['ranking'], 'rankings', side_effect=sqlite3.Error('private db data')):
+            response = self.client.get('/api/portfolio')
+        self.assertEqual(response.status_code, 503)
+        self.assertNotIn('private db data', response.text)
+        self.assertEqual(response.headers['Cache-Control'], 'no-store')
 
     def test_public_profile_is_limited_and_requires_login(self):
         data = self.client.get('/api/rankings').get_json()
@@ -200,6 +237,15 @@ class SupabaseRankingTests(unittest.TestCase):
         self.assertFalse(self.client.get('/api/rankings?scope=club').json['available'])
         self.rows['users'][0]['usernum'] = 'invalid'
         self.assertFalse(self.client.get('/api/rankings?scope=class').json['available'])
+
+    def test_remote_portfolio_uses_target_holdings_and_cash(self):
+        from app.services.ranking_service import profile_key
+        result = self.app.extensions['ranking'].rankings('b', 'school', public_key=profile_key('a'))
+        expected = self.app.extensions['trading'].portfolio('a', 5000)
+        self.assertEqual(result['portfolio']['total'], expected['total'])
+        self.assertEqual({h['club_num'] for h in result['portfolio']['holdings']}, {1, 61})
+        self.assertEqual(result['portfolio']['cash'], 5000)
+        self.assertFalse(result['me']['is_me'])
 
     def test_all_members_are_loaded_even_when_api_caps_each_page(self):
         self.api_cap = 73

@@ -8,6 +8,7 @@ import httpx
 import sqlite3
 from pathlib import Path
 from flask import abort
+from app.services.ranking_service import profile_key
 import re
 
 main = Blueprint("main", __name__)
@@ -75,6 +76,40 @@ def club_profile(user):
     if not (Path(current_app.static_folder) / filename).is_file():
         return default, club_name
     return url_for('static', filename=filename), club_name
+
+
+def own_cosmetics():
+    key = profile_key(session['user_id'])
+    return current_app.extensions['cosmetics'].public([key])[key]
+
+
+def custom_profile_image(key, fallback):
+    try:
+        revision = current_app.extensions['profile_images'].revisions([key]).get(key)
+    except (DatabaseError, sqlite3.Error):
+        current_app.logger.warning('프로필 사진 조회 실패')
+        return fallback
+    if revision:
+        return url_for('photos.image', key=key, revision=revision)
+    return fallback
+
+
+def set_member_images(members):
+    keys = [member['profile_key'] for member in members if member.get('profile_key')]
+    decorations = current_app.extensions['cosmetics'].public(keys)
+    try:
+        revisions = current_app.extensions['profile_images'].revisions(keys)
+    except (DatabaseError, sqlite3.Error):
+        revisions = {}
+    for member in members:
+        member['cosmetics'] = decorations.get(member.get('profile_key'))
+        number = next((n for n, name in CLUBS.items() if name == member.get('club_name')), None)
+        filename = f'images/{number}.png'
+        if not (Path(current_app.static_folder) / filename).is_file():
+            filename = 'images/default_stock_logo.png'
+        member['profileImg'] = url_for('static', filename=filename)
+        if member.get('profile_key') in revisions:
+            member['profileImg'] = url_for('photos.image', key=member['profile_key'], revision=revisions[member['profile_key']])
 
 
 @main.route("/")
@@ -150,12 +185,7 @@ def rankings():
         response = jsonify(success=False, message='랭킹 정보를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.')
         response.headers['Cache-Control'] = 'no-store'
         return response, 503
-    for member in result.get('members', []) + ([result['me']] if result.get('me') else []):
-        number = next((n for n, name in CLUBS.items() if name == member['club_name']), None)
-        filename = f'images/{number}.png' if number is not None else 'images/default_stock_logo.png'
-        if not (Path(current_app.static_folder) / filename).is_file():
-            filename = 'images/default_stock_logo.png'
-        member['profileImg'] = url_for('static', filename=filename)
+    set_member_images(result.get('members', []) + ([result['me']] if result.get('me') else []))
     response = jsonify(success=True, **result)
     response.headers['Cache-Control'] = 'no-store'
     return response
@@ -166,7 +196,49 @@ def settings():
     if "user_id" not in session:
         return redirect(url_for("auth.login"))
 
-    return render_template("settings.html")
+    return render_template("settings.html", csrf_token=csrf_token)
+
+
+def mover_card(stock):
+    if stock is None:
+        return {'name': '데이터 없음', 'sub': '최근 5분 기준', 'change': None, 'candles': [], 'timestamps': [],
+                'logo': url_for('static', filename='images/default_stock_logo.png'), 'club_num': None}
+    filename = f"images/{stock['club_num']}.png"
+    if not (Path(current_app.static_folder) / filename).is_file():
+        filename = 'images/default_stock_logo.png'
+    return dict(stock, sub=f"{stock['price']:,.0f}원 · {stock['category']}",
+                logo=url_for('static', filename=filename))
+
+
+@main.get('/api/market/movers')
+def market_movers():
+    if 'user_id' not in session:
+        return jsonify(success=False), 401
+    try:
+        movers = current_app.extensions['market'].five_minute_movers()
+        response = jsonify(success=True, up=mover_card(movers['up']), down=mover_card(movers['down']))
+    except RANKING_ERRORS:
+        response = jsonify(success=False, message='등락 종목을 불러오지 못했습니다.')
+        response.status_code = 503
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
+@main.get('/api/portfolio')
+def my_portfolio():
+    if 'user_id' not in session:
+        return jsonify(success=False), 401
+    try:
+        result = current_app.extensions['ranking'].rankings(
+            session['user_id'], 'school', public_key=profile_key(session['user_id']))
+        set_member_images([result['me']])
+        response = jsonify(success=True, user=result['me'], portfolio=result['portfolio'],
+                           count=result['count'], timestamp=result['timestamp'], catching_up=result['catching_up'])
+    except (ValueError, *RANKING_ERRORS):
+        response = jsonify(success=False, message='포트폴리오를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.')
+        response.status_code = 503
+    response.headers['Cache-Control'] = 'no-store'
+    return response
 
 @main.route("/api/index-data")
 def index_data():
@@ -177,6 +249,7 @@ def index_data():
 
     user = display_user(user_id)
     profile_image, club_name = club_profile(user)
+    profile_image = custom_profile_image(profile_key(session['user_id']), profile_image)
     trading = current_app.extensions['trading']
     movers = current_app.extensions['market'].five_minute_movers()
     portfolio = trading.portfolio(user_id, None if trading.market.store.postgres else user.get('cash', 0))
@@ -197,6 +270,7 @@ def index_data():
     data = {
         "success": True,
         "profile": {
+            "cosmetics": own_cosmetics(),
             "username": user["name"],
             "profileImg": profile_image,
             "clubName": club_name
@@ -221,7 +295,8 @@ def header_profile():
         return jsonify(success=False, message='로그인이 필요합니다.'), 401
     user = display_user(session['user_id'])
     profile_image, club_name = club_profile(user)
-    response = jsonify(success=True, user={'name': user['name'], 'profileImg': profile_image, 'clubName': club_name})
+    profile_image = custom_profile_image(profile_key(session['user_id']), profile_image)
+    response = jsonify(success=True, user={'name': user['name'], 'profileImg': profile_image, 'clubName': club_name, 'cosmetics': own_cosmetics()})
     response.headers['Cache-Control'] = 'no-store'
     return response
 
@@ -235,6 +310,7 @@ def profile_data():
 
     user = display_user(user_id)
     profile_image, club_name = club_profile(user)
+    profile_image = custom_profile_image(profile_key(session['user_id']), profile_image)
     trading = current_app.extensions['trading']
     trade_view = request.args.get('view') == 'trade'
     market = None if trade_view else current_app.extensions['market'].snapshot()
@@ -260,6 +336,7 @@ def profile_data():
     response = jsonify({
         "success": True,
         "user": {
+            "cosmetics": own_cosmetics(),
             "name": user["name"],
             "profileImg": profile_image,
             "clubName": club_name,
@@ -316,11 +393,10 @@ def member_profile(key):
     except RANKING_ERRORS:
         return '프로필을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.', 503
     member = result['me']
-    number = next((n for n, name in CLUBS.items() if name == member['club_name']), None)
-    filename = f'images/{number}.png'
-    if not (Path(current_app.static_folder) / filename).is_file():
-        filename = 'images/default_stock_logo.png'
+    set_member_images([member])
     response = current_app.make_response(render_template('member.html', member=member,
-        count=result['count'], image=url_for('static', filename=filename)))
+        count=result['count'], image=member['profileImg'], portfolio_data={
+            'success': True, 'user': member, 'portfolio': result['portfolio'], 'count': result['count'],
+            'timestamp': result['timestamp'], 'catching_up': result['catching_up']}))
     response.headers['Cache-Control'] = 'no-store'
     return response
