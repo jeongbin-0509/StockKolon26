@@ -84,6 +84,33 @@ img, svg { max-width: 100%; }
 .page-back-link:active { transform: translateY(0); }
 .sub_text { color: var(--text-secondary); }
 
+.scroll-to-top {
+    position: fixed;
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    z-index: 30;
+    min-height: 44px;
+    padding: .55rem .85rem;
+    border: 1px solid var(--border-card);
+    border-radius: .75rem;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    box-shadow: 0 4px 16px #0005;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.scroll-to-top:hover,
+.scroll-to-top:focus-visible { border-color: var(--color-brand-mint); }
+
+body:has(.pwa-install-button:not([hidden])) .scroll-to-top { transform: translateY(-3.25rem); }
+
+@media (max-width: 760px) {
+    body:has(.mobile-bottom-nav) .scroll-to-top {
+        bottom: calc(88px + env(safe-area-inset-bottom));
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
