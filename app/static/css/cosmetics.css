@@ -1,20 +1,83 @@
-/* Each collection keeps the same palette on signatures, frames and previews. */
-.cosmetic-frame[data-style]:not([data-style="none"]) { position:relative; border-color:var(--metal); box-shadow:inset 0 0 25px color-mix(in srgb,var(--shade),transparent 87%),0 0 16px color-mix(in srgb,var(--metal),transparent 90%); }
-.cosmetic-frame>.frame-ornament { position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:1; }
-.cosmetic-frame>.frame-ornament::before { content:''; position:absolute; inset:-1px; border-radius:inherit; padding:2px; background:linear-gradient(115deg,var(--shade),var(--flare) 24%,var(--metal) 43%,var(--shade) 65%,var(--flare)); -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0); mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; }
-.cosmetic-frame[data-style="prologue"]>.frame-ornament::before { padding:1px; opacity:.65; }
-.cosmetic-frame[data-style="prime"]>.frame-ornament::after,.cosmetic-frame[data-style="anchor"]>.frame-ornament::after { content:''; position:absolute; inset:5px; border:1px solid var(--metal); border-radius:8px; opacity:.35; }
-.cosmetic-frame[data-style="apex"]>.frame-ornament::before { background:linear-gradient(115deg,#6745b3,#d5faff 25%,#b69aff 45%,#704bb3 65%,#ffd4f6); padding:2px; }
-.cosmetic-frame[data-style="tracker"]>.frame-ornament::after { content:''; position:absolute; inset:5px; border-inline:3px dashed var(--metal); border-radius:5px; opacity:.55; }
-.cosmetic-frame:is([data-style="sovereign"],[data-style="oracle"],[data-style="slayer"])>.frame-ornament::after { content:''; position:absolute; inset:5px; border-radius:6px; background:linear-gradient(var(--flare),var(--flare)) left top/22px 2px no-repeat,linear-gradient(var(--flare),var(--flare)) left top/2px 16px no-repeat,linear-gradient(var(--metal),var(--metal)) right top/22px 2px no-repeat,linear-gradient(var(--metal),var(--metal)) right top/2px 16px no-repeat,linear-gradient(var(--metal),var(--metal)) left bottom/22px 2px no-repeat,linear-gradient(var(--metal),var(--metal)) left bottom/2px 16px no-repeat,linear-gradient(var(--flare),var(--flare)) right bottom/22px 2px no-repeat,linear-gradient(var(--flare),var(--flare)) right bottom/2px 16px no-repeat; opacity:.75; }
-.cosmetic-frame[data-style="sovereign"]:not([data-style="none"]) { box-shadow:inset 0 0 32px #d8aa4620,0 0 24px #e5ba5d25; }
-.cosmetic-frame[data-style="sovereign"]>.frame-ornament::before { padding:3px; background:linear-gradient(105deg,#936526,#fff5c7 20%,#e5ba5d 45%,#936526 65%,#fff5c7); }
-.cosmetic-frame[data-style="slayer"]>.frame-ornament::before { background:linear-gradient(100deg,#a92e43,#ffdf99 25%,#ff826d 45%,#a92e43 70%,#ffdf99); }
-.cosmetic-frame:is([data-style="sovereign"],[data-style="apex"],[data-style="slayer"])>.frame-ornament { animation:box-frame-glow 4s ease-in-out infinite alternate; }
-.podium-step.cosmetic-frame[data-style]::before { background:var(--metal); box-shadow:0 0 12px var(--shade); }
-@keyframes box-frame-glow { from { opacity:.65; } to { opacity:1; } }
-.reduce-effects .cosmetic-frame>.frame-ornament { animation:none; }
-@media(prefers-reduced-motion:reduce) { .cosmetic-frame>.frame-ornament { animation:none; } }
+/* Sculpted card frames: decoration never captures clicks or clips card content. */
+.cosmetic-frame[data-style] { position:relative; isolation:isolate; overflow:visible; border-color:color-mix(in srgb,var(--metal),transparent 35%); }
+.cosmetic-frame>.frame-ornament { position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:1; color:var(--metal); }
+.frame-ornament::before { content:''; position:absolute; inset:-1px; border-radius:inherit; padding:1px; background:linear-gradient(115deg,var(--shade),var(--flare) 24%,var(--metal) 43%,var(--shade) 65%,var(--flare)); -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0); mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; }
+.frame-corner { position:absolute; width:52px; height:44px; overflow:visible; }
+.corner-tl { top:-6px; left:-6px; }
+.corner-tr { top:-6px; right:-6px; transform:scaleX(-1); }
+.corner-bl { bottom:-6px; left:-6px; transform:scaleY(-1); }
+.corner-br { bottom:-6px; right:-6px; transform:scale(-1); }
+.frame-plate { fill:var(--shade); stroke:var(--metal); stroke-width:1; stroke-linejoin:miter; }
+.frame-engraving { fill:none; stroke:var(--flare); stroke-width:1.2; stroke-linecap:round; stroke-linejoin:round; }
+.frame-crest { position:absolute; width:112px; height:34px; left:50%; top:-24px; margin-left:-56px; overflow:visible; }
+.frame-sigil { position:absolute; width:24px; height:24px; left:50%; top:-13px; margin-left:-12px; padding:3px; box-sizing:content-box; background:#111823; border-radius:50%; }
+.frame-energy { position:absolute; width:3px; height:20px; top:calc(50% - 10px); background:var(--flare); opacity:0; }
+.energy-left { left:-2px; }.energy-right { right:-2px; }
+/* ORIGIN: restrained bookend rules. */
+[data-style="prologue"]>.frame-ornament::before { opacity:.35; }
+[data-style="prologue"]>.frame-ornament .frame-corner { width:32px; height:27px; opacity:.6; }
+/* PLATINUM: machined corners and a second precision rail. */
+[data-style="prime"]>.frame-ornament::after { content:''; position:absolute; inset:5px; border:1px solid #8fbbf333; border-radius:6px; }
+[data-style="prime"]>.frame-ornament .frame-plate { fill:#172d49; }
+/* PRISM: fractured crystal silhouette and breathing ice light. */
+.cosmetic-frame[data-style="apex"] { box-shadow:inset 0 0 26px #7651dd18,0 0 20px #a17aff22; }
+[data-style="apex"]>.frame-ornament::before { padding:2px; background:linear-gradient(135deg,#9e77ff,#d5ffff 25%,#4a357c 47%,#c295ff 70%,#efffff); }
+[data-style="apex"]>.frame-ornament .frame-plate { fill:#39295f; }
+[data-style="apex"]>.frame-ornament .frame-engraving { stroke:#d8ffff; }
+[data-style="apex"]>.frame-ornament .frame-corner { width:65px; height:55px; filter:drop-shadow(0 0 5px #b097ff90); }
+[data-style="apex"]>.frame-ornament .frame-crest { animation:crystal-float 4.5s ease-in-out infinite; filter:drop-shadow(0 0 6px #a8cfff88); }
+[data-style="apex"]>.frame-ornament .frame-energy { opacity:.8; box-shadow:0 0 9px #c7e8ff; animation:frame-current 4s ease-in-out infinite; }
+/* REGALIA: a crowned crest, gilded wing plates and a moving gold glint. */
+.cosmetic-frame[data-style="sovereign"] { border-radius:9px; box-shadow:inset 0 0 35px #b987211c,0 0 24px #e5ba5d27; }
+[data-style="sovereign"]>.frame-ornament::before { padding:3px; background:linear-gradient(110deg,#77551b,#ffedaf 20%,#b48732 40%,#fff5cb 50%,#9a6c1c 62%,#ffdf8a 80%,#77551b); background-size:250% 100%; animation:regalia-gild 7s ease-in-out infinite; }
+[data-style="sovereign"]>.frame-ornament::after { content:''; position:absolute; inset:6px; border:1px solid #e9c46a45; border-radius:4px; }
+[data-style="sovereign"]>.frame-ornament .frame-corner { width:72px; height:60px; top:auto; filter:drop-shadow(0 0 5px #e5ba5d66); }
+[data-style="sovereign"]>.frame-ornament .corner-tl,[data-style="sovereign"]>.frame-ornament .corner-tr { top:-12px; }
+[data-style="sovereign"]>.frame-ornament .corner-bl,[data-style="sovereign"]>.frame-ornament .corner-br { bottom:-10px; }
+[data-style="sovereign"]>.frame-ornament .frame-plate { fill:#76511d; stroke:#efcb75; }
+[data-style="sovereign"]>.frame-ornament .frame-crest { width:132px; height:40px; margin-left:-66px; top:-29px; filter:drop-shadow(0 0 7px #edc35a99); animation:regalia-breathe 4s ease-in-out infinite; }
+[data-style="sovereign"]>.frame-ornament .frame-energy { width:5px; height:5px; transform:rotate(45deg); opacity:1; box-shadow:0 -16px 0 -1px #e5ba5d,0 16px 0 -1px #e5ba5d,0 0 12px #ffe6a1; animation:regalia-breathe 3s ease-in-out infinite alternate; }
+/* AURORA: sunrise arcs; VELOCITY: directional targeting marks. */
+[data-style="earlybird"]>.frame-ornament::before { background:linear-gradient(180deg,#ffc78f,#b783c4 52%,#384879); }
+[data-style="earlybird"]>.frame-ornament .frame-corner { width:48px; height:40px; }
+[data-style="earlybird"]>.frame-ornament .frame-sigil { color:#ffdcad; box-shadow:0 -3px 14px #ffb78322; }
+[data-style="tracker"]>.frame-ornament::before { background:repeating-linear-gradient(135deg,#55d8af 0 9px,#17382e 9px 16px); }
+[data-style="tracker"]>.frame-ornament .frame-energy { width:14px; height:3px; opacity:.8; clip-path:polygon(0 0,65% 0,100% 100%,35% 100%); animation:frame-current 3s ease-in-out infinite; }
+/* ORACLE: an eye seal and arcane geometry; TIDAL: naval rope and anchor. */
+[data-style="oracle"]>.frame-ornament::after { content:''; position:absolute; inset:5px; border:1px dotted #bd97ec66; border-radius:inherit; }
+[data-style="oracle"]>.frame-ornament .frame-sigil { width:32px; margin-left:-16px; filter:drop-shadow(0 0 4px #bd97ec77); animation:regalia-breathe 5s ease-in-out infinite; }
+[data-style="anchor"]>.frame-ornament::before { padding:2px; background:repeating-linear-gradient(45deg,#255f76 0 4px,#90d5e4 4px 7px,#255f76 7px 10px); }
+[data-style="anchor"]>.frame-ornament .frame-corner { width:44px; height:37px; }
+/* INFERNO: torn blade plates, a horned crest and rising embers. */
+.cosmetic-frame[data-style="slayer"] { border-radius:3px 14px 3px 14px; box-shadow:inset 0 0 28px #d8342115,0 0 24px #f9433227; }
+[data-style="slayer"]>.frame-ornament::before { padding:2px; background:linear-gradient(125deg,#ffbd79,#bc283f 25%,#601829 45%,#ff6449 65%,#ffd79c); }
+[data-style="slayer"]>.frame-ornament .frame-corner { width:70px; height:59px; filter:drop-shadow(0 0 5px #f8404266); }
+[data-style="slayer"]>.frame-ornament .corner-tl,[data-style="slayer"]>.frame-ornament .corner-tr { top:-12px; }
+[data-style="slayer"]>.frame-ornament .corner-bl,[data-style="slayer"]>.frame-ornament .corner-br { bottom:-10px; }
+[data-style="slayer"]>.frame-ornament .frame-plate { fill:#651f30; stroke:#ff795b; }
+[data-style="slayer"]>.frame-ornament .frame-engraving { stroke:#ffbc7e; }
+[data-style="slayer"]>.frame-ornament .frame-crest { width:124px; margin-left:-62px; filter:drop-shadow(0 0 6px #ff553c88); animation:inferno-pulse 3s ease-in-out infinite; }
+[data-style="slayer"]>.frame-ornament .frame-energy { width:3px; height:5px; opacity:.8; box-shadow:0 12px #f44e35,4px 22px #f99b55,-3px -11px #ffcf88; animation:ember-rise 2.8s linear infinite; }
+.frame-ornament .energy-right { animation-delay:-1.4s!important; }
+.podium-step.cosmetic-frame { margin-top:15px; }
+.podium-step.cosmetic-frame::before { display:none; }
+.rank-list:has(.cosmetic-frame) { gap:28px; padding:14px 8px; }
+.my-position.cosmetic-frame { margin-top:28px; margin-bottom:28px; }
+.cosmetic-artwork.cosmetic-frame { margin-top:32px; margin-bottom:16px; }
+#cosmetic-preview.cosmetic-frame { margin-block:38px 30px; }
+@keyframes regalia-gild { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
+@keyframes regalia-breathe { 0%,100% { opacity:.65; } 50% { opacity:1; } }
+@keyframes crystal-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-3px); } }
+@keyframes frame-current { 0%,100% { transform:translateY(-15px); opacity:.35; } 50% { transform:translateY(15px); opacity:1; } }
+@keyframes inferno-pulse { 0%,100% { opacity:.65; transform:scaleX(.97); } 50% { opacity:1; transform:scaleX(1.03); } }
+@keyframes ember-rise { 0% { transform:translateY(18px); opacity:0; } 20%,70% { opacity:.9; } 100% { transform:translateY(-23px); opacity:0; } }
+@media(max-width:760px) {
+  .podium-step .frame-corner { max-width:40px; max-height:38px; }
+  .podium-step.cosmetic-frame .frame-crest { width:80px; max-width:80px; height:28px; margin-left:-40px; top:-20px; }
+  .podium-step[data-style="sovereign"]>.frame-ornament .frame-crest { width:80px; height:28px; margin-left:-40px; top:-20px; }
+  .podium-step[data-style="slayer"]>.frame-ornament .frame-crest { width:80px; margin-left:-40px; }
+  .rank-list:has(.cosmetic-frame) { padding-inline:6px; }
+}
 [data-style] { --metal:#a7bbb8; --flare:#d7eee4; --shade:#415650; }
 [data-style="prime"] { --metal:#8fbbf3; --flare:#e5efff; --shade:#405e9e; }
 [data-style="apex"] { --metal:#b69aff; --flare:#d5faff; --shade:#6745b3; }
@@ -26,11 +89,12 @@
 [data-style="slayer"] { --metal:#ff826d; --flare:#ffdf99; --shade:#a92e43; }
 .signature-badge { position:relative; display:inline-flex; align-items:center; justify-content:center; gap:7px; width:max-content; max-width:100%; padding:5px 10px; border:1px solid color-mix(in srgb,var(--metal),transparent 55%); border-radius:5px; color:var(--flare); background:linear-gradient(115deg,#111b22 0%,color-mix(in srgb,var(--shade),#10161d 65%) 52%,#111b22 100%); font-size:10px; font-weight:800; letter-spacing:1.4px; line-height:1.25; white-space:nowrap; vertical-align:middle; box-sizing:border-box; }
 .signature-badge[hidden] { display:none; }
-.signature-badge::before { content:'◇'; color:var(--metal); font-size:12px; }
-.signature-badge[data-style="sovereign"]::before { content:'♛'; font-size:15px; }
-.signature-badge[data-style="apex"]::before { content:'✦'; }
-.signature-badge[data-style="oracle"]::before { content:'✧'; }
-.signature-badge[data-style="slayer"]::before { content:'✶'; }
+.signature-emblem { width:15px; height:15px; flex:0 0 auto; overflow:visible; color:var(--metal); }
+.signature-emblem .frame-engraving { stroke:currentColor; stroke-width:1.6; }
+.signature-badge[data-style="sovereign"] .signature-emblem { color:#ffe2a0; filter:drop-shadow(0 0 3px #e5ba5d88); }
+.signature-badge[data-style="apex"] .signature-emblem { color:#d7ecff; }
+.signature-badge[data-style="slayer"] .signature-emblem { color:#ffb084; }
+header .signature-emblem { width:11px; height:11px; }
 .signature-badge:is([data-style="prime"],[data-style="oracle"],[data-style="apex"],[data-style="tracker"],[data-style="slayer"],[data-style="sovereign"]) { background-size:220% 100%; background-image:linear-gradient(110deg,#111b22 20%,var(--shade) 48%,#111b22 75%); animation:signature-light 7s ease-in-out infinite; text-shadow:0 0 12px var(--metal); }
 .signature-badge[data-style="sovereign"] { padding-inline:13px; border-color:var(--metal); box-shadow:0 0 16px #e5ba5d24,inset 0 0 10px #e5ba5d15; }
 .cosmetic-name { display:inline-flex; flex-direction:column; align-items:flex-start; gap:5px; min-width:0; }
@@ -78,3 +142,7 @@ header .signature-badge { font-size:8px; padding:3px 6px; letter-spacing:.8px; }
 @media(prefers-reduced-motion:reduce) { .frame-ornament,.signature-badge { animation:none!important; } }
 @media(max-width:760px) { .collection-section { padding:20px 16px; } .cosmetic-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } .collection-heading h2 { font-size:21px; } .cosmetic-card { padding:15px 10px 12px; } .cosmetic-condition { min-height:38px; } .cosmetic-artwork .signature-badge { font-size:9px; letter-spacing:.8px; padding-inline:7px; } .podium-identity>.signature-badge { font-size:8px; letter-spacing:.2px; padding:4px; gap:3px; } }
 @media(max-width:380px) { .cosmetic-card { padding-inline:8px; } .cosmetic-actions { flex-direction:column; } .cosmetic-condition { min-height:55px; } .collection-section { padding-inline:12px; } }
+
+/* Effect preferences cover every decorative layer, including pseudo-elements. */
+.reduce-effects .frame-ornament, .reduce-effects .frame-ornament *, .reduce-effects .frame-ornament::before, .reduce-effects .frame-ornament::after { animation:none!important; }
+@media(prefers-reduced-motion:reduce) { .frame-ornament,.frame-ornament *,.frame-ornament::before,.frame-ornament::after { animation:none!important; } }

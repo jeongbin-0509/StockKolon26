@@ -1,5 +1,45 @@
 (() => {
     const ids = new Set(['prologue','prime','apex','sovereign','earlybird','tracker','oracle','anchor','slayer']);
+    // Inline vector emblems stay crisp at header size and never depend on fonts.
+    const emblems = {
+        prologue: 'M4 5h6l2 2 2-2h6v14h-6l-2 2-2-2H4ZM12 7v14',
+        prime: 'M12 2 21 7v10l-9 5-9-5V7ZM7 15l5-7 5 7M9 13h6',
+        apex: 'M2 20 12 3l10 17H2ZM8 20l4-7 4 7M12 3v5',
+        sovereign: 'M3 7l5 4 4-7 4 7 5-4-3 12H6ZM6 22h12M12 1v1',
+        earlybird: 'M4 17a8 8 0 0 1 16 0M2 20h20M12 2v3M3 6l2 2M21 6l-2 2M1 13h3M20 13h3',
+        tracker: 'M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5M7 17l10-10M10 7h7v7',
+        oracle: 'M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12ZM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM12 1v2M12 21v2',
+        anchor: 'M12 8v13M8 11h8M4 14v3c0 3 8 5 8 5s8-2 8-5v-3M2 16l2-2 2 2M18 16l2-2 2 2M12 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6',
+        slayer: 'M4 2l8 8-3 3L2 4ZM20 2l-8 8 3 3 7-9ZM5 14l5 5M14 5l5 5M3 21l6-6M15 9l6-6M14 14l7 7M14 19l5-5',
+    };
+    const corners = {
+        prologue: ['M5 30V5h30'],
+        prime: ['M2 40V12L12 2h42l-9 6H15l-7 7v18Z', 'M14 34V16h26M19 21h8'],
+        apex: ['M5 48 0 20 10 28 5 0 27 16 25 4 57 15 35 21 46 31 22 25Z', 'M5 0 22 25 0 20M27 16 22 25 35 21M5 48 22 25'],
+        sovereign: ['M8 52C-3 35 0 13 9 4L16 20C23 8 39 1 63 3L47 12 58 13 39 21 48 24 29 29C19 29 12 39 8 52Z', 'M8 52Q7 23 46 9M16 31 9 15M23 23l-3-10M23 23l18 1M34 15l14-1'],
+        earlybird: ['M5 36A31 31 0 0 1 36 5M12 36A24 24 0 0 1 36 12M4 15l7 3M15 4l3 7'],
+        tracker: ['M2 38V8l6-6h30M10 30V10h20M18 22l9-9M22 13h5v5'],
+        oracle: ['M4 36V13l9-9h23M10 27l17-17M5 6l5-5 5 5-5 5ZM21 26l5-5 5 5-5 5Z'],
+        anchor: ['M5 40V17A12 12 0 0 1 17 5h23M11 40V17a6 6 0 0 1 6-6h23M2 22h12M22 2v12'],
+        slayer: ['M0 55 6 6 18 0 12 25ZM15 45 23 12 48 0 32 19ZM31 35 45 13 72 8 52 24Z', 'M6 6l6 19M23 12l9 7M45 13l7 11'],
+    };
+    const crests = {
+        apex: ['M9 29 37 23 32 10 48 19 60 0 72 19 88 10 83 23 111 29 75 32 60 23 45 32Z', 'M60 0v23M48 19l12 4 12-4M32 10l13 22M88 10 75 32'],
+        sovereign: ['M25 8 43 17 60 1 77 17 95 8 87 31H33ZM8 30l15-9 4 10ZM112 30l-15-9-4 10Z', 'M33 26h54M60 11l5 7-5 7-5-7ZM39 20l3 6M81 20l-3 6'],
+        slayer: ['M9 0 48 17 60 13 72 17 111 0 86 27 76 24 60 35 44 24 34 27ZM43 6l17 7 17-7-7 14H50Z', 'M9 0l35 24M111 0 76 24M60 19v10M53 19l3 2M67 19l-3 2'],
+    };
+    function vector(paths, viewBox, cls, plated = false) {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', viewBox); svg.setAttribute('class', cls);
+        svg.setAttribute('aria-hidden', 'true'); svg.setAttribute('focusable', 'false');
+        paths.forEach((d, i) => {
+            const path = document.createElementNS(svg.namespaceURI, 'path');
+            path.setAttribute('d', d);
+            path.setAttribute('class', plated && i === 0 ? 'frame-plate' : 'frame-engraving');
+            svg.append(path);
+        });
+        return svg;
+    }
     const el = (tag, cls, text) => {
         const node = document.createElement(tag);
         if (cls) node.className = cls;
@@ -9,7 +49,10 @@
     function badge(value) {
         const node = el('span', 'signature-badge', value?.name || '');
         node.hidden = !ids.has(value?.signature);
-        if (!node.hidden) node.dataset.style = value.signature;
+        if (!node.hidden) {
+            node.dataset.style = value.signature;
+            node.prepend(vector([emblems[value.signature]], '0 0 24 24', 'signature-emblem'));
+        }
         return node;
     }
     function frame(box, id) {
@@ -20,6 +63,12 @@
             box.dataset.style = id;
             const ornament = el('span', 'frame-ornament');
             ornament.setAttribute('aria-hidden', 'true');
+            for (const position of ['tl','tr','bl','br']) {
+                ornament.append(vector(corners[id], '0 0 72 60', `frame-corner corner-${position}`, ['prime','apex','sovereign','slayer'].includes(id)));
+            }
+            if (crests[id]) ornament.append(vector(crests[id], '0 0 120 36', 'frame-crest', true));
+            else if (['earlybird','oracle','anchor'].includes(id)) ornament.append(vector([emblems[id]], '0 0 24 24', 'frame-sigil'));
+            ornament.append(el('span', 'frame-energy energy-left'), el('span', 'frame-energy energy-right'));
             box.append(ornament);
         } else delete box.dataset.style;
         return box;
