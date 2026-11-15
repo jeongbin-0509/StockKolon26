@@ -1,5 +1,6 @@
 (() => {
     const companionIds = new Set(['luckycat','busybee','moonbunny','cherry','octopus']);
+    const materialIds = new Set(['sovereign','apex','slayer']);
     const ids = new Set(['prologue','prime','apex','sovereign','earlybird','tracker','oracle','anchor','slayer', ...companionIds]);
     // Inline vector emblems stay crisp at header size and never depend on fonts.
     const emblems = {
@@ -121,10 +122,22 @@
         box.querySelector(':scope > .frame-ornament')?.remove();
         box.classList.toggle('cosmetic-frame', ids.has(id));
         box.classList.toggle('companion-frame', companionIds.has(id));
+        box.classList.toggle('material-frame', materialIds.has(id));
         if (ids.has(id)) {
             box.dataset.style = id;
             const ornament = el('span', 'frame-ornament');
             ornament.setAttribute('aria-hidden', 'true');
+            if (materialIds.has(id)) {
+                for (const position of ['tl','tr','bl','br']) ornament.append(el('span', `material-corner corner-${position}`));
+                const crest = el('span', 'material-crest');
+                const motes = el('span', 'material-motes');
+                for (let i = 0; i < 6; i++) {
+                    const mote = el('i'); mote.style.setProperty('--mote', i); motes.append(mote);
+                }
+                ornament.append(crest, motes, el('span','frame-energy energy-left'), el('span','frame-energy energy-right'));
+                box.append(ornament);
+                return box;
+            }
             if (companionIds.has(id)) {
                 for (const position of ['tl','tr','bl','br']) ornament.append(vector(companionCorners[id], '0 0 48 48', `pet-corner corner-${position}`));
                 ornament.append(mascot(id), el('span', 'pet-trail'), el('span', 'pet-sparkles'));
