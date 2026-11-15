@@ -126,6 +126,7 @@ class CosmeticsTests(unittest.TestCase):
         self.assertEqual(self.state()['streak'],0)
         self.assertNotIn('slayer',self.state()['owned'])
         self.assertNotIn('oracle',self.state()['owned'])
+        self.assertNotIn('luckycat',self.state()['owned'])
 
     def test_tracker_200_within_window_and_expired_peak(self):
         with self.market.connection(write=True) as db:
@@ -233,7 +234,7 @@ class CosmeticsTests(unittest.TestCase):
             self.assertEqual(client.post('/api/cosmetics/equip', json=dict(signature=value,frame=None), headers=headers).status_code,400)
         result = client.get('/api/cosmetics')
         self.assertEqual(result.status_code,200)
-        self.assertEqual(len(result.json['items']),9)
+        self.assertEqual(len(result.json['items']),14)
         self.assertEqual(result.headers['Cache-Control'],'no-store')
 
     def test_public_decoration_does_not_leak_internal_tracking(self):
@@ -242,6 +243,108 @@ class CosmeticsTests(unittest.TestCase):
         for item in result.values():
             self.assertEqual(set(item), {'signature','name','frame'})
             self.assertEqual(item['name'], 'PROLOGUE')
+
+    def visit_at(self, day, hour=12, minute=0):
+        self.now = DAY * (21000 + day) + hour * 3600 + minute * 60 - 9 * 3600
+        self.cosmetics.visit('me')
+
+    def test_bee_requires_seven_consecutive_korean_dates(self):
+        for day in range(6):
+            self.visit_at(day, 23, 59)
+            self.cosmetics.visit('me')  # Repeated requests do not count twice.
+            self.assertEqual(self.state()['visit_streak'], day + 1)
+            self.assertNotIn('busybee', self.state()['owned'])
+        self.visit_at(6, 0)
+        earned = self.state()['owned']['busybee']
+        self.visit_at(20)
+        self.assertEqual(self.state()['owned']['busybee'], earned)
+        self.cosmetics.equip('me', 'busybee', 'busybee')
+        self.assertEqual(self.state()['frame'], 'busybee')
+
+    def test_bee_gap_resets_and_does_not_backfill_from_market_ticks(self):
+        self.visit_at(0)
+        self.visit_at(1)
+        self.now += 2 * DAY
+        self.observe()
+        items = {i['id']: i for i in self.cosmetics.collection('me')['items']}
+        self.assertEqual(items['busybee']['progress'], 0)
+        self.assertNotIn('busybee', self.state()['owned'])
+        self.visit_at(3)
+        self.assertEqual(self.state()['visit_streak'], 1)
+        self.visit_at(3, 23)
+        self.assertEqual(self.state()['visit_streak'], 1)
+
+    def test_bunny_window_distinct_nights_and_nonconsecutive_days(self):
+        self.visit_at(0, 21, 59)
+        self.assertEqual(self.state().get('bunny_nights', []), [])
+        self.visit_at(0, 22)
+        self.visit_at(0, 23, 59)
+        self.assertEqual(len(self.state()['bunny_nights']), 1)
+        self.visit_at(1, 0)
+        self.assertEqual(len(self.state()['bunny_nights']), 1)
+        self.visit_at(4, 22)
+        self.assertNotIn('moonbunny', self.state()['owned'])
+        self.visit_at(8, 23)
+        self.assertIn('moonbunny', self.state()['owned'])
+        self.visit_at(9, 23)
+        self.assertEqual(len(self.state()['bunny_nights']), 3)
+
+    def test_cat_requires_realized_profit_and_is_permanent(self):
+        self.order(qty=3)
+        self.price(1)
+        self.order('sell')
+        self.assertNotIn('luckycat', self.state()['owned'])
+        self.price(12000)
+        key = str(uuid.uuid4())
+        self.order('sell', key=key)
+        earned = self.state()['owned']['luckycat']
+        self.order('sell', key=key)
+        self.price(1)
+        self.order('sell')
+        self.assertEqual(self.state()['owned']['luckycat'], earned)
+
+    def test_cherry_rank_thirty_boundary_and_retained_after_drop(self):
+        with self.market.connection(write=True) as db:
+            db.executemany('INSERT INTO users VALUES (?,?)', [(f'c{i}',2000000+i) for i in range(30)])
+        self.observe()
+        self.assertEqual(self.state()['rank'], 31)
+        self.assertNotIn('cherry', self.state()['owned'])
+        with self.market.connection(write=True) as db:
+            db.execute("UPDATE users SET cash=2000000 WHERE id='me'")
+        self.observe()
+        self.assertEqual(self.state()['rank'], 30)  # Tied ranks use competition ranking.
+        self.assertIn('cherry', self.state()['owned'])
+        with self.market.connection(write=True) as db:
+            db.execute("UPDATE users SET cash=1 WHERE id='me'")
+        self.observe()
+        self.assertIn('cherry', self.state()['owned'])
+
+    def test_octopus_counts_distinct_positive_holdings_and_stays_owned(self):
+        with self.market.connection(write=True) as db:
+            db.executemany('INSERT INTO trade_holdings VALUES (?,?,?,?)', [('me',c,1,10000) for c in [1,11,12,13]])
+            db.execute("INSERT INTO trade_holdings VALUES ('me',14,0,0)")
+        self.observe()
+        self.assertNotIn('octopus', self.state()['owned'])
+        with self.market.connection(write=True) as db:
+            db.execute("UPDATE trade_holdings SET quantity=1,cost_basis=10000 WHERE user_id='me' AND club_num=14")
+        self.observe()
+        self.assertIn('octopus', self.state()['owned'])
+        with self.market.connection(write=True) as db:
+            db.execute("DELETE FROM trade_holdings WHERE user_id='me'")
+        self.observe()
+        self.assertIn('octopus', self.state()['owned'])
+
+    def test_new_items_accept_legacy_state_and_enforce_ownership(self):
+        self.observe()
+        for key in ('luckycat','busybee','moonbunny','octopus'):
+            with self.assertRaises(ValueError):
+                self.cosmetics.equip('me', key, key)
+        self.cosmetics.visit('me')
+        items = {i['id']: i for i in self.cosmetics.collection('me')['items']}
+        self.assertEqual(items['busybee']['progress'], 1)
+        self.assertEqual(items['moonbunny']['progress'], 0)
+        self.assertEqual(items['octopus']['progress'], 0)
+        self.assertEqual(items['cherry']['unlocked'], True)
 
 
 if __name__ == '__main__':

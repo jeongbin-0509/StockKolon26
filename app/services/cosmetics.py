@@ -16,6 +16,11 @@ CATALOG = [
     dict(id='oracle', name='예언자', frame='ORACLE', tier='PRESTIGE', condition='5번 연속 매도에서 실현 수익 달성', goal=5),
     dict(id='anchor', name='ANCHOR', frame='TIDAL', tier='RARE', condition='한 종목을 연속 3일 이상 보유', goal=3 * DAY),
     dict(id='slayer', name='SLAYER', frame='INFERNO', tier='ELITE', condition='악재 뉴스가 영향을 주는 동안 해당 종목을 수익 매도', goal=1),
+    dict(id='luckycat', name='LUCKY PAW', frame='PAW PRINT', tier='PLAYFUL', condition='처음으로 수익을 내며 매도', goal=1),
+    dict(id='busybee', name='BUSY BEE', frame='HONEYCOMB', tier='DEVOTED', condition='한국 날짜 기준 7일 연속 접속', goal=7),
+    dict(id='moonbunny', name='MOON BUNNY', frame='MOONLIGHT', tier='DREAMY', condition='한국 시간 밤 10시~자정 사이 서로 다른 3일 접속', goal=3),
+    dict(id='cherry', name='CHERRY ON TOP', frame='SUGAR GLAZE', tier='SWEET', condition='처음으로 전교 30위 이내 진입', goal=1),
+    dict(id='octopus', name='OCTO CLUB', frame='OCTO GARDEN', tier='CURIOUS', condition='서로 다른 5개 종목 동시 보유', goal=5),
 ]
 BY_ID = {item['id']: item for item in CATALOG}
 
@@ -65,6 +70,8 @@ class RankBatch:
                 continue
             state['asof'] = now
             state['rank'] = rank
+            if rank <= 30:
+                state['owned'].setdefault('cherry', now)
             for signature, threshold in (('prime', 30), ('apex', 10), ('sovereign', 1)):
                 if rank > threshold:
                     state['starts'].pop(signature, None)
@@ -84,6 +91,8 @@ class RankBatch:
                 history.pop()
             history.append([now, rank])
             held = self.players[key]['holdings']
+            if len(held) >= 5:
+                state['owned'].setdefault('octopus', now)
             state['positions'] = {club: state['positions'].get(club, now) for club in held}
             if any(now - start >= 3 * DAY for start in state['positions'].values()):
                 state['owned'].setdefault('anchor', now)
@@ -137,6 +146,7 @@ class Cosmetics:
             if state['streak'] >= 5:
                 state['owned'].setdefault('oracle', now)
             if profit > 0:
+                state['owned'].setdefault('luckycat', now)
                 events = db.execute('SELECT target_kind,target,impact,effective_at FROM market_news '
                                     'WHERE impact<0 AND effective_at<=? AND effective_at>?',
                                     (tick, tick - NEWS_TICKS * TICK_SECONDS))
@@ -149,12 +159,28 @@ class Cosmetics:
 
     def visit(self, user_id):
         now = int(self.market.clock())
-        if (now + 9 * 3600) // 3600 % 24 != 3:
-            return
+        local = now + 9 * 3600
+        day, hour = local // DAY, local // 3600 % 24
         with self.market.connection(write=True) as db:
             state = self.read(db, user_id)
-            if 'earlybird' not in state['owned']:
-                state['owned']['earlybird'] = now
+            before = json.dumps(state, sort_keys=True)
+            if hour == 3:
+                state['owned'].setdefault('earlybird', now)
+            # One attendance per Korean calendar date, never backfill absent days.
+            if 'busybee' not in state['owned']:
+                last = state.get('visit_day')
+                if last is None or day > last:
+                    state['visit_streak'] = min(7, state.get('visit_streak', 0) + 1) if last == day - 1 else 1
+                    state['visit_day'] = day
+                    if state['visit_streak'] >= 7:
+                        state['owned']['busybee'] = now
+            if hour >= 22 and 'moonbunny' not in state['owned']:
+                nights = state.setdefault('bunny_nights', [])
+                if day not in nights:
+                    nights.append(day)
+                    if len(nights) >= 3:
+                        state['owned']['moonbunny'] = now
+            if json.dumps(state, sort_keys=True) != before:
                 self.save(db, user_id, state)
 
     def collection(self, user_id):
@@ -166,7 +192,10 @@ class Cosmetics:
             state = self.read(db, user_id)
             self.save(db, user_id, state)
         progress = {'prologue': 1, 'earlybird': 0, 'tracker': state.get('jump', 0),
-                    'oracle': state['streak'], 'anchor': max((state['asof'] - t for t in state['positions'].values()), default=0), 'slayer': 0}
+                    'oracle': state['streak'], 'anchor': max((state['asof'] - t for t in state['positions'].values()), default=0), 'slayer': 0,
+                    'luckycat': int('luckycat' in state['owned']), 'cherry': int('cherry' in state['owned']),
+                    'busybee': state.get('visit_streak', 0) if state.get('visit_day', -2) >= (now + 9 * 3600) // DAY - 1 else 0,
+                    'moonbunny': len(state.get('bunny_nights', [])), 'octopus': len(state['positions'])}
         for key in ('prime', 'apex', 'sovereign'):
             progress[key] = state['asof'] - state['starts'][key] if key in state['starts'] else 0
         return dict(equipped=decoration(state), catching_up=tick < now // TICK_SECONDS * TICK_SECONDS,
