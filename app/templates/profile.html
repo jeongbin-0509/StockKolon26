@@ -71,6 +71,8 @@
 
 
         <!-- 보유 주식 섹션 -->
+        <p id="profile-update-status" class="sub_text" role="status" hidden></p>
+
         <section id="holdings">
             <span class="head1 section-title">보유 주식</span>
 
@@ -99,7 +101,7 @@
 
     <script src="{{ url_for('static', filename='js/header-profile.js', v='box-frames-1') }}"></script>
     <script src="{{ url_for('static', filename='js/charts.js', v='candles-2') }}"></script>
-    <script src="{{ url_for('static', filename='js/profile.js', v='history-3') }}"></script>
+    <script src="{{ url_for('static', filename='js/profile.js', v='auto-refresh-1') }}"></script>
 
 {% include '_mobile_nav.html' %}
 {% include '_pwa_script.html' %}

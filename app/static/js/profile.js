@@ -1,13 +1,4 @@
-async function loadProfileData() {
-    const response = await fetch("/api/profile-data");
-    const data = await response.json();
-
-    if (!data.success) {
-        alert(data.message);
-        location.href = "/auth/login";
-        return;
-    }
-
+function renderProfileData(data, updateHistory) {
     document.querySelector(".user-name").textContent = `${data.user.name}님`;
     updateHeaderProfile(data.user);
     document.querySelector(".user-rank").textContent = data.user.rank;
@@ -31,6 +22,8 @@ async function loadProfileData() {
         data.summary.cash;
 
     const tbody = document.querySelector("#holdings-table tbody");
+    const focusedLink = tbody.contains(document.activeElement)
+        ? document.activeElement.getAttribute('href') : null;
     tbody.querySelectorAll('.mini-chart').forEach(StockolonCharts.disposeChart);
     tbody.innerHTML = "";
 
@@ -87,6 +80,13 @@ async function loadProfileData() {
             tbody.appendChild(row);
         }
     }
+    if (focusedLink) {
+        const link = Array.from(tbody.querySelectorAll('a'))
+            .find(item => item.getAttribute('href') === focusedLink);
+        if (link) link.focus({ preventScroll: true });
+    }
+    if (!updateHistory) return;
+
     const history = document.querySelector('#trade-history-list');
     history.replaceChildren();
     if (!data.orders.length) {
@@ -117,4 +117,51 @@ async function loadProfileData() {
     }
 }
 
+let profileRefreshTimer;
+let profileLoading = false;
+let profileLoaded = false;
+let profileSessionExpired = false;
+
+async function loadProfileData() {
+    clearTimeout(profileRefreshTimer);
+    if (profileLoading || document.hidden || profileSessionExpired) return;
+    profileLoading = true;
+    const status = document.querySelector('#profile-update-status');
+    try {
+        const response = await fetch('/api/profile-data', {
+            cache: 'no-store',
+            signal: AbortSignal.timeout(15000)
+        });
+        if (response.status === 401) {
+            profileSessionExpired = true;
+            location.assign('/auth/login');
+            return;
+        }
+        if (!response.ok) throw new Error('Profile unavailable');
+        const data = await response.json();
+        if (!data.success) throw new Error('Profile unavailable');
+        renderProfileData(data, !profileLoaded);
+        profileLoaded = true;
+        status.hidden = true;
+        status.textContent = '';
+    } catch (error) {
+        status.textContent = profileLoaded
+            ? '연결이 원활하지 않아 마지막으로 받은 정보를 표시하고 있어요. 잠시 후 자동으로 다시 시도합니다.'
+            : '프로필 정보를 불러오지 못했어요. 잠시 후 자동으로 다시 시도합니다.';
+        status.hidden = false;
+    } finally {
+        profileLoading = false;
+        if (!document.hidden && !profileSessionExpired) {
+            profileRefreshTimer = setTimeout(loadProfileData, 10000);
+        }
+    }
+}
+
+document.addEventListener('visibilitychange', () => {
+    clearTimeout(profileRefreshTimer);
+    if (!document.hidden) loadProfileData();
+});
+window.addEventListener('pageshow', event => {
+    if (event.persisted) loadProfileData();
+});
 loadProfileData();
