@@ -6,7 +6,8 @@ from pathlib import Path
 
 from app.market_catalog import CLUBS
 
-_CATALOG_PATH = Path(__file__).with_name('data') / 'news_presets_0_4.json'
+CATALOG_VERSION = 'manuscript-396-2026-11-21'
+_CATALOG_PATH = Path(__file__).with_name('data') / 'news_presets.json'
 
 
 @lru_cache(maxsize=1)
@@ -29,10 +30,9 @@ def _catalog():
             raise RuntimeError(f'Empty news preset: {preset_id}')
         catalog[preset_id] = entry
         counts[(club_num, sentiment)] = counts.get((club_num, sentiment), 0) + 1
-    included_clubs = {entry['club_num'] for entry in entries}
-    expected_groups = {(club_num, sentiment) for club_num in included_clubs for sentiment in ('good', 'bad')}
-    if set(counts) != expected_groups or any(count != 3 for count in counts.values()):
-        raise RuntimeError('Each included club must have three good and three bad presets.')
+    expected_groups = {(club_num, sentiment) for club_num in CLUBS for sentiment in ('good', 'bad')}
+    if set(counts) != expected_groups or any(count != 6 for count in counts.values()):
+        raise RuntimeError('Every club must have six good and six bad presets.')
     return catalog
 
 

@@ -222,26 +222,31 @@ class AdminTests(unittest.TestCase):
         self.assertFalse(self.admin.publish_due_automatic_news())
         with self.market.connection() as db:
             articles = db.execute('SELECT * FROM news_articles').fetchall()
-            self.assertEqual(len(articles), 2)
-            self.assertEqual({article['impact'] > 0 for article in articles}, {True, False})
-            self.assertEqual(len({article['target'] for article in articles}), 2)
+            self.assertEqual(len(articles), 4)
+            self.assertEqual(len({article['target'] for article in articles}), 4)
             for article in articles:
                 event = db.execute('SELECT * FROM market_news WHERE event_id=?', (article['id'],)).fetchone()
                 self.assertEqual((event['target'], event['impact']), (article['target'], article['impact']))
                 self.assertEqual(article['author_id'], 'system')
+        initial_ids = {article['id'] for article in self.admin.public_articles()}
+        self.admin.clock = lambda: now + AUTO_NEWS_INTERVAL - 1
+        self.assertFalse(self.admin.publish_due_automatic_news())
         self.admin.clock = lambda: now + AUTO_NEWS_INTERVAL
         self.market.clock = lambda: now + AUTO_NEWS_INTERVAL
         self.assertTrue(self.admin.publish_due_automatic_news())
-        self.assertEqual(len(self.admin.articles()), 4)
-        self.assertEqual(len({article['title'] for article in self.admin.articles()}), 4)
+        self.assertEqual(len(self.admin.articles()), 5)
+        visible = self.admin.public_articles()
+        self.assertEqual(len(visible), 4)
+        self.assertEqual(len(initial_ids & {article['id'] for article in visible}), 3)
+        self.assertEqual(visible[0]['id'], self.admin.latest_article_id())
 
     def test_automatic_news_concurrent_requests_publish_only_once(self):
         with ThreadPoolExecutor(max_workers=4) as pool:
             results = list(pool.map(lambda _: self.admin.publish_due_automatic_news(), range(4)))
         self.assertEqual(results.count(True), 1)
-        self.assertEqual(len(self.admin.articles()), 2)
+        self.assertEqual(len(self.admin.articles()), 4)
 
-    def test_automatic_pair_rolls_back_when_second_event_fails(self):
+    def test_automatic_initial_batch_rolls_back_when_second_event_fails(self):
         original = self.market._add_news
         calls = []
         def fail_second(*args, **kwargs):
@@ -257,11 +262,10 @@ class AdminTests(unittest.TestCase):
             self.assertEqual(db.execute('SELECT COUNT(*) FROM market_news').fetchone()[0], 0)
             self.assertEqual(db.execute('SELECT COUNT(*) FROM automatic_news_state').fetchone()[0], 0)
 
-    def test_existing_single_news_schedule_starts_pair_immediately(self):
+    def test_existing_schedule_survives_restart_without_early_publication(self):
         with self.market.connection(write=True) as db:
             db.execute('INSERT INTO automatic_news_state VALUES (1, ?, 1)', (int(time.time()) + 1800,))
-        self.assertTrue(self.admin.publish_due_automatic_news())
-        self.assertEqual(len(self.admin.articles()), 2)
+        self.admin.initialize()
         self.assertFalse(self.admin.publish_due_automatic_news())
 
     def test_news_page_publishes_due_article_when_enabled(self):
@@ -272,26 +276,28 @@ class AdminTests(unittest.TestCase):
         self.assertIn(self.admin.articles()[0]['title'], page)
         self.assertNotIn('아직 새로운 소식이 없어요', page)
 
-    def test_news_page_groups_good_and_bad_separately(self):
+    def test_news_page_mixes_articles_without_target_or_sentiment_metadata(self):
         self.ready()
         self.admin.publish_news('good-test', '좋은 소식 제목', '좋은 소식 본문', 'club', 61, 0.01, self.owner)
         self.admin.publish_news('bad-test', '나쁜 소식 제목', '나쁜 소식 본문', 'club', 62, -0.01, self.owner)
         with self.client.session_transaction() as sess:
             sess['user_id'] = 'regular-user'
         page = self.client.get('/news').get_data(as_text=True)
-        good = page.split('aria-labelledby="news-good-heading"', 1)[1].split('</section>', 1)[0]
-        bad = page.split('aria-labelledby="news-bad-heading"', 1)[1].split('</section>', 1)[0]
-        self.assertIn('좋은 소식 제목', good)
-        self.assertNotIn('나쁜 소식 제목', good)
-        self.assertIn('나쁜 소식 제목', bad)
-        self.assertNotIn('좋은 소식 제목', bad)
+        feed = page.split('<section class="news-feed"', 1)[1].split('</section>', 1)[0]
+        self.assertIn('좋은 소식 제목', feed)
+        self.assertIn('나쁜 소식 제목', feed)
+        for hidden in ('호재', '악재', '세미콜론', '데이터무제한', 'news-good', 'news-bad', 'data-target', 'impact'):
+            self.assertNotIn(hidden, feed)
+        for article in self.admin.public_articles():
+            self.assertEqual(set(article), {'id', 'title', 'body', 'published_at'})
 
-    def test_news_page_has_separate_empty_states(self):
+    def test_news_page_has_one_neutral_empty_state(self):
         with self.client.session_transaction() as sess:
             sess['user_id'] = 'regular-user'
         page = self.client.get('/news').get_data(as_text=True)
-        self.assertIn('아직 호재 뉴스가 없어요', page)
-        self.assertIn('아직 악재 뉴스가 없어요', page)
+        self.assertIn('아직 새로운 소식이 없어요', page)
+        self.assertNotIn('호재', page)
+        self.assertNotIn('악재', page)
 
     def test_atomic_news_failure_rolls_back_price_event(self):
         self.ready()
@@ -305,7 +311,7 @@ class AdminTests(unittest.TestCase):
 
     def test_unknown_or_forged_preset_cannot_create_news(self):
         self.ready()
-        for preset_id in ('', 'missing', 'c61-good-1', '../../secret'):
+        for preset_id in ('', 'missing', 'c61-good-7', '../../secret'):
             data = self.news_form(f'invalid-{preset_id}')
             data['preset_id'] = preset_id
             data.update(title='위조 제목', body='위조 본문', impact='15', club_num='61')
@@ -326,7 +332,7 @@ class AdminTests(unittest.TestCase):
         self.assertNotIn(str(preset['impact']), dashboard)
         self.assertNotIn('"impact"', str(self.admin.audit()))
 
-    def test_catalog_has_three_good_and_bad_presets_per_included_club(self):
+    def test_catalog_has_six_good_and_bad_presets_per_club(self):
         options = public_news_options()
         counts = {}
         for option in options:
@@ -334,8 +340,8 @@ class AdminTests(unittest.TestCase):
             counts[key] = counts.get(key, 0) + 1
             self.assertNotIn('impact', option)
             self.assertNotIn('level', option)
-        self.assertEqual(len(options), 102)
-        self.assertEqual(set(counts.values()), {3})
+        self.assertEqual(len(options), 396)
+        self.assertEqual(set(counts.values()), {6})
 
     def test_sector_news_cannot_be_published(self):
         with self.assertRaises(ValueError):

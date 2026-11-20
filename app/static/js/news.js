@@ -12,5 +12,5 @@ async function checkLatestNews() {
     }
 }
 
-setInterval(checkLatestNews, 60000);
+setInterval(checkLatestNews, 30000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) checkLatestNews(); });

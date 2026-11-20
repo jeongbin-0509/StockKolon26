@@ -140,7 +140,7 @@ def news():
 
     if current_app.config['AUTO_NEWS_ENABLED']:
         current_app.extensions['admin'].publish_due_automatic_news()
-    return render_template("news.html", articles=current_app.extensions["admin"].articles(), csrf_token=csrf_token)
+    return render_template("news.html", articles=current_app.extensions["admin"].public_articles(), csrf_token=csrf_token)
 
 
 @main.get('/api/news/latest')

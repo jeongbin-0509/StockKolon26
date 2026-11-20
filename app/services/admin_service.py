@@ -11,7 +11,8 @@ import time
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.market_catalog import CATEGORIES, CLUBS
-from app.news_catalog import news_presets
+from app.news_catalog import CATALOG_VERSION, news_presets
+from app.logics.logic import NEWS_TICKS, TICK_SECONDS
 
 PERMISSIONS = {
     'owner': {'market:view', 'news:publish', 'audit:view', 'admins:manage'},
@@ -20,6 +21,8 @@ PERMISSIONS = {
 ROLE_NAMES = {'owner': '최고관리자', 'editor': '운영관리자'}
 SESSION_SECONDS = 8 * 3600
 AUTO_NEWS_INTERVAL = 30 * 60
+NEWS_FEED_LIMIT = 4
+NEWS_DURATION = NEWS_TICKS * TICK_SECONDS
 
 
 class AdminService:
@@ -45,6 +48,22 @@ class AdminService:
                 'next_at INTEGER NOT NULL, published_count INTEGER NOT NULL)',
             ):
                 db.execute(sql)
+            self._replace_legacy_news(db)
+
+    def _replace_legacy_news(self, db):
+        """One-time, transactional replacement on deployment, never on every restart."""
+        if db.execute('SELECT 1 FROM admin_audit WHERE action=? AND target_id=? LIMIT 1',
+                      ('news.catalog.replace', CATALOG_VERSION)).fetchone():
+            return
+        # Validate the entire replacement before removing any existing article/event.
+        presets = news_presets()
+        removed = db.execute('SELECT COUNT(*) FROM news_articles').fetchone()[0]
+        db.execute('DELETE FROM news_articles')
+        db.execute('DELETE FROM market_news_profiles')
+        db.execute('DELETE FROM market_news')
+        db.execute('DELETE FROM automatic_news_state')
+        self._audit(db, None, 'news.catalog.replace', CATALOG_VERSION,
+                    {'removed_articles': removed, 'presets': len(presets)}, int(self.clock()))
 
     @staticmethod
     def _audit(db, actor_id, action, target_id, detail, timestamp):
@@ -221,6 +240,16 @@ class AdminService:
                 if values != (title, body, target_kind, target, impact, actor_id):
                     raise ValueError('이미 사용된 발행 요청입니다. 화면을 새로고침하세요.')
                 return False
+            if target in self._unavailable_news_clubs(db, int(self.clock())):
+                raise ValueError('이 종목은 현재 뉴스에 표시되거나 아직 가격에 영향을 주고 있습니다.')
+            visible = self._visible_news(db)
+            positive = impact > 0
+            if (len(visible) == NEWS_FEED_LIMIT and (visible[-1]['impact'] > 0) != positive) or (
+                len(visible) < NEWS_FEED_LIMIT and sum((row['impact'] > 0) == positive for row in visible) >= 2
+            ):
+                raise ValueError('호재 2개·악재 2개 유지를 위해 가장 오래된 기사와 같은 성격으로 발행하세요.')
+            if len(visible) == NEWS_FEED_LIMIT and int(self.clock()) <= visible[0]['published_at']:
+                raise ValueError('방금 발행한 기사가 있습니다. 잠시 후 다시 발행하세요.')
             if not self.market._add_news(db, article_id, target_kind, target, impact):
                 raise ValueError('이 발행 ID는 이미 시장 이벤트에서 사용 중입니다.')
             now = int(self.clock())
@@ -232,44 +261,66 @@ class AdminService:
         return True
 
     def publish_due_automatic_news(self):
-        """Publish one good/bad pair atomically, without replaying missed intervals."""
+        """Maintain two good/two bad cards, replacing the oldest every 30 minutes."""
         now = int(self.clock())
         with self.market.connection(write=True) as db:
             state = db.execute('SELECT next_at, published_count FROM automatic_news_state WHERE id=1').fetchone()
-            paired_before = db.execute('SELECT 1 FROM news_articles WHERE id LIKE ? LIMIT 1', ('auto-pair-%',)).fetchone()
-            if state and paired_before and now < state['next_at']:
+            if state and now < state['next_at']:
                 return False
             count = state['published_count'] if state else 0
-            presets = news_presets()
-            good = sorted((p for p in presets if p['sentiment'] == 'good'), key=lambda item: item['id'])
-            bad = sorted((p for p in presets if p['sentiment'] == 'bad'), key=lambda item: item['id'])
-            if not good or len(good) != len(bad):
-                return False
-            market_seed = db.execute('SELECT seed FROM market_state WHERE id=1').fetchone()['seed']
-            cycle, position = divmod(count, len(good))
-            rng = random.Random(hashlib.sha256(f'{market_seed}:auto-news-pairs:{cycle}'.encode()).digest())
-            rng.shuffle(good)
-            rng.shuffle(bad)
-            # 충돌하는 쌍을 교환해 같은 동아리가 동시에 호재와 악재를 받지 않도록 한다.
-            for i in range(len(good)):
-                if good[i]['club_num'] != bad[i]['club_num']:
-                    continue
-                candidates = list(range(i + 1, len(good))) + list(range(i))
-                swap = next((j for j in candidates if good[i]['club_num'] != bad[j]['club_num']
-                             and good[j]['club_num'] != bad[i]['club_num']), None)
-                if swap is None:
-                    raise ValueError('서로 다른 동아리의 뉴스 쌍을 만들 수 없습니다.')
-                bad[i], bad[swap] = bad[swap], bad[i]
-            for preset in (good[position], bad[position]):
-                article_id = f"auto-pair-{count}-{preset['sentiment']}"
+            visible = self._visible_news(db)
+            blocked = self._unavailable_news_clubs(db, now)
+            rng = random.SystemRandom()
+            if len(visible) < NEWS_FEED_LIMIT:
+                directions = ['good'] * (2 - sum(row['impact'] > 0 for row in visible))
+                directions += ['bad'] * (2 - sum(row['impact'] < 0 for row in visible))
+                rng.shuffle(directions)
+            else:
+                directions = ['good' if visible[-1]['impact'] > 0 else 'bad']
+            groups = {}
+            for preset in news_presets():
+                groups.setdefault((preset['club_num'], preset['sentiment']), []).append(preset)
+            for sentiment in directions:
+                clubs = sorted({club for club, _ in groups} - blocked)
+                if not clubs:
+                    break
+                club = rng.choice(clubs)
+                preset = rng.choice(groups[club, sentiment])
+                # Public identifiers disclose neither the club nor the sentiment.
+                article_id = f'news-{count:012d}-{secrets.token_hex(8)}'
                 self.market._add_news(db, article_id, 'club', preset['club_num'], preset['impact'])
                 db.execute('INSERT INTO news_articles VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
                            (article_id, preset['title'], preset['body'], 'club', preset['club_num'],
                             preset['impact'], 'system', now))
+                blocked.add(club)
+                count += 1
             db.execute('INSERT INTO automatic_news_state (id, next_at, published_count) VALUES (1, ?, ?) '
                        'ON CONFLICT(id) DO UPDATE SET next_at=excluded.next_at, published_count=excluded.published_count',
-                       (now + AUTO_NEWS_INTERVAL, count + 1))
+                       (now + AUTO_NEWS_INTERVAL, count))
         return True
+
+    @staticmethod
+    def _visible_news(db):
+        return db.execute('SELECT * FROM news_articles ORDER BY published_at DESC, id DESC LIMIT ?',
+                          (NEWS_FEED_LIMIT,)).fetchall()
+
+    @staticmethod
+    def _unavailable_news_clubs(db, now):
+        # The display window and the one-hour market effect are intentionally independent.
+        visible = db.execute('SELECT target FROM news_articles ORDER BY published_at DESC, id DESC LIMIT ?',
+                             (NEWS_FEED_LIMIT,))
+        blocked = {row['target'] for row in visible}
+        blocked.update(row['target'] for row in db.execute(
+            "SELECT target FROM market_news WHERE target_kind='club' AND effective_at>?",
+            (now - NEWS_DURATION,)))
+        return blocked
+
+    def public_articles(self):
+        """Only presentation fields cross the member-facing template boundary."""
+        with self.market.connection() as db:
+            return [dict(row) for row in db.execute(
+                'SELECT id, title, body, published_at FROM news_articles '
+                'ORDER BY published_at DESC, id DESC LIMIT ?', (NEWS_FEED_LIMIT,))]
 
     def latest_article_id(self):
         with self.market.connection() as db:
