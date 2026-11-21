@@ -222,8 +222,9 @@ class AdminTests(unittest.TestCase):
         self.assertFalse(self.admin.publish_due_automatic_news())
         with self.market.connection() as db:
             articles = db.execute('SELECT * FROM news_articles').fetchall()
-            self.assertEqual(len(articles), 4)
-            self.assertEqual(len({article['target'] for article in articles}), 4)
+            self.assertEqual(len(articles), 2)
+            self.assertEqual(len({article['target'] for article in articles}), 2)
+            self.assertEqual(sum(article['impact'] > 0 for article in articles), 1)
             for article in articles:
                 event = db.execute('SELECT * FROM market_news WHERE event_id=?', (article['id'],)).fetchone()
                 self.assertEqual((event['target'], event['impact']), (article['target'], article['impact']))
@@ -234,19 +235,34 @@ class AdminTests(unittest.TestCase):
         self.admin.clock = lambda: now + AUTO_NEWS_INTERVAL
         self.market.clock = lambda: now + AUTO_NEWS_INTERVAL
         self.assertTrue(self.admin.publish_due_automatic_news())
-        self.assertEqual(len(self.admin.articles()), 5)
+        self.assertEqual(len(self.admin.articles()), 4)
         visible = self.admin.public_articles()
         self.assertEqual(len(visible), 4)
-        self.assertEqual(len(initial_ids & {article['id'] for article in visible}), 3)
+        self.assertEqual(len(initial_ids & {article['id'] for article in visible}), 2)
         self.assertEqual(visible[0]['id'], self.admin.latest_article_id())
 
     def test_automatic_news_concurrent_requests_publish_only_once(self):
         with ThreadPoolExecutor(max_workers=4) as pool:
             results = list(pool.map(lambda _: self.admin.publish_due_automatic_news(), range(4)))
         self.assertEqual(results.count(True), 1)
-        self.assertEqual(len(self.admin.articles()), 4)
+        self.assertEqual(len(self.admin.articles()), 2)
 
     def test_automatic_initial_batch_rolls_back_when_second_event_fails(self):
+        if self.market.store.postgres:
+            from app.services.database import DatabaseError
+            with self.market.connection(write=True) as db:
+                db.raw.execute("""CREATE FUNCTION fail_second_news() RETURNS trigger LANGUAGE plpgsql AS $$
+                    BEGIN IF (SELECT count(*) FROM market_news)>0 THEN RAISE EXCEPTION 'test failure'; END IF;
+                    RETURN NEW; END; $$;
+                    CREATE TRIGGER fail_second BEFORE INSERT ON market_news
+                    FOR EACH ROW EXECUTE FUNCTION fail_second_news();""")
+            with self.assertRaises(DatabaseError):
+                self.admin.publish_due_automatic_news()
+            with self.market.connection() as db:
+                self.assertEqual(db.execute('SELECT COUNT(*) FROM news_articles').fetchone()[0], 0)
+                self.assertEqual(db.execute('SELECT COUNT(*) FROM market_news').fetchone()[0], 0)
+                self.assertEqual(db.execute('SELECT COUNT(*) FROM automatic_news_state').fetchone()[0], 0)
+            return
         original = self.market._add_news
         calls = []
         def fail_second(*args, **kwargs):
@@ -298,6 +314,32 @@ class AdminTests(unittest.TestCase):
         self.assertIn('아직 새로운 소식이 없어요', page)
         self.assertNotIn('호재', page)
         self.assertNotIn('악재', page)
+
+    def test_news_cards_have_no_recency_labels_or_special_classes(self):
+        self.admin.publish_due_automatic_news()
+        with self.client.session_transaction() as sess:
+            sess['user_id'] = 'regular-user'
+        page = self.client.get('/news').get_data(as_text=True)
+        for text in ('LATEST', '최신 소식', '이전 소식', 'news-current', 'news-history', 'news-edition'):
+            self.assertNotIn(text, page)
+        self.assertEqual(page.count('<article class="news-card">'), 2)
+
+    def test_news_reset_cli_requires_confirmation_and_starts_with_two(self):
+        self.admin.publish_due_automatic_news()
+        before = self.admin.public_articles()
+        runner = self.app.test_cli_runner()
+        declined = runner.invoke(args=['admin', 'reset-news'], input='n\n')
+        self.assertNotEqual(declined.exit_code, 0)
+        self.assertEqual(before, self.admin.public_articles())
+        result = runner.invoke(args=['admin', 'reset-news', '--yes'])
+        self.assertEqual(result.exit_code, 0, result.output)
+        self.assertEqual(len(self.admin.public_articles()), 2)
+        self.assertNotEqual(before, self.admin.public_articles())
+
+    def test_standalone_news_publisher_runs_without_member_request(self):
+        result = self.app.test_cli_runner().invoke(args=['admin', 'news-watch', '--once'])
+        self.assertEqual(result.exit_code, 0, result.output)
+        self.assertEqual(len(self.admin.public_articles()), 2)
 
     def test_atomic_news_failure_rolls_back_price_event(self):
         self.ready()

@@ -49,6 +49,9 @@ class AdminService:
             ):
                 db.execute(sql)
             self._replace_legacy_news(db)
+            if self.market.store.postgres:
+                from app.services.news_scheduler import install_publisher
+                install_publisher(db, self.market.store)
 
     def _replace_legacy_news(self, db):
         """One-time, transactional replacement on deployment, never on every restart."""
@@ -261,42 +264,61 @@ class AdminService:
         return True
 
     def publish_due_automatic_news(self):
-        """Maintain two good/two bad cards, replacing the oldest every 30 minutes."""
+        """Start with two; add/replace two each half hour under the market write lock."""
         now = int(self.clock())
         with self.market.connection(write=True) as db:
-            state = db.execute('SELECT next_at, published_count FROM automatic_news_state WHERE id=1').fetchone()
-            if state and now < state['next_at']:
-                return False
-            count = state['published_count'] if state else 0
-            visible = self._visible_news(db)
-            blocked = self._unavailable_news_clubs(db, now)
-            rng = random.SystemRandom()
-            if len(visible) < NEWS_FEED_LIMIT:
-                directions = ['good'] * (2 - sum(row['impact'] > 0 for row in visible))
-                directions += ['bad'] * (2 - sum(row['impact'] < 0 for row in visible))
-                rng.shuffle(directions)
-            else:
-                directions = ['good' if visible[-1]['impact'] > 0 else 'bad']
-            groups = {}
-            for preset in news_presets():
-                groups.setdefault((preset['club_num'], preset['sentiment']), []).append(preset)
-            for sentiment in directions:
-                clubs = sorted({club for club, _ in groups} - blocked)
-                if not clubs:
-                    break
-                club = rng.choice(clubs)
-                preset = rng.choice(groups[club, sentiment])
-                # Public identifiers disclose neither the club nor the sentiment.
-                article_id = f'news-{count:012d}-{secrets.token_hex(8)}'
-                self.market._add_news(db, article_id, 'club', preset['club_num'], preset['impact'])
-                db.execute('INSERT INTO news_articles VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                           (article_id, preset['title'], preset['body'], 'club', preset['club_num'],
-                            preset['impact'], 'system', now))
-                blocked.add(club)
-                count += 1
-            db.execute('INSERT INTO automatic_news_state (id, next_at, published_count) VALUES (1, ?, ?) '
-                       'ON CONFLICT(id) DO UPDATE SET next_at=excluded.next_at, published_count=excluded.published_count',
-                       (now + AUTO_NEWS_INTERVAL, count))
+            return self._publish_due_news(db, now)
+
+    def reset_news(self):
+        """Explicit server CLI operation, separate from deployment and normal restarts."""
+        now = int(self.clock())
+        with self.market.connection(write=True) as db:
+            news_presets()
+            for table in ('news_articles', 'market_news_profiles', 'market_news', 'automatic_news_state'):
+                db.execute(f'DELETE FROM {table}')
+            self._publish_due_news(db, now)
+            self._audit(db, None, 'news.reset', 'news', {'initial_articles': 2}, now)
+
+    def _publish_due_news(self, db, now):
+        if self.market.store.postgres:
+            return db.execute('SELECT publish_due_news(?) AS published', (now,)).fetchone()['published']
+        state = db.execute('SELECT next_at, published_count FROM automatic_news_state WHERE id=1').fetchone()
+        if state and now < state['next_at']:
+            return False
+        count = state['published_count'] if state else 0
+        visible = self._visible_news(db)
+        blocked = self._unavailable_news_clubs(db, now)
+        rng = random.SystemRandom()
+        if not visible:
+            directions = ['good', 'bad']
+        else:
+            retained = visible[:2]
+            directions = ['good'] * (2 - sum(row['impact'] > 0 for row in retained))
+            directions += ['bad'] * (2 - sum(row['impact'] < 0 for row in retained))
+        rng.shuffle(directions)
+        directions = directions[:2]
+        groups = {}
+        for preset in news_presets():
+            groups.setdefault((preset['club_num'], preset['sentiment']), []).append(preset)
+        for sentiment in directions:
+            clubs = sorted({club for club, _ in groups} - blocked)
+            if not clubs:
+                raise ValueError('중복되지 않는 뉴스 종목을 선택할 수 없습니다.')
+            club = rng.choice(clubs)
+            preset = rng.choice(groups[club, sentiment])
+            # Public identifiers disclose neither the club nor the sentiment.
+            article_id = f'news-{count:012d}-{secrets.token_hex(8)}'
+            self.market._add_news(db, article_id, 'club', preset['club_num'], preset['impact'])
+            db.execute('INSERT INTO news_articles VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                       (article_id, preset['title'], preset['body'], 'club', preset['club_num'],
+                        preset['impact'], 'system', now))
+            blocked.add(club)
+            count += 1
+        next_at = (state['next_at'] + ((now - state['next_at']) // AUTO_NEWS_INTERVAL + 1) * AUTO_NEWS_INTERVAL
+                   if state else now + AUTO_NEWS_INTERVAL)
+        db.execute('INSERT INTO automatic_news_state (id, next_at, published_count) VALUES (1, ?, ?) '
+                   'ON CONFLICT(id) DO UPDATE SET next_at=excluded.next_at, published_count=excluded.published_count',
+                   (next_at, count))
         return True
 
     @staticmethod

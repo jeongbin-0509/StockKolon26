@@ -3,6 +3,7 @@ from functools import wraps
 import hmac
 import secrets
 import sqlite3
+import time
 
 import click
 from flask import Blueprint, abort, current_app, flash, g, jsonify, redirect, render_template, request, session, url_for
@@ -232,3 +233,24 @@ def reset_password(username):
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
     click.echo('비밀번호를 초기화했습니다. 다음 로그인 때 변경해야 합니다.')
+
+
+@admin.cli.command('reset-news')
+@click.confirmation_option(prompt='기존 뉴스와 남은 뉴스 영향을 삭제하고 2개로 다시 시작할까요?')
+def reset_news():
+    """뉴스만 초기화한다. 현재가·거래·보유 자산은 변경하지 않는다."""
+    service().reset_news()
+    click.echo('뉴스 2개로 시작했습니다. 30분 뒤 2개 추가, 이후 30분마다 2개씩 교체합니다.')
+
+
+@admin.cli.command('news-watch')
+@click.option('--once', is_flag=True, help='예약 시각을 한 번 확인하고 종료합니다.')
+def news_watch(once):
+    """로컬 SQLite 등 DB Cron이 없는 환경에서 실행하는 독립 뉴스 발행 프로세스."""
+    while True:
+        published = service().publish_due_automatic_news()
+        if published:
+            click.echo('뉴스 2개 발행 완료')
+        if once:
+            return
+        time.sleep(30)

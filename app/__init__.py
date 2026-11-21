@@ -89,6 +89,11 @@ def create_app(test_config=None):
     admin_service = AdminService(service)
     admin_service.initialize()
     app.extensions["admin"] = admin_service
+    # The DB timer runs independently of users and the Render web process.
+    # Test factories never create hosted schedules; SQLite can use `admin news-watch`.
+    if service.store.postgres and app.config['AUTO_NEWS_ENABLED'] and not app.config.get('TESTING'):
+        from app.services.news_scheduler import install_schedule
+        install_schedule(service)
     app.register_blueprint(admin)
     verification = EmailVerification(service, app.config["SECRET_KEY"])
     verification.initialize()

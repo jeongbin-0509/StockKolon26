@@ -7,7 +7,7 @@
     {% include '_pwa_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css', v='settings-1') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/news.css', v='rotation-1') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/news.css', v='neutral-2') }}">
 </head>
 <body>
 
@@ -46,8 +46,7 @@
         <p class="news-description">새로운 소식과 동아리 시장의 흐름을 확인하세요.</p>
         <section class="news-feed" aria-label="최근 뉴스">
                 {% for article in articles %}
-                <article class="news-card {{ 'news-current' if loop.first else 'news-history' }}">
-                    <span class="news-edition">{{ 'LATEST · 최신 소식' if loop.first else '이전 소식' }}</span>
+                <article class="news-card">
                     <div class="news-meta"><time>{{ article.published_at|kst_time }}</time></div>
                     <h3>{{ article.title }}</h3>
                     <p class="news-body">{{ article.body }}</p>
