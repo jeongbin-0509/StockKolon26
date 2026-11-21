@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 from flask import Flask, jsonify
 from dotenv import load_dotenv
@@ -18,6 +19,7 @@ def create_app(test_config=None):
     app.config["EMAIL_PROVIDER"] = os.getenv("EMAIL_PROVIDER", "brevo" if os.getenv("RENDER") else "smtp").lower()
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     app.config["SESSION_COOKIE_SECURE"] = os.getenv("SESSION_COOKIE_SECURE", "1" if os.getenv("RENDER") else "0") == "1"
+    app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
     app.config["MAX_CONTENT_LENGTH"] = 64 * 1024
     app.config["MARKET_DATABASE"] = os.getenv("MARKET_DATABASE", str(Path(app.instance_path) / "market.sqlite3"))
     app.config["DATABASE_URL"] = os.getenv("DATABASE_URL")

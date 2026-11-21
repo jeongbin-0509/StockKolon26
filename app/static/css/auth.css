@@ -14,6 +14,12 @@
 .auth-form input::placeholder { color: #777; }
 .auth-form input:focus, .auth-form select:focus { border-color: var(--color-brand-mint); box-shadow: 0 0 0 3px rgba(0,255,153,.1); }
 .auth-form input[aria-invalid="true"], .auth-form select[aria-invalid="true"] { border-color: #ff6b6b; }
+.remember-login { display: inline-flex; align-items: center; gap: .65rem; width: fit-content; color: #d8d8d8; font-size: .85rem; cursor: pointer; user-select: none; }
+.auth-form .remember-login input { appearance: none; width: 20px; min-width: 20px; height: 20px; margin: 0; padding: 0; border: 1px solid #55585b; border-radius: 6px; background: #2f2f32; cursor: pointer; display: grid; place-content: center; }
+.auth-form .remember-login input::before { content: ''; width: 10px; height: 6px; border-left: 2px solid #111; border-bottom: 2px solid #111; transform: rotate(-45deg) scale(0); transform-origin: center; transition: transform .12s ease; }
+.auth-form .remember-login input:checked { border-color: var(--color-brand-mint); background: var(--color-brand-mint); }
+.auth-form .remember-login input:checked::before { transform: rotate(-45deg) scale(1); }
+.auth-form .remember-login input:focus-visible { outline: 2px solid var(--color-brand-mint); outline-offset: 3px; box-shadow: none; }
 .field-hint { font-size: .75rem; color: #9a9a9a; line-height: 1.6; }
 .field-error { font-size: .75rem; color: #ff6b6b; line-height: 1.6; }
 .auth-page [hidden] { display: none !important; }

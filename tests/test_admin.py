@@ -89,6 +89,8 @@ class AdminTests(unittest.TestCase):
         page = self.client.get('/auth/login').get_data(as_text=True)
         self.assertNotIn('관리자', page)
         self.assertNotIn('/admin/login', page)
+        self.assertIn('name="remember"', page)
+        self.assertIn('로그인 상태 유지', page)
         self.assertTrue(self.client.get('/admin/login').location.endswith('/auth/login'))
 
     def test_shared_login_checks_csrf_and_admin_password(self):
@@ -117,6 +119,29 @@ class AdminTests(unittest.TestCase):
         with self.client.session_transaction() as sess:
             self.assertEqual(sess['user_id'], 'member')
             self.assertNotIn('admin_token', sess)
+
+    def test_student_login_remember_choice_controls_cookie_lifetime(self):
+        from werkzeug.security import generate_password_hash
+        user = {'id': 'member', 'usernum': '54321', 'name': '학생',
+                'password': generate_password_hash(PASSWORD)}
+        with patch('app.routes.auth.supabase', new=MagicMock()) as supabase:
+            supabase.table.return_value.select.return_value.eq.return_value.execute.return_value.data = [user]
+            token = self.token('/auth/login')
+            response = self.client.post('/auth/login', data={
+                'csrf_token': token, 'usernum': '54321', 'password': PASSWORD, 'remember': '1'})
+        self.assertIn('Expires=', response.headers.get('Set-Cookie', ''))
+        with self.client.session_transaction() as sess:
+            self.assertTrue(sess.permanent)
+
+        self.client.post('/auth/logout', data={'csrf_token': self.token('/')})
+        with patch('app.routes.auth.supabase', new=MagicMock()) as supabase:
+            supabase.table.return_value.select.return_value.eq.return_value.execute.return_value.data = [user]
+            token = self.token('/auth/login')
+            response = self.client.post('/auth/login', data={
+                'csrf_token': token, 'usernum': '54321', 'password': PASSWORD})
+        self.assertNotIn('Expires=', response.headers.get('Set-Cookie', ''))
+        with self.client.session_transaction() as sess:
+            self.assertFalse(sess.permanent)
 
     def test_editor_cannot_manage_admin_accounts(self):
         editor = self.admin.create_account('editor', PASSWORD, 'editor')

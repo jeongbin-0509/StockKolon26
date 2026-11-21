@@ -48,6 +48,7 @@ def login():
             abort(403)
         usernum = request.form.get("usernum", "").strip()
         password = request.form.get("password", "")
+        remember = request.form.get("remember") == "1"
 
         # 관리자 아이디가 학번과 겹칠 경우 관리자 계정이 우선한다.
         admin = current_app.extensions["admin"]
@@ -58,6 +59,7 @@ def login():
                 token = admin.login(usernum, password, request.remote_addr or "unknown")
                 if token:
                     session.clear()
+                    session.permanent = remember
                     session["admin_token"] = token
                     csrf_token()
                     return redirect(url_for("admin.dashboard"))
@@ -85,6 +87,7 @@ def login():
         
         # 로그인 성공
         session.clear()
+        session.permanent = remember
         session["user_id"] = user["id"]
         session["usernum"] = user["usernum"]
         session["name"] = user["name"]

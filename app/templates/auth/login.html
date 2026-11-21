@@ -15,6 +15,10 @@
         <input type="password" name="password" id="password" placeholder="비밀번호를 입력하세요" required minlength="6" autocomplete="current-password" aria-describedby="password_errormsg">
         <p class="field-error" id="password_errormsg" hidden>비밀번호를 6자 이상 입력해주세요.</p>
     </div>
+    <label class="remember-login" for="remember">
+        <input type="checkbox" name="remember" id="remember" value="1">
+        <span>로그인 상태 유지</span>
+    </label>
     <button type="submit" id="submit_btn" class="primary-button">로그인</button>
 </form>
 {% endblock %}
