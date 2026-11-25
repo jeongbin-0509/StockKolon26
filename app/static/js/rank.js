@@ -13,6 +13,8 @@
     const refresh = document.getElementById('refresh');
     const filters = [...document.querySelectorAll('[data-scope]')];
     const labels = {school: '전교 순위', class: '내 학급 순위', club: '내 동아리 순위'};
+    let scope = 'school';
+    let requestNumber = 0;
     let rankCounts = new Map();
     const element = (tag, cls, value) => {
         const node = document.createElement(tag);

@@ -16,10 +16,8 @@ MARKET_HISTORY_CANDLES = 60
 MARKET_PREVIEW_CANDLES = 12
 
 
-def trade_quotes(price):
-    mid = Decimal(str(price))
-    return tuple(max(1, int((mid * factor).quantize(Decimal('1'), rounding=ROUND_HALF_UP)))
-                 for factor in (Decimal('1.0025'), Decimal('0.9975')))
+def price_in_won(price):
+    return max(1, int(Decimal(str(price)).quantize(Decimal('1'), rounding=ROUND_HALF_UP)))
 
 
 class MarketService:
@@ -165,11 +163,13 @@ class MarketService:
                 club_num, price = row["club_num"], row["price"]
                 stats = daily.get(club_num, {})
                 baseline = stats["day_open"] if stats else price
+                current_price = price_in_won(price)
                 stocks.append({
                     "club_num": club_num, "club_name": CLUBS[club_num],
                     "categoryKey": club_num // 10, "category": CATEGORIES[club_num // 10],
-                    "price": round(price, 2), "changeRate": (price / baseline - 1) * 100,
-                    "buyPrice": trade_quotes(price)[0], "sellPrice": trade_quotes(price)[1],
+                    "price": current_price, "changeRate": (price / baseline - 1) * 100,
+                    # Older open trade pages still read these two keys.
+                    "buyPrice": current_price, "sellPrice": current_price,
                     "changeWon": round(price - baseline, 2),
                     "high": round(stats["day_high"] if stats else price, 2),
                     "low": round(stats["day_low"] if stats else price, 2),

@@ -90,10 +90,15 @@ class TradingTests(unittest.TestCase):
 
     def test_market_order_uses_latest_server_price(self):
         with self.market.connection(write=True) as db:
-            db.execute('UPDATE market_stocks SET price=? WHERE club_num=?', (12345, 61))
-        result = self.place(qty=1)
-        self.assertEqual(result['order']['price'], 12376)
-        self.assertEqual(result['order']['total'], 12376)
+            db.execute('UPDATE market_stocks SET price=? WHERE club_num=?', (12345.5, 61))
+        quote = next(stock for stock in self.market.snapshot()['stocks'] if stock['club_num'] == 61)
+        self.assertEqual((quote['price'], quote['buyPrice'], quote['sellPrice']), (12346, 12346, 12346))
+        buy = self.place(qty=1)
+        self.assertEqual(buy['order']['price'], 12346)
+        self.assertEqual(self.trade.portfolio('member')['profit'], 0)
+        sell = self.place('sell', qty=1)
+        self.assertEqual(sell['order']['total'], 12346)
+        self.assertEqual(self.trade.portfolio('member')['cash'], 100000)
 
     def test_filled_demand_updates_candle_prices_and_volume_on_next_tick(self):
         import json

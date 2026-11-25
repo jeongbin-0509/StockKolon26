@@ -8,7 +8,6 @@ from unittest.mock import MagicMock, patch
 import httpx
 
 from app import create_app
-from app.services.market_service import trade_quotes
 from app.services.ranking_service import RankingService
 
 
@@ -25,7 +24,7 @@ class RankingTests(unittest.TestCase):
             db.execute('CREATE TABLE clubs (id TEXT PRIMARY KEY, name TEXT)')
             db.execute('CREATE TABLE users (id TEXT PRIMARY KEY, name TEXT, usernum TEXT, club_id TEXT, cash INTEGER)')
             db.execute("INSERT INTO clubs VALUES ('c1', '온에어'), ('c2', '다른 동아리')")
-            db.execute("INSERT INTO users VALUES ('a', '가', '10101', 'c1', 5000), ('b', '나', '10102', 'c2', 14975), ('c', '다', '10201', 'c1', 20000), ('d', '라', '10103', NULL, 1000)")
+            db.execute("INSERT INTO users VALUES ('a', '가', '10101', 'c1', 5000), ('b', '나', '10102', 'c2', 15000), ('c', '다', '10201', 'c1', 20000), ('d', '라', '10103', NULL, 1000)")
             db.execute("INSERT INTO trade_holdings VALUES ('a', 1, 1, 10000)")
             db.execute('UPDATE market_stocks SET price=10000 WHERE club_num=1')
             db.execute('UPDATE market_state SET last_tick=?', (1800000000,))
@@ -39,8 +38,8 @@ class RankingTests(unittest.TestCase):
     def test_actual_assets_ties_and_privacy(self):
         data = self.client.get('/api/rankings').get_json()
         self.assertEqual([x['rank'] for x in data['members']], [1, 2, 2, 4])
-        self.assertEqual(data['me']['assets'], 5000 + trade_quotes(10000)[1])
-        self.assertAlmostEqual(data['me']['rate'], -.25)
+        self.assertEqual(data['me']['assets'], 5000 + 10000)
+        self.assertAlmostEqual(data['me']['rate'], 0)
         self.assertNotIn('usernum', str(data))
         self.assertNotIn('club_id', str(data))
         self.assertEqual(self.client.get('/api/rankings').headers['Cache-Control'], 'no-store')
@@ -120,7 +119,7 @@ class RankingTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         body = response.get_data(as_text=True)
         self.assertIn('나의 프로필', body)
-        self.assertIn('14,975', body)
+        self.assertIn('15,000', body)
         for private in ('10102', 'password', 'email', 'trade_holdings'):
             self.assertNotIn(private, body)
         self.assertEqual(self.client.get('/members/' + '0' * 64).status_code, 404)
@@ -244,7 +243,7 @@ class SupabaseRankingTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json
         self.assertEqual(data['count'], 3)
-        self.assertEqual(data['me']['assets'], 5000 + trade_quotes(10000)[1] * 3)
+        self.assertEqual(data['me']['assets'], 5000 + 10000 * 3)
         self.assertEqual(data['me']['rank'], 1)
         self.assertEqual(data['me']['profileImg'], '/static/images/61.png')
         self.assertEqual({request[3] for request in self.requests}, {'id,name,usernum,club_id,cash', 'id,name'})

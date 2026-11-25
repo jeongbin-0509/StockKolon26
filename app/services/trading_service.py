@@ -3,7 +3,7 @@ import uuid
 
 from app.logics.logic import CANDLE_SECONDS, TICK_SECONDS
 from app.market_catalog import CLUBS, CATEGORIES
-from app.services.market_service import trade_quotes
+from app.services.market_service import price_in_won
 
 
 class TradingService:
@@ -52,8 +52,7 @@ class TradingService:
             stock = db.execute('SELECT price FROM market_stocks WHERE club_num=?', (club_num,)).fetchone()
             if not stock:
                 raise ValueError('종목을 찾을 수 없습니다.')
-            buy_price, sell_price = trade_quotes(stock['price'])
-            price = buy_price if side == 'buy' else sell_price
+            price = price_in_won(stock['price'])
             # 모든 거래는 DB의 스키마별 쓰기 잠금 안에서 처리한다.
             user = db.execute(f'SELECT cash FROM {self._users_table()} WHERE id=?', (user_id,)).fetchone()
             if not user or user['cash'] is None or user['cash'] < 0:
@@ -128,7 +127,7 @@ class TradingService:
         holdings = []
         for row in rows:
             number, quantity, basis = row['club_num'], row['quantity'], row['cost_basis']
-            price = trade_quotes(row['price'])[1]
+            price = price_in_won(row['price'])
             value = price * quantity
             holdings.append({'club_num': number, 'name': CLUBS[number], 'category': CATEGORIES[number // 10],
                              'quantity': quantity, 'price': price, 'value': value, 'cost': basis,

@@ -208,7 +208,7 @@ async function changeFavorite(clubNum) {
 function updateSubmit() {
     const amount = Number(amountInput.value);
     const stock = stocks.find(item => item.club_num === selectedClub);
-    currentPrice = stock ? (currentMode === 'buy' ? stock.buyPrice : stock.sellPrice) : 0;
+    currentPrice = stock?.price ?? 0;
     const valid = Number.isSafeInteger(amount) && amount >= 1;
     document.querySelector("#submit-count").textContent = `${amount}주`;
     document.querySelector("#submit-total").textContent = `(${formatWon(valid ? amount * currentPrice : 0)})`;
@@ -217,7 +217,7 @@ function updateSubmit() {
     submitButton.disabled = submitting || !valid || !currentPrice || !portfolio;
     const held = portfolio?.holdings.find(item => item.club_num === selectedClub)?.quantity || 0;
     document.querySelector('.modal-stats dd').textContent = `${held.toLocaleString('ko-KR')}주`;
-    if (portfolio) document.querySelector('#order-balance').textContent = `남은 현금 ${formatWon(portfolio.user.cash)} · ${currentMode === 'buy' ? '매수가' : '매도가'} ${formatWon(currentPrice)}`;
+    if (portfolio) document.querySelector('#order-balance').textContent = `남은 현금 ${formatWon(portfolio.user.cash)} · 현재가 ${formatWon(currentPrice)}`;
 }
 
 function updateModal(stock) {
@@ -307,6 +307,7 @@ async function loadMarket() {
         if (lastTimestamp !== data.timestamp) {
             stocks = data.stocks;
             lastTimestamp = data.timestamp;
+            updateAssetTotal();
             renderStockCards();
             if (selectedClub !== null) updateModal(stocks.find((stock) => stock.club_num === selectedClub));
             openRequestedTrade();
@@ -390,6 +391,16 @@ document.querySelectorAll(".amount-btn, .shortcut-btn:not(:disabled)").forEach((
     });
 });
 amountInput.addEventListener("input", updateSubmit);
+function updateAssetTotal() {
+    if (!portfolio) return;
+    const prices = new Map(stocks.map(stock => [stock.club_num, stock.price]));
+    const total = portfolio.holdings.reduce((sum, holding) => {
+        const price = prices.get(holding.club_num) ?? holding.price;
+        return sum + price * holding.quantity;
+    }, portfolio.user.cash);
+    document.querySelector('#asset-total').textContent = formatWon(total);
+}
+
 async function loadPortfolio() {
     try {
         const response = await fetch('/api/profile-data?view=trade', {cache: 'no-store'});
@@ -398,7 +409,7 @@ async function loadPortfolio() {
         if (!data.success) throw new Error();
         portfolio = data;
         updateHeaderProfile(data.user);
-        document.querySelector('#asset-total').textContent = data.summary.total_assets;
+        updateAssetTotal();
         document.querySelector('#asset-cost').textContent = data.summary.purchase_amount;
         document.querySelector('#asset-cash').textContent = data.summary.cash;
         renderStockCards();

@@ -238,7 +238,8 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(data, other.snapshot())
         with self.service.connection() as db:
             self.assertEqual(db.execute('SELECT COUNT(*) FROM market_ticks').fetchone()[0], 33 * 11)
-        self.assertAlmostEqual(self.stock(data)['candles'][-1]['close'], self.stock(data)['price'], places=2)
+        close = self.stock(data)['candles'][-1]['close']
+        self.assertEqual(self.stock(data)['price'], math.floor(close + 0.5))
 
     def test_concurrent_writers_do_not_duplicate_ticks(self):
         self.now += 300

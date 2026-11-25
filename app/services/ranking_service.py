@@ -7,7 +7,7 @@ def profile_key(user_id):
 
 
 from app.logics.logic import TICK_SECONDS
-from app.services.market_service import trade_quotes
+from app.services.market_service import price_in_won
 from app.market_catalog import CLUBS, CATEGORIES
 from app.services.supabase_client import get_supabase
 
@@ -75,7 +75,8 @@ class RankingService:
                                 'club_name': row['club_name'], 'assets': int(row['cash']), 'value': 0, 'cost': 0,
                                 'holdings': []}
             if row['quantity'] and row['price'] is not None:
-                value = trade_quotes(row['price'])[1] * row['quantity']
+                price = price_in_won(row['price'])
+                value = price * row['quantity']
                 members[key]['assets'] += value
                 members[key]['value'] += value
                 members[key]['cost'] += row['cost_basis']
@@ -83,7 +84,7 @@ class RankingService:
                     number, basis = row['club_num'], row['cost_basis']
                     members[key]['holdings'].append({
                         'club_num': number, 'name': CLUBS[number], 'category': CATEGORIES[number // 10],
-                        'quantity': row['quantity'], 'price': trade_quotes(row['price'])[1],
+                        'quantity': row['quantity'], 'price': price,
                         'value': value, 'cost': basis, 'profit': value - basis,
                         'rate': (value / basis - 1) * 100 if basis else 0})
         return members, timestamp, timestamp < target
