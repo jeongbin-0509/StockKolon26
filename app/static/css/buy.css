@@ -112,7 +112,7 @@ body {
 .stock-card {
     position: relative;
     display: block;
-    padding: clamp(.65rem, 1vw, 1rem);
+    padding: clamp(.85rem, 1.2vw, 1.15rem) clamp(.65rem, 1vw, 1rem);
     border: 2px solid #303030;
     border-radius: 1rem;
     background: #1a1a1a;
@@ -196,12 +196,16 @@ body {
     grid-column: 1 / -1;
     align-self: end;
     width: 100%;
-    height: clamp(44px, 5vw, 70px);
+    height: clamp(60px, 5.8vw, 82px);
     overflow: visible;
 }
 
-@media (min-width: 1200px) {
+@media (min-width: 1050px) {
     .stock-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1440px) {
+    .stock-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 #detail-chart-status:empty { display: none; }
@@ -658,7 +662,7 @@ body {
 
 @media (max-width: 620px) {
     .stock-chart {
-        height: 48px;
+        height: 62px;
     }
 
     .modal-stats {
@@ -718,7 +722,7 @@ body {
     .summary-card strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .stock-category-filter { flex-wrap: nowrap; overflow-x: auto; padding-bottom: .35rem; scrollbar-width: thin; }
     .category-btn { flex: 0 0 auto; }
-    .stock-card { padding: .7rem; }
+    .stock-card { padding: .85rem .7rem; }
     .trade-overlay { padding: .6rem; }
     .trade-modal { max-height: calc(100dvh - 1.2rem); padding: 1rem; border-width: 1px; border-radius: 1.1rem; }
     .modal-stock { gap: .8rem; }

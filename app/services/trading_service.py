@@ -113,6 +113,8 @@ class TradingService:
                                        f'LEFT JOIN trade_holdings h ON h.user_id={user_key} AND h.quantity>0 '
                                        'LEFT JOIN market_stocks s ON s.club_num=h.club_num WHERE u.id=? ORDER BY h.club_num',
                                        (str(user_id),)))
+                if not rows and include_profile:
+                    raise LookupError('계정을 찾을 수 없습니다.')
                 if not rows or rows[0]['cash'] is None:
                     raise ValueError('계정의 보유 현금을 확인할 수 없습니다.')
                 cash = rows[0]['cash']

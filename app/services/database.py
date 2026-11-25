@@ -10,6 +10,7 @@ import psycopg
 from psycopg import sql
 from psycopg.conninfo import conninfo_to_dict
 from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool, PoolTimeout
 from app.services.database_timing import measure
 
 
@@ -76,13 +77,28 @@ class Database:
             raise ValueError('유효하지 않은 DB 스키마 이름입니다.')
         self.schema = schema
         self.lock_id = int.from_bytes(hashlib.sha256(schema.encode()).digest()[:8], 'big', signed=True)
+        self.pool = None
+
+    def postgres_options(self):
+        options = conninfo_to_dict(self.location)
+        options.setdefault('sslmode', 'require')
+        options['connect_timeout'] = 10
+        return dict(options, prepare_threshold=None, row_factory=dict_row)
+
+    def open_pool(self):
+        if self.postgres and self.pool is None:
+            self.pool = ConnectionPool(
+                kwargs=self.postgres_options(), min_size=2, max_size=6,
+                timeout=8, name='stockolon', open=True,
+            )
+
+    def close_pool(self):
+        if self.pool is not None:
+            self.pool.close()
 
     def _connect_postgres(self):
         try:
-            options = conninfo_to_dict(self.location)
-            options.setdefault('sslmode', 'require')
-            options['connect_timeout'] = 10
-            return psycopg.connect(**options, prepare_threshold=None, row_factory=dict_row)
+            return psycopg.connect(**self.postgres_options())
         except (psycopg.Error, ValueError):
             raise DatabaseError('PostgreSQL 접속을 확인하세요. DATABASE_URL과 네트워크 설정이 필요합니다.') from None
 
@@ -127,17 +143,24 @@ class Database:
             finally:
                 db.close()
             return
-        with measure('db_connect'):
-            db = self._connect_postgres()
+        pool = self.pool
+        try:
+            with measure('db_pool' if pool else 'db_connect'):
+                db = pool.getconn() if pool else self._connect_postgres()
+        except PoolTimeout:
+            raise DatabaseError('PostgreSQL 연결을 빌리지 못했습니다. 잠시 후 다시 시도하세요.') from None
         try:
             with ExitStack() as transaction:
                 with measure('db_setup'):
                     transaction.enter_context(db.transaction())
                     if consistent_read:
                         db.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
-                    db.execute("SET LOCAL lock_timeout = '10s'")
-                    db.execute("SET LOCAL statement_timeout = '25s'")
-                    db.execute(sql.SQL('SET LOCAL search_path TO {}, pg_catalog').format(sql.Identifier(self.schema)))
+                    db.execute(
+                        "SELECT set_config('lock_timeout', '10s', true), "
+                        "set_config('statement_timeout', '25s', true), "
+                        "set_config('search_path', %s, true)",
+                        (f'"{self.schema}", pg_catalog',),
+                    )
                 if write:
                     with measure('db_lock'):
                         db.execute('SELECT pg_advisory_xact_lock(%s)', (self.lock_id,))
@@ -145,4 +168,7 @@ class Database:
         except psycopg.Error:
             raise DatabaseError('PostgreSQL 요청을 처리하지 못했습니다. 잠시 후 다시 시도하세요.') from None
         finally:
-            db.close()
+            if pool:
+                pool.putconn(db)
+            else:
+                db.close()

@@ -25,7 +25,7 @@ def report_database_timing(view):
             with measure('handler'):
                 response = make_response(view(*args, **kwargs))
         response.headers.add('Server-Timing', format_timings(timings))
-        if timings.get('db_connect', 0):
+        if 'db_connect' in timings or 'db_pool' in timings:
             current_app.logger.info('home_db_timing endpoint=%s status=%d %s',
                                     request.endpoint, response.status_code, format_timings(timings))
         return response
@@ -70,6 +70,18 @@ def display_user(user_id):
                 abort(401)
             return dict(row)
     return supabase.table('users').select('name,club_id,cash').eq('id', user_id).single().execute().data
+
+
+def load_viewer_portfolio(user_id):
+    trading = current_app.extensions['trading']
+    if trading.market.store.postgres:
+        try:
+            portfolio = trading.portfolio(user_id, include_profile=True)
+        except LookupError:
+            abort(401)
+        return portfolio, portfolio
+    user = display_user(user_id)
+    return user, trading.portfolio(user_id, user.get('cash', 0))
 
 
 def club_profile(user):
@@ -240,11 +252,9 @@ def index_data():
 
     user_id = session["user_id"]
 
-    user = display_user(user_id)
+    user, portfolio = load_viewer_portfolio(user_id)
     profile_image, club_name = club_profile(user)
-    trading = current_app.extensions['trading']
     movers = current_app.extensions['market'].five_minute_movers()
-    portfolio = trading.portfolio(user_id, None if trading.market.store.postgres else user.get('cash', 0))
     rate = (portfolio['profit'] / portfolio['cost'] * 100) if portfolio['cost'] else 0
 
     def stock_card(stock):
@@ -303,12 +313,7 @@ def profile_data():
     trade_view = request.args.get('view') == 'trade'
     summary_only = request.args.get('view') == 'summary'
     full_view = not (trade_view or summary_only)
-    if trading.market.store.postgres and summary_only:
-        portfolio = trading.portfolio(user_id, include_profile=True)
-        user = portfolio
-    else:
-        user = display_user(user_id)
-        portfolio = trading.portfolio(user_id, None if trading.market.store.postgres else user.get('cash', 0))
+    user, portfolio = load_viewer_portfolio(user_id)
     profile_image, club_name = club_profile(user)
     summary_time = (perf_counter() - started) * 1000
     if full_view:
