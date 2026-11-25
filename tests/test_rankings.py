@@ -53,6 +53,29 @@ class RankingTests(unittest.TestCase):
         self.assertEqual(self.client.get('/api/my-rank').get_json()['rank'], 4)
         self.assertEqual(self.client.get('/api/my-rank').headers['Cache-Control'], 'no-store')
 
+    def test_school_snapshot_reuses_ranking_until_next_refresh(self):
+        ranking = self.app.extensions['ranking']
+        ranking.refresh_school()
+        with self.market.connection(write=True) as db:
+            db.execute("UPDATE users SET cash=30000 WHERE id='a'")
+        with patch.object(ranking, 'load_members', side_effect=AssertionError('unexpected recalculation')):
+            self.assertEqual(self.client.get('/api/my-rank').json['rank'], 2)
+        ranking.refresh_school()
+        self.assertEqual(self.client.get('/api/my-rank').json['rank'], 1)
+
+    def test_profile_charts_only_return_latest_seven_for_owned_stocks(self):
+        with self.market.connection(write=True) as db:
+            db.executemany(
+                'INSERT INTO market_candles VALUES (?, ?, ?, ?, ?, ?, ?)',
+                [(club, 1800000000 - age * 300, 100, 100, 100, 100, 0)
+                 for club in (1, 2) for age in range(8)],
+            )
+        data = self.client.get('/api/profile-details/charts').json
+        self.assertEqual(list(data['candles']), ['1'])
+        self.assertEqual([item['timestamp'] for item in data['candles']['1']],
+                         list(range(1799998200, 1800000001, 300)))
+        self.assertNotIn('user-rank', self.client.get('/').text)
+
     def test_portfolio_uses_viewer_and_same_valuation_as_ranking(self):
         data = self.client.get('/api/portfolio').json
         self.assertEqual(data['portfolio'], self.app.extensions['trading'].portfolio('a'))

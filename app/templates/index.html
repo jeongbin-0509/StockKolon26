@@ -26,7 +26,6 @@
                     <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" alt="기본 프로필 이미지">
                 </div>
                 <span class="head2 user-name">회원</span>
-                <span class="user-rank">순위 확인 중</span>
             </div>
             <!-- 버튼 -->
             <a id="ranking_btn" href="{{ url_for('main.rank') }}">
@@ -134,7 +133,7 @@
     <script src="{{ url_for('static', filename='js/header-profile.js', v='clean-ui-1') }}"></script>
     <script src="{{ url_for('static', filename='js/charts.js', v='candles-2') }}"></script>
     <script src="{{ url_for('static', filename='js/index.js', v='clean-ui-1') }}"></script>
-<script src="{{ url_for('static', filename='js/portfolio.js', v='clean-ui-1') }}"></script>
+<script src="{{ url_for('static', filename='js/portfolio.js', v='profile-fast-1') }}"></script>
 {% include '_mobile_nav.html' %}
 {% include '_pwa_script.html' %}
 </body>

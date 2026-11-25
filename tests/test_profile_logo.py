@@ -55,6 +55,14 @@ class ProfileLogoTests(unittest.TestCase):
             session.clear()
         self.assertEqual(self.client.get('/api/profile-data').status_code, 401)
 
+    def test_settings_does_not_offer_custom_photos(self):
+        settings = self.client.get('/settings').get_data(as_text=True)
+        self.assertNotIn('type="file"', settings)
+        self.assertNotIn('photo-crop', settings)
+        for method in ('GET', 'POST', 'DELETE'):
+            self.assertEqual(self.client.open('/api/profile-image', method=method).status_code, 404)
+        self.assertEqual(self.client.post('/api/profile-image/prepare').status_code, 404)
+
     def test_trade_view_skips_expensive_market_and_history_calls(self):
         self.set_user('club-uuid', '세미콜론')
         market = self.app.extensions['market']
@@ -69,6 +77,20 @@ class ProfileLogoTests(unittest.TestCase):
         self.assertEqual(response.json['user']['cash'], 100)
         self.assertEqual(response.json['orders'], [])
         self.ranking.assert_not_called()
+
+    def test_summary_excludes_chart_rank_and_history_queries(self):
+        self.set_user('club-uuid', '세미콜론')
+        trading = self.app.extensions['trading']
+        with patch('app.routes.main.supabase', new=self.fake), \
+                patch.object(trading, 'holding_candles') as charts, \
+                patch.object(trading, 'history') as history:
+            response = self.client.get('/api/profile-data?view=summary')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['totals']['total'], 100)
+        self.assertIn('profile_summary', response.headers['Server-Timing'])
+        self.ranking.assert_not_called()
+        charts.assert_not_called()
+        history.assert_not_called()
 
     def test_ranking_failure_preserves_profile_and_portfolio(self):
         self.set_user(None)

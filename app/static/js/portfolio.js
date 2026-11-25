@@ -15,7 +15,7 @@
         const ratio = value => p.total ? value / p.total * 100 : 0;
         const put = (selector,text) => { panel.querySelector(selector).textContent=text; };
         put('.pf-total', won(p.total)); put('.pf-cash',won(p.cash)); put('.pf-stock-value',won(p.value));
-        put('.pf-rank',`전교 ${data.user.rank.toLocaleString('ko-KR')}위`);
+        if (!own) put('.pf-rank',`전교 ${data.user.rank.toLocaleString('ko-KR')}위`);
         put('.pf-profit',signed(p.profit)); put('.pf-rate',`(${p.cost ? (p.profit/p.cost*100).toFixed(2) : '0.00'}%)`);
         for (const selector of ['.pf-profit','.pf-rate']) { panel.querySelector(selector).classList.toggle('pf-down',p.profit<0); panel.querySelector(selector).classList.toggle('pf-up',p.profit>0); }
         put('.pf-count',`${holdings.length}개 종목`); put('.pf-stock-ratio',`${ratio(p.value).toFixed(1)}%`);
@@ -44,7 +44,7 @@
             card.append(top,metrics);list.append(card);
         }
         if(!holdings.length){const empty=node('div','pf-empty','아직 보유한 주식이 없습니다.');if(own){const link=node('a','','첫 종목 살펴보기 →');link.href='/buy';empty.append(link);}list.append(empty);}
-        if (own) updateHeaderProfile({...data.user, clubName: data.user.club_name});
+        if (own) updateHeaderProfile({...data.user, clubName: data.user.clubName});
         status.hidden=true;panel.querySelector('.pf-content').hidden=false;
     }
     if(!own){try{render(JSON.parse(document.getElementById('member-portfolio-data').textContent));}catch(_){status.textContent='투자 현황을 표시하지 못했습니다. 새로고침해주세요.';}return;}
@@ -52,7 +52,7 @@
     async function load(){
         if(loading||document.hidden||!mobile.matches)return;
         loading=true;button.disabled=true;
-        try{const response=await fetch('/api/portfolio',{cache:'no-store',signal:AbortSignal.timeout(20000)});if(response.status===401){location.href='/auth/login';return;}const data=await response.json();if(!response.ok||!data.success)throw new Error();render(data);}
+        try{const response=await fetch('/api/profile-data?view=summary',{cache:'no-store',signal:AbortSignal.timeout(20000)});if(response.status===401){location.href='/auth/login';return;}const data=await response.json();if(!response.ok||!data.success)throw new Error();render({...data, portfolio: {...data.totals, holdings: data.holdings}});}
         catch(_){status.hidden=false;status.textContent='연결이 지연되고 있습니다. 잠시 후 다시 시도하거나 새로고침을 눌러주세요.';}
         finally{loading=false;button.disabled=false;}
     }

@@ -10,6 +10,7 @@ from pathlib import Path
 from flask import abort
 from app.services.ranking_service import profile_key
 import re
+from time import perf_counter
 
 main = Blueprint("main", __name__)
 RANKING_ERRORS = (DatabaseError, sqlite3.Error, APIError, httpx.HTTPError, RuntimeError)
@@ -78,31 +79,13 @@ def club_profile(user):
     return url_for('static', filename=filename), club_name
 
 
-def custom_profile_image(key, fallback):
-    try:
-        revision = current_app.extensions['profile_images'].revisions([key]).get(key)
-    except (DatabaseError, sqlite3.Error):
-        current_app.logger.warning('프로필 사진 조회 실패')
-        return fallback
-    if revision:
-        return url_for('photos.image', key=key, revision=revision)
-    return fallback
-
-
 def set_member_images(members):
-    keys = [member['profile_key'] for member in members if member.get('profile_key')]
-    try:
-        revisions = current_app.extensions['profile_images'].revisions(keys)
-    except (DatabaseError, sqlite3.Error):
-        revisions = {}
     for member in members:
         number = next((n for n, name in CLUBS.items() if name == member.get('club_name')), None)
         filename = f'images/{number}.png'
         if not (Path(current_app.static_folder) / filename).is_file():
             filename = 'images/default_stock_logo.png'
         member['profileImg'] = url_for('static', filename=filename)
-        if member.get('profile_key') in revisions:
-            member['profileImg'] = url_for('photos.image', key=member['profile_key'], revision=revisions[member['profile_key']])
 
 
 @main.route("/")
@@ -242,7 +225,6 @@ def index_data():
 
     user = display_user(user_id)
     profile_image, club_name = club_profile(user)
-    profile_image = custom_profile_image(profile_key(session['user_id']), profile_image)
     trading = current_app.extensions['trading']
     movers = current_app.extensions['market'].five_minute_movers()
     portfolio = trading.portfolio(user_id, None if trading.market.store.postgres else user.get('cash', 0))
@@ -287,7 +269,6 @@ def header_profile():
         return jsonify(success=False, message='로그인이 필요합니다.'), 401
     user = display_user(session['user_id'])
     profile_image, club_name = club_profile(user)
-    profile_image = custom_profile_image(profile_key(session['user_id']), profile_image)
     response = jsonify(success=True, user={'name': user['name'], 'profileImg': profile_image, 'clubName': club_name})
     response.headers['Cache-Control'] = 'no-store'
     return response
@@ -299,25 +280,30 @@ def profile_data():
         return jsonify({"success": False, "message": "로그인이 필요합니다."}), 401
 
     user_id = session["user_id"]
-
-    user = display_user(user_id)
-    profile_image, club_name = club_profile(user)
-    profile_image = custom_profile_image(profile_key(session['user_id']), profile_image)
+    started = perf_counter()
     trading = current_app.extensions['trading']
     trade_view = request.args.get('view') == 'trade'
-    market = None if trade_view else current_app.extensions['market'].snapshot()
-    portfolio = trading.portfolio(user_id, None if trading.market.store.postgres else user.get('cash', 0))
-    if not trade_view:
-        market_by_club = {stock['club_num']: stock for stock in market['stocks']}
+    summary_only = request.args.get('view') == 'summary'
+    full_view = not (trade_view or summary_only)
+    if trading.market.store.postgres and summary_only:
+        portfolio = trading.portfolio(user_id, include_profile=True)
+        user = portfolio
+    else:
+        user = display_user(user_id)
+        portfolio = trading.portfolio(user_id, None if trading.market.store.postgres else user.get('cash', 0))
+    profile_image, club_name = club_profile(user)
+    summary_time = (perf_counter() - started) * 1000
+    if full_view:
+        candles_by_club = trading.holding_candles(user_id)
         for holding in portfolio['holdings']:
-            candles = market_by_club.get(holding['club_num'], {}).get('candles', [])[-7:]
+            candles = candles_by_club.get(holding['club_num'], [])
             holding['prices'] = [candle['close'] for candle in candles]
             holding['timestamps'] = [candle['timestamp'] for candle in candles]
             holding['candles'] = candles
     cash = portfolio['cash']
     rate = (portfolio['profit'] / portfolio['cost'] * 100) if portfolio['cost'] else 0
     rank_text = None
-    if not trade_view:
+    if full_view:
         try:
             ranking = current_app.extensions['ranking'].rankings(user_id, 'school')
             rank_text = f"전교 {ranking['me']['rank']:,}위 · {ranking['count']:,}명 중"
@@ -351,9 +337,33 @@ def profile_data():
             "down_rate": "0.0%"
         },
         "holdings": portfolio['holdings'],
-        "orders": [] if trade_view else trading.history(user_id)
+        "orders": trading.history(user_id) if full_view else [],
+        **({'totals': {key: portfolio[key] for key in ('cash', 'value', 'cost', 'total', 'profit')}}
+           if summary_only else {})
     })
     response.headers['Cache-Control'] = 'no-store'
+    response.headers['Server-Timing'] = f'profile_summary;dur={summary_time:.1f}, profile_total;dur={(perf_counter() - started) * 1000:.1f}'
+    return response
+
+
+@main.get('/api/profile-details/<section>')
+def profile_details(section):
+    if 'user_id' not in session:
+        return jsonify(success=False), 401
+    trading = current_app.extensions['trading']
+    started = perf_counter()
+    try:
+        if section == 'charts':
+            response = jsonify(success=True, candles=trading.holding_candles(session['user_id']))
+        elif section == 'history':
+            response = jsonify(success=True, orders=trading.history(session['user_id']))
+        else:
+            abort(404)
+    except (DatabaseError, sqlite3.Error):
+        current_app.logger.warning('투자 현황 상세 조회 실패: %s', section)
+        return jsonify(success=False), 503
+    response.headers['Cache-Control'] = 'no-store'
+    response.headers['Server-Timing'] = f'profile_{section};dur={(perf_counter() - started) * 1000:.1f}'
     return response
 
 

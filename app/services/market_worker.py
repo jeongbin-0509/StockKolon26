@@ -15,3 +15,13 @@ def watch_market(app):
             app.logger.exception('정기 시세 갱신 실패')
             delay = 5
         time.sleep(delay)
+
+
+def watch_school_ranking(app):
+    ranking = app.extensions['ranking']
+    while True:
+        try:
+            ranking.refresh_school()
+        except Exception:
+            app.logger.exception('전교 순위 갱신 실패')
+        time.sleep(300 - time.time() % 300)

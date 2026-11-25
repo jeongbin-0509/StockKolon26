@@ -35,10 +35,9 @@ class RankingService:
     def __init__(self, market, member_loader=None):
         self.market = market
         self.member_loader = member_loader
+        self.school_snapshot = None
 
-    def rankings(self, user_id, scope, public_key=None):
-        if scope not in ('school', 'class', 'club'):
-            raise ValueError('랭킹 범위를 확인해주세요.')
+    def load_members(self, public_key=None):
         # 원격 API 응답을 기다리는 동안 시장의 쓰기 잠금을 잡지 않는다.
         users_from_api = self.member_loader() if self.member_loader else None
         users = 'public.users' if self.market.store.postgres else 'users'
@@ -87,6 +86,39 @@ class RankingService:
                         'quantity': row['quantity'], 'price': trade_quotes(row['price'])[1],
                         'value': value, 'cost': basis, 'profit': value - basis,
                         'rate': (value / basis - 1) * 100 if basis else 0})
+        return members, timestamp, timestamp < target
+
+    def refresh_school(self):
+        members, timestamp, catching_up = self.load_members()
+        selected = sorted(members.values(), key=lambda member: (-member['assets'], member['id']))
+        ranked = {}
+        previous_assets = None
+        rank = 0
+        for position, member in enumerate(selected, 1):
+            if member['assets'] != previous_assets:
+                rank = position
+                previous_assets = member['assets']
+            ranked[member['id']] = self.ranking_item(member, rank, None)
+        self.school_snapshot = ranked, list(ranked.items())[:100], timestamp, catching_up
+
+    def ranking_item(self, member, rank, user_id):
+        return {'profile_key': profile_key(member['id']), 'rank': rank, 'name': member['name'],
+                'club_name': member['club_name'], 'assets': member['assets'],
+                'rate': (member['value'] / member['cost'] - 1) * 100 if member['cost'] else None,
+                'is_me': member['id'] == user_id}
+
+    def rankings(self, user_id, scope, public_key=None):
+        if scope not in ('school', 'class', 'club'):
+            raise ValueError('랭킹 범위를 확인해주세요.')
+        snapshot = self.school_snapshot
+        if scope == 'school' and public_key is None and snapshot is not None:
+            ranked, top, timestamp, catching_up = snapshot
+            key = str(user_id)
+            if key in ranked:
+                return {'available': True, 'members': [dict(item, is_me=member_id == key) for member_id, item in top],
+                        'me': dict(ranked[key], is_me=True), 'count': len(ranked), 'timestamp': timestamp,
+                        'catching_up': catching_up}
+        members, timestamp, catching_up = self.load_members(public_key)
         me = members.get(str(user_id))
         if public_key is not None:
             me = next((u for u in members.values() if profile_key(u['id']) == public_key), None)
@@ -111,15 +143,13 @@ class RankingService:
             if member['assets'] != previous_assets:
                 rank = position
                 previous_assets = member['assets']
-            item = {'profile_key': profile_key(member['id']), 'rank': rank, 'name': member['name'], 'club_name': member['club_name'],
-                    'assets': member['assets'], 'rate': (member['value'] / member['cost'] - 1) * 100 if member['cost'] else None,
-                    'is_me': member['id'] == str(user_id)}
+            item = self.ranking_item(member, rank, str(user_id))
             if member['id'] == me['id']:
                 my_rank = item
             if position <= 100:
                 result.append(item)
         response = {'available': True, 'members': result, 'me': my_rank, 'count': len(selected),
-                    'timestamp': timestamp, 'catching_up': timestamp < target}
+                    'timestamp': timestamp, 'catching_up': catching_up}
         if public_key is not None:
             response['portfolio'] = {
                 'cash': me['assets'] - me['value'], 'value': me['value'], 'cost': me['cost'],

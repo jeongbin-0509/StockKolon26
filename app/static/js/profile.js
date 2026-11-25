@@ -1,7 +1,6 @@
-function renderProfileData(data, updateHistory) {
+function renderProfileData(data) {
     document.querySelector(".user-name").textContent = `${data.user.name}님`;
     updateHeaderProfile(data.user);
-    document.querySelector(".user-rank").textContent = data.user.rank;
 
     document.querySelector("#card-total-assets .summary-value").textContent =
         data.summary.total_assets;
@@ -53,11 +52,9 @@ function renderProfileData(data, updateHistory) {
             chartCell.className = 'chart-cell';
             const chart = document.createElement('div');
             chart.className = 'mini-chart';
-            StockolonCharts.renderCandlestickChart(chart, {
-                candles: item.candles,
-                compact: true,
-                ariaLabel: `${item.name} 최근 30분 5분봉 가격 차트`
-            });
+            chart.dataset.club = item.club_num;
+            chart.dataset.name = item.name;
+            chart.textContent = '가격 불러오는 중';
             chartCell.append(chart);
             row.appendChild(chartCell);
             const actionCell = document.createElement('td');
@@ -85,24 +82,27 @@ function renderProfileData(data, updateHistory) {
             .find(item => item.getAttribute('href') === focusedLink);
         if (link) link.focus({ preventScroll: true });
     }
-    if (!updateHistory) return;
+}
 
+function renderHistory(orders) {
     const history = document.querySelector('#trade-history-list');
+    const wasOpen = history.querySelector('details')?.open ?? false;
     history.replaceChildren();
-    if (!data.orders.length) {
+    if (!orders.length) {
         history.textContent = '아직 거래 내역이 없습니다.';
     } else {
         const more = document.createElement('details');
         more.className = 'trade-history-more';
+        more.open = wasOpen;
         const toggle = document.createElement('summary');
-        const remaining = data.orders.length - 3;
+        const remaining = orders.length - 3;
         const updateToggle = () => {
             toggle.textContent = more.open ? '거래 내역 접기' : `이전 거래 ${remaining}개 펼쳐보기`;
         };
         updateToggle();
         more.addEventListener('toggle', updateToggle);
         more.append(toggle);
-        for (const [index, order] of data.orders.entries()) {
+        for (const [index, order] of orders.entries()) {
             const row = document.createElement('div');
             row.className = 'trade-history-row';
             const date = new Date(order.timestamp * 1000).toLocaleString('ko-KR', {timeZone: 'Asia/Seoul'});
@@ -121,6 +121,61 @@ let profileRefreshTimer;
 let profileLoading = false;
 let profileLoaded = false;
 let profileSessionExpired = false;
+let rankCheckedAt = 0;
+let historyNeedsRefresh = true;
+
+async function fetchProfilePart(path) {
+    const response = await fetch(path, {cache: 'no-store', signal: AbortSignal.timeout(15000)});
+    if (response.status === 401 && !profileSessionExpired) {
+        profileSessionExpired = true;
+        location.assign('/auth/login');
+    }
+    if (!response.ok) throw new Error('Profile unavailable');
+    const data = await response.json();
+    if (!data.success) throw new Error('Profile unavailable');
+    return data;
+}
+
+async function loadCharts(holdings) {
+    if (!holdings.length) return;
+    const charts = [...document.querySelectorAll('#holdings-table .mini-chart')];
+    try {
+        const data = await fetchProfilePart('/api/profile-details/charts');
+        for (const chart of charts) {
+            if (!chart.isConnected) continue;
+            chart.textContent = '';
+            StockolonCharts.renderCandlestickChart(chart, {
+                candles: data.candles[chart.dataset.club] || [],
+                compact: true,
+                ariaLabel: `${chart.dataset.name} 최근 30분 가격 차트`
+            });
+        }
+    } catch (_) {
+        for (const chart of charts) chart.textContent = '가격 차트를 불러올 수 없어요.';
+    }
+}
+
+async function loadHistory() {
+    historyNeedsRefresh = false;
+    const history = document.querySelector('#trade-history-list');
+    try {
+        renderHistory((await fetchProfilePart('/api/profile-details/history')).orders);
+    } catch (_) {
+        historyNeedsRefresh = true;
+        if (!history.querySelector('.trade-history-row')) history.textContent = '거래 내역을 불러올 수 없어요.';
+    }
+}
+
+async function loadRank() {
+    rankCheckedAt = Date.now();
+    const badge = document.querySelector('.user-rank');
+    try {
+        const data = await fetchProfilePart('/api/my-rank');
+        badge.textContent = `전교 ${data.rank.toLocaleString('ko-KR')}위 · ${data.count.toLocaleString('ko-KR')}명 중`;
+    } catch (_) {
+        badge.textContent = '순위를 불러올 수 없어요.';
+    }
+}
 
 async function loadProfileData() {
     clearTimeout(profileRefreshTimer);
@@ -128,40 +183,41 @@ async function loadProfileData() {
     profileLoading = true;
     const status = document.querySelector('#profile-update-status');
     try {
-        const response = await fetch('/api/profile-data', {
-            cache: 'no-store',
-            signal: AbortSignal.timeout(15000)
-        });
-        if (response.status === 401) {
-            profileSessionExpired = true;
-            location.assign('/auth/login');
-            return;
-        }
-        if (!response.ok) throw new Error('Profile unavailable');
-        const data = await response.json();
-        if (!data.success) throw new Error('Profile unavailable');
-        renderProfileData(data, !profileLoaded);
+        const data = await fetchProfilePart('/api/profile-data?view=summary');
+        renderProfileData(data);
         profileLoaded = true;
         status.hidden = true;
         status.textContent = '';
-    } catch (error) {
+        void loadCharts(data.holdings);
+        if (historyNeedsRefresh) void loadHistory();
+        if (Date.now() - rankCheckedAt >= 60000) void loadRank();
+    } catch (_) {
+        if (profileSessionExpired) return;
         status.textContent = profileLoaded
-            ? '연결이 원활하지 않아 마지막으로 받은 정보를 표시하고 있어요. 잠시 후 자동으로 다시 시도합니다.'
-            : '프로필 정보를 불러오지 못했어요. 잠시 후 자동으로 다시 시도합니다.';
+            ? '연결이 원활하지 않아 마지막으로 받은 정보를 표시하고 있어요.'
+            : '투자 현황을 불러오지 못했어요. 잠시 후 다시 시도합니다.';
         status.hidden = false;
     } finally {
         profileLoading = false;
         if (!document.hidden && !profileSessionExpired) {
-            profileRefreshTimer = setTimeout(loadProfileData, 10000);
+            const tickMs = 30000;
+            const nextTick = tickMs - (Date.now() % tickMs) + 500;
+            profileRefreshTimer = setTimeout(loadProfileData, profileLoaded ? nextTick : 10000);
         }
     }
 }
 
 document.addEventListener('visibilitychange', () => {
     clearTimeout(profileRefreshTimer);
-    if (!document.hidden) loadProfileData();
+    if (!document.hidden) {
+        historyNeedsRefresh = true;
+        loadProfileData();
+    }
 });
 window.addEventListener('pageshow', event => {
-    if (event.persisted) loadProfileData();
+    if (event.persisted) {
+        historyNeedsRefresh = true;
+        loadProfileData();
+    }
 });
 loadProfileData();

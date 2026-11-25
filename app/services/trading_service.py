@@ -1,7 +1,7 @@
 """모의 체결·잔액·보유 주식을 같은 DB 트랜잭션에서 처리한다."""
 import uuid
 
-from app.logics.logic import TICK_SECONDS
+from app.logics.logic import CANDLE_SECONDS, TICK_SECONDS
 from app.market_catalog import CLUBS, CATEGORIES
 from app.services.market_service import trade_quotes
 
@@ -101,17 +101,23 @@ class TradingService:
                 'side': row['side'], 'quantity': row['quantity'], 'price': row['price'], 'total': row['total'],
                 'cash_after': row['cash_after'], 'quantity_after': row['quantity_after'], 'timestamp': row['created_at']}
 
-    def portfolio(self, user_id, cash=None):
+    def portfolio(self, user_id, cash=None, include_profile=False):
+        profile = {}
         with self.market.connection() as db:
             if cash is None:
                 user_key = 'CAST(u.id AS TEXT)' if self.market.store.postgres else 'u.id'
-                rows = list(db.execute(f'SELECT u.cash,h.club_num,h.quantity,h.cost_basis,s.price FROM {self._users_table()} u '
+                profile_fields = ',u.name,u.club_id,c.name AS club_name' if include_profile else ''
+                profile_join = 'LEFT JOIN public.clubs c ON c.id=u.club_id ' if include_profile else ''
+                rows = list(db.execute(f'SELECT u.cash,h.club_num,h.quantity,h.cost_basis,s.price{profile_fields} FROM {self._users_table()} u '
+                                       f'{profile_join}'
                                        f'LEFT JOIN trade_holdings h ON h.user_id={user_key} AND h.quantity>0 '
                                        'LEFT JOIN market_stocks s ON s.club_num=h.club_num WHERE u.id=? ORDER BY h.club_num',
                                        (str(user_id),)))
                 if not rows or rows[0]['cash'] is None:
                     raise ValueError('계정의 보유 현금을 확인할 수 없습니다.')
                 cash = rows[0]['cash']
+                if include_profile:
+                    profile = {key: rows[0][key] for key in ('name', 'club_id', 'club_name')}
                 rows = [row for row in rows if row['club_num'] is not None and row['price'] is not None]
             else:
                 rows = list(db.execute('SELECT h.club_num,h.quantity,h.cost_basis,s.price FROM trade_holdings h '
@@ -128,7 +134,23 @@ class TradingService:
         cost = sum(item['cost'] for item in holdings)
         value = sum(item['value'] for item in holdings)
         return {'cash': int(cash), 'holdings': holdings, 'cost': cost, 'value': value,
-                'total': int(cash) + value, 'profit': value - cost}
+                'total': int(cash) + value, 'profit': value - cost, **profile}
+
+    def holding_candles(self, user_id):
+        with self.market.connection(consistent_read=True) as db:
+            rows = db.execute(
+                'SELECT club_num,timestamp,open,high,low,close,volume FROM ('
+                'SELECT c.*, ROW_NUMBER() OVER (PARTITION BY c.club_num ORDER BY c.timestamp DESC) AS position '
+                'FROM market_candles c JOIN trade_holdings h ON h.club_num=c.club_num '
+                'WHERE h.user_id=? AND h.quantity>0 AND c.timestamp >= '
+                '(SELECT last_tick - ? FROM market_state WHERE id=1)'
+                ') recent WHERE position<=7 ORDER BY club_num,timestamp',
+                (str(user_id), 60 * CANDLE_SECONDS),
+            )
+            candles = {}
+            for row in rows:
+                candles.setdefault(row['club_num'], []).append(dict(row))
+        return candles
 
     def history(self, user_id):
         with self.market.connection() as db:
