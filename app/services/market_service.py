@@ -12,6 +12,9 @@ from app.logics.logic import CANDLE_SECONDS, NEWS_TICKS, TICK_SECONDS, news_retu
 from app.market_catalog import CATEGORIES, CLUBS
 from app.services.database import Database
 
+MARKET_HISTORY_CANDLES = 60
+MARKET_PREVIEW_CANDLES = 12
+
 
 def trade_quotes(price):
     mid = Decimal(str(price))
@@ -137,7 +140,7 @@ class MarketService:
             db.execute("DELETE FROM market_candles WHERE timestamp<?", (end - 7 * 86400,))
         return end
 
-    def snapshot(self):
+    def snapshot(self, candle_count=MARKET_HISTORY_CANDLES):
         """같은 트랜잭션의 현재가·일간 통계·최근 5분봉을 일괄 조회한다."""
         target = int(self.clock()) // TICK_SECONDS * TICK_SECONDS
         with self.connection(consistent_read=True) as db:
@@ -151,7 +154,7 @@ class MarketService:
                 "GROUP BY club_num", (day_start,),
             )}
             history = {}
-            first_bucket = timestamp // CANDLE_SECONDS * CANDLE_SECONDS - 59 * CANDLE_SECONDS
+            first_bucket = timestamp // CANDLE_SECONDS * CANDLE_SECONDS - (candle_count - 1) * CANDLE_SECONDS
             for candle in db.execute(
                 "SELECT club_num, timestamp, open, high, low, close, volume FROM market_candles "
                 "WHERE timestamp>=? ORDER BY club_num, timestamp", (first_bucket,),
@@ -177,6 +180,17 @@ class MarketService:
                 "tickSeconds": TICK_SECONDS, "candleSeconds": CANDLE_SECONDS,
                 "catchingUp": timestamp < target, "stocks": stocks,
             }
+
+    def stock_chart(self, club_num):
+        with self.connection(consistent_read=True) as db:
+            timestamp = db.execute("SELECT last_tick FROM market_state WHERE id=1").fetchone()[0]
+            first_bucket = timestamp // CANDLE_SECONDS * CANDLE_SECONDS - (MARKET_HISTORY_CANDLES - 1) * CANDLE_SECONDS
+            candles = [dict(row) for row in db.execute(
+                "SELECT timestamp,open,high,low,close,volume FROM market_candles "
+                "WHERE club_num=? AND timestamp>=? ORDER BY timestamp",
+                (club_num, first_bucket),
+            )]
+        return {"success": True, "timestamp": timestamp, "candles": candles}
 
     def five_minute_movers(self):
         """전체 종목의 정확히 5분 전 가격과 현재 가격을 비교한다."""

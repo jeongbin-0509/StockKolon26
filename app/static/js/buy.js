@@ -40,6 +40,10 @@ let loading = false;
 let lastTimestamp = null;
 let requestedTradeHandled = false;
 let chartInterval = 300;
+const modalChart = document.querySelector('.modal-chart');
+const chartStatus = document.querySelector('#detail-chart-status');
+let detailChart = null;
+let chartRequest = null;
 
 function formatWon(value) {
     return `${Math.round(value).toLocaleString("ko-KR")}원`;
@@ -53,16 +57,39 @@ function setClubImage(img, clubNum) {
     img.src = `${imageBase}${clubNum}.png`;
 }
 
-function renderStockChart(container, stock, compact = false) {
+function renderStockChart(container, stock, compact = false, timestamp = lastTimestamp) {
     StockolonCharts.renderCandlestickChart(container, {
         candles: stock.candles,
         seriesKey: stock.club_num,
         compact,
-        maxCandles: compact ? 36 : 60,
+        maxCandles: compact ? 12 : 60,
         intervalSeconds: compact ? 300 : chartInterval,
-        timestamp: lastTimestamp,
+        timestamp,
         ariaLabel: `${stock.club_name} ${compact ? 5 : chartInterval / 60}분봉 가격 차트`
     });
+}
+
+async function loadDetailChart(stock) {
+    if (detailChart?.timestamp >= lastTimestamp || chartRequest) return;
+    const request = new AbortController();
+    chartRequest = request;
+    if (!detailChart) chartStatus.textContent = '전체 차트를 불러오는 중…';
+    try {
+        const response = await fetch(`/api/market/${stock.club_num}/chart`, {
+            cache: 'no-store',
+            signal: AbortSignal.any([request.signal, AbortSignal.timeout(15000)])
+        });
+        if (!response.ok) throw new Error('Chart unavailable');
+        const data = await response.json();
+        if (chartRequest !== request) return;
+        detailChart = data;
+        renderStockChart(modalChart, {...stock, candles: data.candles}, false, data.timestamp);
+        chartStatus.textContent = '';
+    } catch (_) {
+        if (chartRequest === request) chartStatus.textContent = '전체 차트를 불러오지 못했어요. 잠시 후 다시 시도합니다.';
+    } finally {
+        if (chartRequest === request) chartRequest = null;
+    }
 }
 
 document.querySelectorAll('[data-chart-interval]').forEach(button => {
@@ -74,7 +101,7 @@ document.querySelectorAll('[data-chart-interval]').forEach(button => {
             item.setAttribute('aria-pressed', String(active));
         });
         const stock = stocks.find(item => item.club_num === selectedClub);
-        if (stock) renderStockChart(document.querySelector('.modal-chart'), stock);
+        if (stock && detailChart) renderStockChart(modalChart, {...stock, candles: detailChart.candles}, false, detailChart.timestamp);
     });
 });
 
@@ -90,7 +117,7 @@ function createStockCard(stock) {
     card.innerHTML = `
         <button type="button" class="stock-open" aria-label="${stock.club_name} ${formatWon(stock.price)} 상세 보기">
         <div class="stock-top">
-            <img alt="${stock.club_name} 로고" class="stock-logo">
+            <img alt="${stock.club_name} 로고" class="stock-logo" loading="lazy" decoding="async">
             <div><h2>${stock.club_name}</h2><p>${stock.category}</p></div>
         </div>
         <div class="stock-value ${trend}">
@@ -202,7 +229,7 @@ function updateModal(stock) {
     change.textContent = `${stock.changeWon > 0 ? "+" : stock.changeWon < 0 ? "−" : ""}${formatWon(Math.abs(stock.changeWon))} (${stock.changeRate > 0 ? "+" : ""}${stock.changeRate.toFixed(2)}%)`;
     change.classList.toggle("up", trend === "up");
     change.classList.toggle("down", trend === "down");
-    renderStockChart(document.querySelector(".modal-chart"), stock);
+    void loadDetailChart(stock);
     setClubImage(document.querySelector(".modal-logo"), stock.club_num);
     const stats = document.querySelectorAll(".modal-stats dd");
     stats[1].textContent = formatWon(stock.high);
@@ -251,6 +278,12 @@ function openRequestedTrade() {
 
 function closeModal() {
     modal.hidden = true;
+    chartRequest?.abort();
+    chartRequest = null;
+    detailChart = null;
+    StockolonCharts.disposeChart(modalChart);
+    modalChart.replaceChildren();
+    chartStatus.textContent = '';
     stockGrid.querySelector(`[data-club="${selectedClub}"] .stock-open`)?.focus({ preventScroll: true });
     selectedClub = null;
 }
@@ -263,7 +296,7 @@ async function loadMarket() {
     const timeout = setTimeout(() => controller.abort(), 15000);
     let retryDelay = 10000;
     try {
-        const response = await fetch("/api/market", { cache: "no-store", signal: controller.signal });
+        const response = await fetch("/api/market?view=list", { cache: "no-store", signal: controller.signal });
         if (response.status === 401) {
             location.assign("/auth/login");
             return;

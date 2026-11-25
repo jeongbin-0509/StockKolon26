@@ -1,6 +1,6 @@
 """로컬 SQLite / 배포 PostgreSQL 저장소. 서비스의 내부 SQL만 처리한다."""
 
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 import hashlib
 from pathlib import Path
 import re
@@ -10,6 +10,7 @@ import psycopg
 from psycopg import sql
 from psycopg.conninfo import conninfo_to_dict
 from psycopg.rows import dict_row
+from app.services.database_timing import measure
 
 
 class DatabaseError(Exception):
@@ -57,11 +58,13 @@ class PostgresConnection:
         self.raw = connection
 
     def execute(self, statement, parameters=()):
-        return Cursor(self.raw.execute(postgres_statement(statement), parameters))
+        with measure('db_sql'):
+            return Cursor(self.raw.execute(postgres_statement(statement), parameters))
 
     def executemany(self, statement, parameters):
         cursor = self.raw.cursor()
-        cursor.executemany(postgres_statement(statement), parameters)
+        with measure('db_sql'):
+            cursor.executemany(postgres_statement(statement), parameters)
         return Cursor(cursor)
 
 
@@ -107,11 +110,13 @@ class Database:
     def connection(self, write=False, consistent_read=False):
         if not self.postgres:
             Path(self.location).parent.mkdir(parents=True, exist_ok=True)
-            db = sqlite3.connect(self.location, timeout=30)
+            with measure('db_connect'):
+                db = sqlite3.connect(self.location, timeout=30)
             db.row_factory = sqlite3.Row
             try:
                 if write:
-                    db.execute('BEGIN IMMEDIATE')
+                    with measure('db_lock'):
+                        db.execute('BEGIN IMMEDIATE')
                 elif consistent_read:
                     db.execute('BEGIN')
                 yield db
@@ -122,17 +127,20 @@ class Database:
             finally:
                 db.close()
             return
-        db = self._connect_postgres()
+        with measure('db_connect'):
+            db = self._connect_postgres()
         try:
-            with db.transaction():
-                if consistent_read:
-                    db.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
-                db.execute("SET LOCAL lock_timeout = '10s'")
-                db.execute("SET LOCAL statement_timeout = '25s'")
+            with ExitStack() as transaction:
+                with measure('db_setup'):
+                    transaction.enter_context(db.transaction())
+                    if consistent_read:
+                        db.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
+                    db.execute("SET LOCAL lock_timeout = '10s'")
+                    db.execute("SET LOCAL statement_timeout = '25s'")
+                    db.execute(sql.SQL('SET LOCAL search_path TO {}, pg_catalog').format(sql.Identifier(self.schema)))
                 if write:
-                    # 트랜잭션 풀러에서도 동일 스키마의 모든 쓰기를 직렬화한다.
-                    db.execute('SELECT pg_advisory_xact_lock(%s)', (self.lock_id,))
-                db.execute(sql.SQL('SET LOCAL search_path TO {}, pg_catalog').format(sql.Identifier(self.schema)))
+                    with measure('db_lock'):
+                        db.execute('SELECT pg_advisory_xact_lock(%s)', (self.lock_id,))
                 yield PostgresConnection(db)
         except psycopg.Error:
             raise DatabaseError('PostgreSQL 요청을 처리하지 못했습니다. 잠시 후 다시 시도하세요.') from None

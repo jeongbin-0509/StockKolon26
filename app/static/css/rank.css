@@ -56,7 +56,7 @@
 .rank-number { color: #718198; font: 600 17px Arial, sans-serif; text-align: center; font-variant-numeric: tabular-nums; }
 .rank-number small { font: 400 9px 'Noto Sans KR', sans-serif; margin-left: 2px; }
 .rank-person { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.rank-avatar { display: block; flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: #fff; border: 1px solid #ffffff22; }
+.rank-avatar { display: block; flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; object-fit: contain; background: #fff; border: 1px solid #ffffff22; }
 .rank-identity { min-width: 0; }
 .rank-name { color: #dce3ef; font-size: 13px; font-weight: 500; overflow-wrap: anywhere; }
 .rank-sub { display: block; color: #697a91; font-size: 10px; margin-top: 3px; }

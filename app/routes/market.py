@@ -6,6 +6,7 @@ import hmac
 from app.market_catalog import CLUBS
 from app.services.database import DatabaseError
 from app.services.market_worker import watch_market
+from app.services.market_service import MARKET_PREVIEW_CANDLES
 
 market = Blueprint("market", __name__)
 
@@ -73,11 +74,27 @@ def market_data():
     if "user_id" not in session:
         return jsonify(success=False, message="로그인이 필요합니다."), 401
     try:
-        data = current_app.extensions["market"].snapshot()
+        service = current_app.extensions["market"]
+        data = service.snapshot(MARKET_PREVIEW_CANDLES) if request.args.get("view") == "list" else service.snapshot()
     except (sqlite3.Error, DatabaseError):
         current_app.logger.exception("주가 데이터 조회 실패")
         return jsonify(success=False, message="주가 데이터를 불러오지 못했습니다. 잠시 후 다시 시도하세요."), 503
     response = jsonify(data)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@market.get("/api/market/<int:club_num>/chart")
+def market_chart(club_num):
+    if "user_id" not in session:
+        return jsonify(success=False), 401
+    if club_num not in CLUBS:
+        return jsonify(success=False), 404
+    try:
+        response = jsonify(current_app.extensions["market"].stock_chart(club_num))
+    except (sqlite3.Error, DatabaseError):
+        current_app.logger.exception("종목 차트 조회 실패")
+        return jsonify(success=False), 503
     response.headers["Cache-Control"] = "no-store"
     return response
 

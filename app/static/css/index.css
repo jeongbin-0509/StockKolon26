@@ -47,7 +47,8 @@ main {
 #profile-img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+    background: #fff;
 }
 
 #profile-text {
@@ -225,7 +226,7 @@ main {
     width: clamp(4rem, 7vw, 5.5rem);
     height: clamp(4rem, 7vw, 5.5rem);
     border-radius: 50%;
-    object-fit: cover;
+    object-fit: contain;
     background-color: #ffffff;
     flex-shrink: 0;
 }

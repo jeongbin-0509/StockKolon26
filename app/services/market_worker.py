@@ -1,6 +1,7 @@
 import time
 
 from app.logics.logic import TICK_SECONDS
+from app.services.database_timing import collect_timings, format_timings, measure
 
 
 def watch_market(app):
@@ -9,7 +10,13 @@ def watch_market(app):
         try:
             if app.config['AUTO_NEWS_ENABLED'] and not market.store.postgres:
                 app.extensions['admin'].publish_due_automatic_news()
-            _, catching_up = market.advance()
+            with collect_timings() as timings:
+                try:
+                    with measure('worker'):
+                        _, catching_up = market.advance()
+                finally:
+                    if market.store.postgres:
+                        app.logger.info('market_db_timing %s', format_timings(timings))
             delay = 1 if catching_up else TICK_SECONDS - market.clock() % TICK_SECONDS
         except Exception:
             app.logger.exception('정기 시세 갱신 실패')

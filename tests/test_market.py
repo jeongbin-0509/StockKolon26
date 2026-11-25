@@ -361,6 +361,27 @@ class ApiTests(unittest.TestCase):
     def test_market_requires_login(self):
         self.assertEqual(self.client.get('/api/market').status_code, 401)
         self.assertEqual(self.client.get('/api/market/movers').status_code, 401)
+        self.assertEqual(self.client.get('/api/market/61/chart').status_code, 401)
+
+    def test_market_list_returns_recent_twelve_and_detail_returns_full_history(self):
+        with self.client.session_transaction() as session:
+            session['user_id'] = 'test-user'
+        market = self.app.extensions['market']
+        timestamp = int(market.clock()) // 300 * 300
+        with market.connection(write=True) as db:
+            db.executemany(
+                'INSERT INTO market_candles VALUES (?, ?, ?, ?, ?, ?, ?) '
+                'ON CONFLICT(club_num, timestamp) DO NOTHING',
+                [(61, timestamp - age * 300, 100, 100, 100, 100, 0) for age in range(60)],
+            )
+        data = self.client.get('/api/market?view=list').json
+        preview = next(stock for stock in data['stocks'] if stock['club_num'] == 61)['candles']
+        chart = self.client.get('/api/market/61/chart').json
+        self.assertEqual(len(preview), 12)
+        self.assertEqual(len(chart['candles']), 60)
+        self.assertEqual(preview, chart['candles'][-12:])
+        self.assertEqual(data['timestamp'], chart['timestamp'])
+        self.assertEqual(self.client.get('/api/market/999/chart').status_code, 404)
 
     def test_market_api_reads_last_commit_during_uncommitted_update(self):
         with self.client.session_transaction() as session:

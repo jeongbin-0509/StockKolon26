@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, session, redirect, url_for, jsonify, current_app, send_from_directory, request
+from flask import Blueprint, render_template, session, redirect, url_for, jsonify, current_app, send_from_directory, request, make_response
+from functools import wraps
 from app.services.supabase_client import supabase
 from app.market_catalog import CLUBS
 from app.routes.admin import csrf_token
@@ -11,9 +12,24 @@ from flask import abort
 from app.services.ranking_service import profile_key
 import re
 from time import perf_counter
+from app.services.database_timing import collect_timings, format_timings, measure
 
 main = Blueprint("main", __name__)
 RANKING_ERRORS = (DatabaseError, sqlite3.Error, APIError, httpx.HTTPError, RuntimeError)
+
+
+def report_database_timing(view):
+    @wraps(view)
+    def timed_view(*args, **kwargs):
+        with collect_timings() as timings:
+            with measure('handler'):
+                response = make_response(view(*args, **kwargs))
+        response.headers.add('Server-Timing', format_timings(timings))
+        if timings.get('db_connect', 0):
+            current_app.logger.info('home_db_timing endpoint=%s status=%d %s',
+                                    request.endpoint, response.status_code, format_timings(timings))
+        return response
+    return timed_view
 
 
 @main.get("/manifest.webmanifest")
@@ -217,6 +233,7 @@ def my_portfolio():
     return response
 
 @main.route("/api/index-data")
+@report_database_timing
 def index_data():
     if "user_id" not in session:
         return jsonify({"success": False, "message": "로그인이 필요합니다."}), 401
@@ -275,6 +292,7 @@ def header_profile():
 
 
 @main.route("/api/profile-data")
+@report_database_timing
 def profile_data():
     if "user_id" not in session:
         return jsonify({"success": False, "message": "로그인이 필요합니다."}), 401
