@@ -36,7 +36,6 @@
 .candle-controls button:last-child { font: 10px 'Noto Sans KR', sans-serif; }
 .candle-controls button:hover:not(:disabled) { color: #fff; border-color: #ffffff30; background: #283343; }
 .candle-controls button:disabled { color: #465365; cursor: default; background: transparent; }
-.chart-caption { margin-top: 6px; color: #929aa7; font-size: 11px; text-align: right; }
 
 @media (max-width: 620px) {
     .candle-detail-values { grid-template-columns: repeat(4, 1fr); gap: 6px; }

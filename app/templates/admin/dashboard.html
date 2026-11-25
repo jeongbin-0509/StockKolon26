@@ -1,16 +1,16 @@
 {% extends 'admin/base.html' %}
 {% block title %}운영 관리{% endblock %}
 {% block content %}
-<div class="page-heading"><div><p class="eyebrow">STOCKOLON 26</p><h1>운영 관리</h1><p class="muted">시장 흐름을 확인하고 동아리 뉴스를 발행하세요.</p></div>
+<div class="page-heading"><div><h1>운영 관리</h1></div>
 <nav class="section-links" aria-label="관리 영역"><a href="#market">시장</a><a href="#news">뉴스</a>{% if g.admin.role == 'owner' %}<a href="#accounts">관리자</a>{% endif %}<a href="#audit">작업 기록</a></nav></div>
 <section class="panel" id="market">
-    <div class="section-heading"><h2>시장 현황 <span class="badge">{{ market.stocks|length }}개 종목</span></h2><p class="muted" id="market-updated">{{ market.timestamp|kst_time }} 갱신{% if market.catchingUp %} · 이력 복구 중{% endif %}</p></div>
+    <div class="section-heading"><h2>시장 현황 <span class="badge">{{ market.stocks|length }}개 종목</span></h2><p class="muted" id="market-updated">{{ market.timestamp|kst_time }} 갱신{% if market.catchingUp %} · 시세 갱신 중{% endif %}</p></div>
     <div class="table-wrap"><table><thead><tr><th>동아리</th><th>분야</th><th>현재가</th><th>오늘 등락</th><th>오늘 최고</th><th>오늘 최저</th></tr></thead><tbody>
     {% for stock in market.stocks %}<tr data-club="{{ stock.club_num }}"><th>{{ stock.club_name }}</th><td>{{ stock.category }}</td><td data-price>{{ '{:,.0f}'.format(stock.price) }}원</td><td data-rate class="{{ 'up' if stock.changeRate >= 0 else 'down' }}">{{ '%+.2f'|format(stock.changeRate) }}%</td><td data-high>{{ '{:,.0f}'.format(stock.high) }}원</td><td data-low>{{ '{:,.0f}'.format(stock.low) }}원</td></tr>{% endfor %}
     </tbody></table></div>
 </section>
 <section class="panel" id="news">
-    <h2>동아리별 뉴스 발행</h2><p class="muted">동아리와 준비된 뉴스 문구를 선택하세요. 발행 즉시 뉴스 목록에 공개되고 다음 30초 가격 틱부터 영향을 반영합니다.</p>
+    <h2>동아리별 뉴스 발행</h2><p class="muted">동아리와 준비된 뉴스 문구를 선택하세요. 발행 즉시 뉴스 목록에 공개되고 다음 시세 갱신부터 영향을 반영합니다.</p>
     <form class="stack" method="post" action="{{ url_for('admin.publish_news') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="article_id" value="{{ article_id }}">
         <div class="form-row"><label>영향 동아리<select id="news-club" required><option value="" selected>동아리를 선택하세요</option>{% for number, name in clubs|dictsort %}{% if number in news_club_numbers %}<option value="{{ number }}">{{ name }}</option>{% endif %}{% endfor %}</select></label>

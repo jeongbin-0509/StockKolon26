@@ -43,9 +43,9 @@ class RankingService:
         users_from_api = self.member_loader() if self.member_loader else None
         users = 'public.users' if self.market.store.postgres else 'users'
         clubs = 'public.clubs' if self.market.store.postgres else 'clubs'
-        with self.market.connection(write=True) as db:
+        with self.market.connection(consistent_read=True) as db:
             target = int(self.market.clock()) // TICK_SECONDS * TICK_SECONDS
-            timestamp = self.market._advance(db, target)
+            timestamp = db.execute('SELECT last_tick FROM market_state WHERE id=1').fetchone()[0]
             if users_from_api is None:
                 # 배포 환경에서는 잔액과 보유 주식을 같은 트랜잭션에서 읽는다.
                 rows = db.execute(

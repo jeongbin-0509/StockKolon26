@@ -9,14 +9,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css', v='settings-1') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css', v='candles-2') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css', v='detail-chart-1') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/portfolio.css', v='mobile-1') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/portfolio.css', v='clean-ui-1') }}">
 </head>
 <body class="mobile-home">
 
     <!-- 헤더 -->
     <header>
         <a href="{{ url_for('main.index') }}" class="logo-link" aria-label="메인으로 이동">
-            <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo" alt="STOCKOLON 26 Logo" />
+            <img src="{{ url_for('static', filename='images/stockolon_logo.png') }}" id="logo" alt="STOCKOLON 26" />
         </a>
 
         <nav id="header-nav">
@@ -30,7 +30,7 @@
             </div>
             <!-- 버튼 -->
             <a id="ranking_btn" href="{{ url_for('main.rank') }}">
-                <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="랭킹">
+                <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="순위">
             </a>
 {% include '_settings_button.html' %}
 
@@ -47,7 +47,6 @@
                 <img src="{{ url_for('static', filename='images/default_stock_logo.png') }}" id="profile-img" alt="기본 프로필 이미지">
             </div>
             <div id="profile-text">
-                <span class="sub_text">안녕하세요,</span>
                 <span id="username" class="head1">회원님</span>
             </div>
         </section>
@@ -57,7 +56,7 @@
             <div id="portfolio-header">
                 <span class="sub_text">내 프로필</span>
                 <div id="portfolio-rate-wrap">
-                    <span class="sub_text">보유 종목 수익률</span>
+                    <span class="sub_text">주식 수익률</span>
                     <span id="today-rate" class="head2">—</span>
                 </div>
             </div>
@@ -89,7 +88,6 @@
                     <span class="stock-change head2">—</span>
                 </div>
                 <div class="stock-chart"></div>
-                <p class="chart-caption">최근 1시간 · 5분봉</p>
             </section>
 
             <!-- 최근 가장 많이 하락한 주식 -->
@@ -108,7 +106,6 @@
                     <span class="stock-change head2">—</span>
                 </div>
                 <div class="stock-chart"></div>
-                <p class="chart-caption">최근 1시간 · 5분봉</p>
             </section>
 
         </section>
@@ -120,15 +117,13 @@
                 <img src="{{ url_for('static', filename='images/buy_icon.png') }}" alt="주식 구매 아이콘">
                 <div class="link-text">
                     <span class="head2">주식 구매하기</span>
-                    <span class="sub_text">원하는 동아리의 주식을 구매해보세요</span>
                 </div>
             </a>
 
             <a href="{{ url_for('main.news') }}" class="link-card" id="news-link">
                 <img src="{{ url_for('static', filename='images/news_icon.png') }}" alt="뉴스 아이콘">
                 <div class="link-text">
-                    <span class="head2">SEMI NEWS!</span>
-                    <span class="sub_text">최신 시장 뉴스와 정보를 확인해보세요</span>
+                    <span class="head2">동아리 뉴스</span>
                 </div>
             </a>
 
@@ -136,10 +131,10 @@
 
     </main>
 
-    <script src="{{ url_for('static', filename='js/header-profile.js', v='box-frames-1') }}"></script>
+    <script src="{{ url_for('static', filename='js/header-profile.js', v='clean-ui-1') }}"></script>
     <script src="{{ url_for('static', filename='js/charts.js', v='candles-2') }}"></script>
-    <script src="{{ url_for('static', filename='js/index.js', v='box-frames-1') }}"></script>
-<script src="{{ url_for('static', filename='js/portfolio.js', v='mobile-1') }}"></script>
+    <script src="{{ url_for('static', filename='js/index.js', v='clean-ui-1') }}"></script>
+<script src="{{ url_for('static', filename='js/portfolio.js', v='clean-ui-1') }}"></script>
 {% include '_mobile_nav.html' %}
 {% include '_pwa_script.html' %}
 </body>

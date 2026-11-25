@@ -104,7 +104,7 @@ class Database:
             db.close()
 
     @contextmanager
-    def connection(self, write=False):
+    def connection(self, write=False, consistent_read=False):
         if not self.postgres:
             Path(self.location).parent.mkdir(parents=True, exist_ok=True)
             db = sqlite3.connect(self.location, timeout=30)
@@ -112,6 +112,8 @@ class Database:
             try:
                 if write:
                     db.execute('BEGIN IMMEDIATE')
+                elif consistent_read:
+                    db.execute('BEGIN')
                 yield db
                 db.commit()
             except BaseException:
@@ -123,6 +125,8 @@ class Database:
         db = self._connect_postgres()
         try:
             with db.transaction():
+                if consistent_read:
+                    db.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
                 db.execute("SET LOCAL lock_timeout = '10s'")
                 db.execute("SET LOCAL statement_timeout = '25s'")
                 if write:

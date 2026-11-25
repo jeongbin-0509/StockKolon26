@@ -190,7 +190,7 @@ function updateSubmit() {
     submitButton.disabled = submitting || !valid || !currentPrice || !portfolio;
     const held = portfolio?.holdings.find(item => item.club_num === selectedClub)?.quantity || 0;
     document.querySelector('.modal-stats dd').textContent = `${held.toLocaleString('ko-KR')}주`;
-    if (portfolio) document.querySelector('#order-balance').textContent = `보유 현금 ${formatWon(portfolio.user.cash)} · ${currentMode === 'buy' ? '매수가' : '매도가'} ${formatWon(currentPrice)}`;
+    if (portfolio) document.querySelector('#order-balance').textContent = `남은 현금 ${formatWon(portfolio.user.cash)} · ${currentMode === 'buy' ? '매수가' : '매도가'} ${formatWon(currentPrice)}`;
 }
 
 function updateModal(stock) {
@@ -215,7 +215,7 @@ function openModal(card) {
     if (!stock) return;
     selectedClub = stock.club_num;
     amountInput.value = 1;
-    orderStatus.textContent = pendingOrder ? '이전에 결과를 확인하지 못한 주문이 있습니다. 같은 종목·방향·수량으로 다시 요청하면 중복 체결 없이 결과를 확인합니다.' : '';
+    orderStatus.textContent = pendingOrder ? '이전에 결과를 확인하지 못한 주문이 있습니다. 같은 종목·방향·수량으로 다시 요청하면 중복 주문 없이 결과를 확인합니다.' : '';
     updateModal(stock);
     modal.hidden = false;
     closeButton.focus();
@@ -280,11 +280,11 @@ async function loadMarket() {
         }
         const updated = new Date(data.timestamp * 1000).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
         statusElement.textContent = data.catchingUp
-            ? `중단된 기간의 주가를 복구하고 있습니다. 현재 ${updated}`
-            : '';
-        statusElement.hidden = !data.catchingUp;
+            ? `${updated} 기준 · 시세 갱신 지연 중`
+            : `${updated} 기준`;
+        statusElement.hidden = false;
         statusElement.classList.remove("error");
-        if (data.catchingUp) retryDelay = 1000;
+        if (data.catchingUp) retryDelay = 3000;
     } catch (error) {
         statusElement.hidden = false;
         statusElement.textContent = stocks.length
@@ -391,10 +391,10 @@ orderForm.addEventListener('submit', event => {
     if (!stock) return;
     confirmedOrder = order;
     const sideText = order.side === 'buy' ? '매수' : '매도';
-    document.querySelector('#confirm-title').textContent = pendingOrder ? '이전 주문 결과를 확인할까요?' : `${sideText} 주문을 체결하시겠습니까?`;
+    document.querySelector('#confirm-title').textContent = pendingOrder ? '이전 주문 결과를 확인할까요?' : `${sideText} 주문을 거래할까요?`;
     document.querySelector('#confirm-details').textContent = pendingOrder
         ? '결과를 확인하지 못한 이전 주문을 같은 번호로 다시 확인합니다.'
-        : '아래 주문 내용을 확인해주세요.';
+        : '확인하면 그때의 가격으로 거래됩니다.';
     document.querySelector('#confirm-stock').textContent = stock.club_name;
     document.querySelector('#confirm-side').textContent = sideText;
     document.querySelector('#confirm-quantity').textContent = `${order.quantity.toLocaleString('ko-KR')}주`;
@@ -436,8 +436,8 @@ confirmSubmit.addEventListener('click', async () => {
             orderStatus.textContent = result.message || '주문을 처리하지 못했습니다.';
             await loadMarket();
         } else {
-            orderStatus.textContent = `${result.order.club_name} ${result.order.quantity}주 ${result.order.side === 'buy' ? '매수' : '매도'} 완료 · ${formatWon(result.order.price)}에 체결`;
-            document.querySelector('#execution-title').textContent = result.replayed ? '이전 체결 확인' : `${result.order.side === 'buy' ? '매수' : '매도'} 체결 완료`;
+            orderStatus.textContent = `${result.order.club_name} ${result.order.quantity}주 ${result.order.side === 'buy' ? '매수' : '매도'} 완료 · ${formatWon(result.order.price)}에 거래`;
+            document.querySelector('#execution-title').textContent = result.replayed ? '이전 거래 확인' : `${result.order.side === 'buy' ? '매수' : '매도'} 거래 완료`;
             document.querySelector('#execution-detail').textContent = `${result.order.club_name} ${result.order.quantity.toLocaleString('ko-KR')}주 · ${formatWon(result.order.price)} · 총 ${formatWon(result.order.total)}`;
             executionToast.hidden = false;
             clearTimeout(toastTimer);
@@ -446,7 +446,7 @@ confirmSubmit.addEventListener('click', async () => {
             await Promise.all([loadPortfolio(), loadMarket()]);
         }
     } catch (_) {
-        orderStatus.textContent = '주문 결과를 확인하지 못했습니다. 같은 종목·방향·수량으로 다시 요청하면 중복 체결 없이 결과를 확인합니다.';
+        orderStatus.textContent = '주문 결과를 확인하지 못했습니다. 같은 종목·방향·수량으로 다시 요청하면 중복 주문 없이 결과를 확인합니다.';
     } finally {
         submitting = false;
         updateSubmit();

@@ -2,6 +2,8 @@
 
 Flask 기반 동아리 모의주식 게임입니다. 주가 계산과 이력 저장은 서버에서 수행합니다.
 
+[개발 인계 및 TODO](docs/development-handoff.md)
+
 ## 로컬 실행
 
 ```bash
@@ -27,8 +29,9 @@ flask --app run market tick --watch
 python -m unittest discover -s tests -v
 ```
 
-웹 서버만 실행해도 `/api/market` 조회 시 지난 틱을 복구합니다. 무료 Render에서는 이 방식으로
-운영하며, 항상 실행 가능한 환경에서는 같은 DB를 사용하는 `market tick --watch`를 추가할 수 있습니다. Flask 개발 서버는 로컬 개발용입니다.
+로컬에서 실시간 가격을 확인하려면 Flask 개발 서버와 별도로 `market tick --watch`를 실행합니다.
+Render에서는 Gunicorn 기동 시 백그라운드 스레드에서 시세를 갱신합니다. 시세 API는 마지막으로
+DB에 저장이 완료된 가격과 기준 시각을 읽으며, 갱신이 밀린 경우 화면에 표시합니다.
 
 ## 무료 Render 배포
 

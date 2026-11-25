@@ -19,7 +19,7 @@
 <main class="auth-main">
     <section class="auth-panel {% block panel_class %}{% endblock %}" aria-labelledby="auth-title">
         {% if request.endpoint != 'auth.login' %}<a class="page-back-link auth-back-link" href="{{ url_for('auth.login') }}">← 로그인으로</a>{% endif %}
-        <div class="auth-heading"><h1 id="auth-title">{% block heading %}{% endblock %}</h1><p>{% block description %}{% endblock %}</p></div>
+        <div class="auth-heading"><h1 id="auth-title">{% block heading %}{% endblock %}</h1>{% set description %}{% block description %}{% endblock %}{% endset %}{% if description|trim %}<p>{{ description }}</p>{% endif %}</div>
         {% for message in get_flashed_messages() %}<p class="flash_msg" role="alert">{{ message }}</p>{% endfor %}
         {% block form %}{% endblock %}
         {% block footer %}{% endblock %}

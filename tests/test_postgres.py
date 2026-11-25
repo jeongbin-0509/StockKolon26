@@ -60,6 +60,7 @@ class PostgresMarketTests(PostgresFixture, unittest.TestCase):
         self.service.record_flow('pg-fill', 61, 100)
         self.now += 3600
         with ThreadPoolExecutor(max_workers=4) as pool:
+            list(pool.map(lambda _: self.service.advance(), range(4)))
             data = list(pool.map(lambda _: self.service.snapshot(), range(4)))
         self.assertTrue(all(snapshot == data[0] for snapshot in data))
         other = MarketService(TEST_URL, clock=lambda: self.now, schema=self.schema)
@@ -88,6 +89,8 @@ class PostgresMarketTests(PostgresFixture, unittest.TestCase):
                 service.add_news('same-news', 'club', 61, -0.02)
                 service.record_flow('same-fill', 62, -80)
             self.now += 600
+            local.advance()
+            self.service.advance()
             expected, actual = local.snapshot(), self.service.snapshot()
             self.assertEqual(expected, actual)
 

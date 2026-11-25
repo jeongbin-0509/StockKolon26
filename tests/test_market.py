@@ -175,16 +175,16 @@ class ServiceTests(unittest.TestCase):
     def test_opposite_news_overlap_and_expire_independently(self):
         self.service.add_news('good', 'club', 61, 0.03)
         self.now += 1800
-        self.service.snapshot()
+        self.service.advance()
         self.service.add_news('bad', 'club', 61, -0.02)
         self.now += 30
-        self.service.snapshot()
+        self.service.advance()
         with self.service.connection() as db:
             row = db.execute('SELECT components FROM market_ticks WHERE club_num=? AND timestamp=?', (61, self.now)).fetchone()
         effect = json.loads(row['components'])['news']
         self.assertAlmostEqual(effect, news_return(0.03, 60) + news_return(-0.02, 0))
         self.now += 1800
-        self.service.snapshot()
+        self.service.advance()
         with self.service.connection() as db:
             row = db.execute('SELECT components FROM market_ticks WHERE club_num=? AND timestamp=?', (61, self.now)).fetchone()
         self.assertAlmostEqual(json.loads(row['components'])['news'], news_return(-0.02, 60))
@@ -194,7 +194,7 @@ class ServiceTests(unittest.TestCase):
         with self.service.connection(write=True) as db:
             db.execute('DELETE FROM market_news_profiles WHERE event_id=?', ('old',))
         self.now += 60
-        self.service.snapshot()
+        self.service.advance()
         with self.service.connection() as db:
             row = db.execute('SELECT components FROM market_ticks WHERE club_num=? AND timestamp=?', (61, self.now)).fetchone()
         self.assertAlmostEqual(json.loads(row['components'])['news'], news_return(0.03, 1, 1))
@@ -209,6 +209,7 @@ class ServiceTests(unittest.TestCase):
     def test_five_minute_movers_cover_all_stocks_and_require_full_history(self):
         self.assertEqual(self.service.five_minute_movers(), {'up': None, 'down': None})
         self.now += 300
+        self.service.advance()
         movers = self.service.five_minute_movers()
         with self.service.connection() as db:
             rows = list(db.execute('SELECT club_num, timestamp, price FROM market_ticks '
@@ -229,6 +230,7 @@ class ServiceTests(unittest.TestCase):
 
     def test_same_tick_and_restart_are_idempotent(self):
         self.now += 300
+        self.service.advance()
         data = self.service.snapshot()
         self.assertEqual(data, self.service.snapshot())
         other = MarketService(self.path, clock=lambda: self.now)
@@ -238,10 +240,10 @@ class ServiceTests(unittest.TestCase):
             self.assertEqual(db.execute('SELECT COUNT(*) FROM market_ticks').fetchone()[0], 33 * 11)
         self.assertAlmostEqual(self.stock(data)['candles'][-1]['close'], self.stock(data)['price'], places=2)
 
-    def test_concurrent_readers_do_not_duplicate_ticks(self):
+    def test_concurrent_writers_do_not_duplicate_ticks(self):
         self.now += 300
         with ThreadPoolExecutor(max_workers=4) as executor:
-            results = list(executor.map(lambda _: self.service.snapshot(), range(4)))
+            results = list(executor.map(lambda _: self.service.advance(), range(4)))
         self.assertTrue(all(result == results[0] for result in results))
         with self.service.connection() as db:
             self.assertEqual(db.execute('SELECT COUNT(*) FROM market_ticks').fetchone()[0], 33 * 11)
@@ -255,16 +257,20 @@ class ServiceTests(unittest.TestCase):
         other = MarketService(other_path, clock=lambda: self.now)
         for _ in range(12):
             self.now += 30
-            other.snapshot()
+            other.advance()
+        self.service.advance()
         self.assertEqual(self.service.snapshot(), other.snapshot())
 
     def test_long_catchup_is_bounded_and_eventually_completes(self):
         self.service.max_catchup = 2
         self.now += 150
+        self.service.advance()
         first = self.service.snapshot()
         self.assertTrue(first['catchingUp'])
         self.assertEqual(first['timestamp'], self.now - 90)
+        self.service.advance()
         self.assertTrue(self.service.snapshot()['catchingUp'])
+        self.service.advance()
         self.assertFalse(self.service.snapshot()['catchingUp'])
 
     def test_events_are_once_only_and_volume_is_gross(self):
@@ -274,6 +280,7 @@ class ServiceTests(unittest.TestCase):
         self.assertFalse(self.service.record_flow('trade-1', 61, 200))
         self.service.record_flow('trade-2', 61, -100)
         self.now += 30
+        self.service.advance()
         data = self.service.snapshot()
         self.assertEqual(self.stock(data)['candles'][-1]['volume'], 300)
         with self.service.connection() as db:
@@ -286,7 +293,7 @@ class ServiceTests(unittest.TestCase):
             parts[61]['flow'], FLOW_MAX_LOG_RETURN * math.tanh(100 / FLOW_LIQUIDITY_SHARES)
         )
         self.now += 30
-        self.service.snapshot()
+        self.service.advance()
         with self.service.connection() as db:
             part = json.loads(db.execute('SELECT components FROM market_ticks WHERE timestamp=? AND club_num=61', (self.now,)).fetchone()[0])
         self.assertEqual(part['flow'], 0)
@@ -310,18 +317,19 @@ class ServiceTests(unittest.TestCase):
     def test_scheduled_news_cannot_affect_past_prices(self):
         self.service.add_news('future', 'club', 61, 0.02, timestamp=self.now + 60)
         self.now += 60
-        self.service.snapshot()
+        self.service.advance()
         with self.service.connection() as db:
             for row in db.execute("SELECT components FROM market_ticks WHERE club_num=61"):
                 self.assertEqual(json.loads(row[0]).get('news', 0), 0)
         self.now += 30
-        self.service.snapshot()
+        self.service.advance()
         with self.service.connection() as db:
             row = db.execute('SELECT components FROM market_ticks WHERE club_num=61 AND timestamp=?', (self.now,)).fetchone()
             self.assertGreater(json.loads(row[0])['news'], 0)
 
     def test_candle_ohlc_matches_ticks(self):
         self.now += 600
+        self.service.advance()
         data = self.service.snapshot()
         with self.service.connection() as db:
             for candle in self.stock(data)['candles']:
@@ -333,9 +341,10 @@ class ServiceTests(unittest.TestCase):
 
     def test_korean_midnight_resets_daily_baseline(self):
         self.now = ((self.now + 9*3600) // 86400 + 1) * 86400 - 9*3600 - 30
-        while self.service.snapshot()['catchingUp']:
+        while self.service.advance()[1]:
             pass
         self.now += 30
+        self.service.advance()
         data = self.service.snapshot()
         self.assertEqual(self.stock(data)['changeRate'], 0)
         self.assertEqual(self.stock(data)['high'], self.stock(data)['low'])
@@ -352,6 +361,25 @@ class ApiTests(unittest.TestCase):
     def test_market_requires_login(self):
         self.assertEqual(self.client.get('/api/market').status_code, 401)
         self.assertEqual(self.client.get('/api/market/movers').status_code, 401)
+
+    def test_market_api_reads_last_commit_during_uncommitted_update(self):
+        with self.client.session_transaction() as session:
+            session['user_id'] = 'test-user'
+        market = self.app.extensions['market']
+        before = self.client.get('/api/market').get_json()
+        market.clock = lambda: before['timestamp'] + 30
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            with market.connection(write=True) as db:
+                market._advance(db, int(market.clock()))
+                response = executor.submit(self.client.get, '/api/market').result(timeout=2)
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json['timestamp'], before['timestamp'])
+                self.assertEqual(response.json['stocks'], before['stocks'])
+                self.assertTrue(response.json['catchingUp'])
+        after = self.client.get('/api/market').get_json()
+        self.assertEqual(after['timestamp'], before['timestamp'] + 30)
+        self.assertFalse(after['catchingUp'])
+        self.assertNotEqual(after['stocks'], before['stocks'])
 
     def test_movers_api_preserves_actual_candles(self):
         with self.client.session_transaction() as sess:

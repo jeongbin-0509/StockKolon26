@@ -1,11 +1,11 @@
 import sqlite3
-import time
 
 import click
 from flask import Blueprint, current_app, jsonify, session, request
 import hmac
 from app.market_catalog import CLUBS
 from app.services.database import DatabaseError
+from app.services.market_worker import watch_market
 
 market = Blueprint("market", __name__)
 
@@ -73,8 +73,6 @@ def market_data():
     if "user_id" not in session:
         return jsonify(success=False, message="로그인이 필요합니다."), 401
     try:
-        if current_app.config['AUTO_NEWS_ENABLED']:
-            current_app.extensions['admin'].publish_due_automatic_news()
         data = current_app.extensions["market"].snapshot()
     except (sqlite3.Error, DatabaseError):
         current_app.logger.exception("주가 데이터 조회 실패")
@@ -89,9 +87,10 @@ def market_data():
 def market_tick(watch):
     """한 번 갱신하거나 --watch로 30초 틱을 계속 저장한다."""
     service = current_app.extensions["market"]
-    while True:
-        data = service.snapshot()
-        click.echo(f"market timestamp={data['timestamp']} catching_up={data['catchingUp']}")
-        if not watch:
-            break
-        time.sleep(0.1 if data["catchingUp"] else 30 - time.time() % 30 + 0.1)
+    if watch:
+        watch_market(current_app._get_current_object())
+        return
+    if current_app.config['AUTO_NEWS_ENABLED']:
+        current_app.extensions['admin'].publish_due_automatic_news()
+    timestamp, catching_up = service.advance()
+    click.echo(f"market timestamp={timestamp} catching_up={catching_up}")

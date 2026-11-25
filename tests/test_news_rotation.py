@@ -189,8 +189,8 @@ class NewsRotationTests(unittest.TestCase):
         start = self.now
         for age in (0, 60, 119, 120):
             self.now = start + TICK_SECONDS * (age + 1)
-            self.market.snapshot()
-            baseline.snapshot()
+            self.market.advance()
+            baseline.advance()
             with self.market.connection() as db, baseline.connection() as no_news:
                 actual = {r['club_num']: r for r in db.execute('SELECT * FROM market_ticks WHERE timestamp=?', (self.now,))}
                 control = {r['club_num']: r for r in no_news.execute('SELECT * FROM market_ticks WHERE timestamp=?', (self.now,))}

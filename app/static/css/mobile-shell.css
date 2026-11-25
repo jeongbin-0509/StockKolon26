@@ -19,9 +19,9 @@
     body:has(.mobile-bottom-nav) .pwa-install-button{bottom:calc(88px + env(safe-area-inset-bottom));}
     .mobile-home>main{display:block;margin:0;padding:24px 18px;}
     .mobile-home>main>#profile-section,.mobile-home>main>#portfolio-section,.mobile-home>main>#highlight-section,.mobile-home>main>#link-section{display:none;}
-    .mobile-home{background:radial-gradient(ellipse at 100% 0%,#173f302e,transparent 50%),#0d1415;}
+    .mobile-home{background:#0d1415;}
     .mobile-movers{margin:22px 0 28px;}
-    .mobile-market-heading{margin:24px 2px 16px;}.mobile-market-heading p{font-size:10px;color:#79ba9e;letter-spacing:.18em;}.mobile-market-heading h1{font-size:26px;margin-top:5px;letter-spacing:-.04em;}
+    .mobile-market-heading{margin:24px 2px 16px;}.mobile-market-heading h1{font-size:26px;margin-top:5px;letter-spacing:-.04em;}
     .buy-page>.asset-summary{position:static;}
     .buy-page>.asset-summary .summary-card strong{font-size:clamp(10px,3.1vw,16px);white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;letter-spacing:-.035em;}
     .mobile-movers>h2{font-size:20px;margin-bottom:5px;letter-spacing:-.04em;}

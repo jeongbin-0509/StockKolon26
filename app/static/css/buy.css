@@ -487,10 +487,8 @@ body {
 }
 .order-confirm::backdrop { background: rgba(0, 0, 0, .72); }
 .order-confirm-body { padding: 1.6rem; }
-.order-confirm-eyebrow { color: #0bd16f; font-size: .85rem; font-weight: 700; margin-bottom: .4rem; }
 .order-confirm h2 { font-size: 1.45rem; margin: 0 0 .5rem; }
-.order-confirm-description, .order-confirm-hint { color: var(--text-secondary); font-size: .9rem; }
-.order-confirm-summary { margin: 1.25rem 0; }
+.order-confirm-description, .order-confirm-summary { margin: 1.25rem 0; }
 .order-confirm-summary div { display: flex; justify-content: space-between; gap: 1rem; padding: .55rem 0; }
 .order-confirm-summary dt { color: var(--text-secondary); }
 .order-confirm-summary dd { margin: 0; font-weight: 700; text-align: right; }

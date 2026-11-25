@@ -85,7 +85,7 @@ python scripts/check_deploy.py --env .env
 | 서비스 유형 | Python Web Service |
 | 인스턴스 | Free |
 | Build Command | `pip install -r requirements.txt` |
-| Start Command | `gunicorn run:app --bind 0.0.0.0:$PORT --workers 1 --worker-class gthread --threads 4 --timeout 60` |
+| Start Command | `gunicorn -c gunicorn.conf.py run:app --bind 0.0.0.0:$PORT --workers 1 --worker-class gthread --threads 4 --timeout 60` |
 | Health Check Path | `/healthz` |
 | Python | `.python-version`의 3.14 |
 
@@ -118,9 +118,9 @@ flask --app run admin create --username admin --role owner
 
 ## 6. 무료 서비스에서의 시장 시간
 
-무료 Render는 유휴 상태에서 중지될 수 있습니다. 항상 실행되는 30초 백그라운드 프로세스를
-보장할 수 없으므로 무료 배포에서는 조회 시 지난 틱을 순서대로 복구합니다.
-접속 중에는 화면이 10초마다 조회하고 가격은 30초 경계로 움직입니다.
+Gunicorn은 서버가 실행되는 동안 백그라운드 스레드에서 30초마다 시세를 갱신합니다.
+서비스가 중지됐다가 재시작하면 이 작업이 지난 틱을 순서대로 복구합니다.
+화면은 서버에 저장이 완료된 시세와 기준 시각을 읽습니다.
 재시작해도 PostgreSQL의 seed·시장 상태·뉴스·관리자 계정은 유지됩니다.
 장기 중지 후에는 한 번에 240틱씩 복구하고 화면에 복구 상태를 표시합니다.
 별도의 Render Worker와 SQLite 파일을 공유하는 구조는 사용하지 않습니다.

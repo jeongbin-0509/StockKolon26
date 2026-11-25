@@ -7,7 +7,7 @@
     {% include '_pwa_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css', v='settings-1') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/rank.css', v='pedestal-restore-1') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/rank.css', v='clean-ui-1') }}">
 </head>
 <body class="leaderboard-page">
 <header class="buy-header">
@@ -22,38 +22,37 @@
 <nav class="page-back-nav" aria-label="페이지 이동"><a class="page-back-link" href="{{ url_for('main.index') }}">← 메인으로</a></nav>
 <main class="rank-page">
     <div class="rank-heading">
-        <div><p class="rank-eyebrow"><span></span> STOCKOLON 26</p><h1>리더보드<span class="heading-dot">.</span></h1></div>
-        <button id="refresh" class="refresh-btn" type="button" aria-label="랭킹 새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 3M4 15l2 3a7 7 0 0 0 12-1"/></svg><span>새로고침</span></button>
+        <div><h1>순위</h1></div>
+        <button id="refresh" class="refresh-btn" type="button" aria-label="순위 새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 3M4 15l2 3a7 7 0 0 0 12-1"/></svg><span>새로고침</span></button>
     </div>
     <div class="rank-filter-bar">
-    <nav class="rank-filters" aria-label="랭킹 범위">
+    <nav class="rank-filters" aria-label="순위 범위">
         <button type="button" class="active" data-scope="school" aria-pressed="true">전교</button>
         <button type="button" data-scope="class" aria-pressed="false">내 학급</button>
         <button type="button" data-scope="club" aria-pressed="false">내 동아리</button>
     </nav>
 
     </div>
-    <div id="status" class="rank-status" role="status" aria-live="polite">랭킹을 불러오는 중입니다.</div>
+    <div id="status" class="rank-status" role="status" aria-live="polite">순위를 불러오는 중입니다.</div>
     <section id="ranking-content" hidden>
         <section class="rank-arena" aria-labelledby="list-title">
-            <div class="arena-heading"><div><h2 id="list-title">전교 랭킹</h2></div><span id="member-count" class="member-count"></span></div>
+            <div class="arena-heading"><div><h2 id="list-title">전교 순위</h2></div><span id="member-count" class="member-count"></span></div>
             <div id="podium" class="podium" aria-label="상위 세 명 시상대"></div>
-            <div class="arena-footer"><span class="arena-line"></span><span>자산으로 빛나는 순간</span><span class="arena-line"></span></div>
         </section>
         <section class="my-rank-section" aria-labelledby="my-rank-heading">
-            <div class="list-heading"><h2 id="my-rank-heading"><span class="section-accent"></span>나의 현재 위치</h2><span class="section-eyebrow">MY POSITION</span></div>
+            <div class="list-heading"><h2 id="my-rank-heading"><span class="section-accent"></span>내 순위</h2></div>
             <div id="my-rank"></div>
         </section>
         <section class="rank-table" aria-labelledby="rank-table-heading">
             <div class="list-heading"><h2 id="rank-table-heading">순위 목록</h2><span class="rank-sort">총자산 순</span></div>
-            <div class="rank-table-labels" aria-hidden="true"><span>순위</span><span>투자자</span><span>총자산</span><span>보유 주식 수익률</span></div>
+            <div class="rank-table-labels" aria-hidden="true"><span>순위</span><span>투자자</span><span>총자산</span><span>주식 수익률</span></div>
             <div id="rank-list" class="rank-list" role="list"></div>
         </section>
 
     </section>
 </main>
-<script src="{{ url_for('static', filename='js/header-profile.js', v='box-frames-1') }}" data-autoload="true"></script>
-<script src="{{ url_for('static', filename='js/rank.js', v='box-frames-1') }}"></script>
+<script src="{{ url_for('static', filename='js/header-profile.js', v='clean-ui-1') }}" data-autoload="true"></script>
+<script src="{{ url_for('static', filename='js/rank.js', v='clean-ui-1') }}"></script>
 {% include '_mobile_nav.html' %}
 {% include '_pwa_script.html' %}
 </body>

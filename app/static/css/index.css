@@ -56,10 +56,6 @@ main {
     gap: 0.4rem;
 }
 
-#profile-text .sub_text {
-    font-size: clamp(1rem, 1.7vw, 1.25rem);
-}
-
 #username {
     font-size: clamp(1.5rem, 3.5vw, 2.5rem);
 }
@@ -328,10 +324,6 @@ main {
     color: var(--text-primary);
 }
 
-.link-text .sub_text {
-    font-size: clamp(0.9rem, 1.7vw, 1.1rem);
-}
-
 @media (max-width: 760px) {
     main {
         grid-template-columns: 1fr;
@@ -365,5 +357,4 @@ main {
     #portfolio-section, .highlight-card, .link-card { border-radius: 1rem; padding: 1rem; }
     .link-card > img { width: 3.75rem; height: 3.75rem; }
     .link-text .head2 { font-size: 1.2rem; }
-    .link-text .sub_text { font-size: .82rem; line-height: 1.5; }
-}
+    }

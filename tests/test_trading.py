@@ -99,9 +99,10 @@ class TradingTests(unittest.TestCase):
         import json
         self.place(qty=3)
         self.now += 30
-        self.market.snapshot()
+        self.market.advance()
         self.place('sell', qty=2)
         self.now += 30
+        self.market.advance()
         snapshot = self.market.snapshot()
         stock = next(stock for stock in snapshot['stocks'] if stock['club_num'] == 61)
         candle = stock['candles'][-1]

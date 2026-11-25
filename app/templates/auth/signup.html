@@ -2,7 +2,6 @@
 {% block title %}회원가입{% endblock %}
 {% block panel_class %}signup-panel{% endblock %}
 {% block heading %}나의 첫 동아리 투자{% endblock %}
-{% block description %}학교 이메일로 인증하고 STOCKOLON에 참여하세요.{% endblock %}
 {% block form %}
 <form method="post" action="{{ url_for('auth.signup') }}" id="signup_form" class="auth-form">
     <section class="form-section" aria-labelledby="basic-info-title"><h2 id="basic-info-title">기본 정보</h2>
@@ -75,5 +74,5 @@
     <button type="submit" id="signup_btn" class="primary-button">회원가입</button>
 </form>
 {% endblock %}
-{% block footer %}<p class="auth-footer">이미 계정이 있으신가요? <a href="{{ url_for('auth.login') }}">로그인</a></p>{% endblock %}
+{% block footer %}<p class="auth-footer"><a href="{{ url_for('auth.login') }}">로그인</a></p>{% endblock %}
 {% block scripts %}<script src="{{ url_for('static', filename='js/signup.js', v='club-picker-2') }}"></script>{% endblock %}

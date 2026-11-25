@@ -15,9 +15,6 @@ class ProfileSection {
             this.profileImg.src = data.profileImg;
             this.profileImg.alt = '프로필 사진';
         }
-        if (data.cosmetics && window.StockCosmetics) {
-            StockCosmetics.label(this.username, data.cosmetics);
-        }
         updateHeaderProfile(data);
     }
 }

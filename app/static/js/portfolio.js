@@ -38,18 +38,16 @@
             name.append(link,node('small','',`${item.quantity.toLocaleString('ko-KR')}주 보유 · ${item.category}`));
             top.append(img,name,node('span','pf-weight',`${ratio(item.value).toFixed(1)}%`));
             const metrics=node('div','pf-holding-metrics');
-            for(const [label,value,sub,cls] of [['평가금액',won(item.value),`현재 매도가 ${won(item.price)}`,''],['평가손익',signed(item.profit),`${item.rate>0?'+':''}${item.rate.toFixed(2)}%`,item.profit<0?'pf-down':item.profit>0?'pf-up':'']]){
+            for(const [label,value,sub,cls] of [['현재 가치',won(item.value),`지금 팔면 1주에 ${won(item.price)}`,''],['현재 손익',signed(item.profit),`${item.rate>0?'+':''}${item.rate.toFixed(2)}%`,item.profit<0?'pf-down':item.profit>0?'pf-up':'']]){
                 const block=node('div');block.append(node('span','',label),node('strong',cls,value),node('small',cls,sub));metrics.append(block);
             }
             card.append(top,metrics);list.append(card);
         }
         if(!holdings.length){const empty=node('div','pf-empty','아직 보유한 주식이 없습니다.');if(own){const link=node('a','','첫 종목 살펴보기 →');link.href='/buy';empty.append(link);}list.append(empty);}
-        const time=new Date(data.timestamp*1000).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
-        put('.pf-time',`${time} 시세 기준${data.catching_up?' · 시세 갱신 중':''}`);
-        if(own){updateHeaderProfile({...data.user,clubName:data.user.club_name});panel.querySelector('.pf-intro').textContent=`${data.user.name}님의 투자, 한눈에 모아보기`;}
+        if (own) updateHeaderProfile({...data.user, clubName: data.user.club_name});
         status.hidden=true;panel.querySelector('.pf-content').hidden=false;
     }
-    if(!own){try{render(JSON.parse(document.getElementById('member-portfolio-data').textContent));}catch(_){status.textContent='포트폴리오를 표시하지 못했습니다. 새로고침해주세요.';}return;}
+    if(!own){try{render(JSON.parse(document.getElementById('member-portfolio-data').textContent));}catch(_){status.textContent='투자 현황을 표시하지 못했습니다. 새로고침해주세요.';}return;}
     let loading=false;
     async function load(){
         if(loading||document.hidden||!mobile.matches)return;

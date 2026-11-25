@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile - STOCKOLON 26</title>
+    <title>내 투자 현황 · STOCKOLON 26</title>
     {% include '_pwa_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css', v='settings-1') }}">
@@ -29,7 +29,7 @@
             </div>
             <!-- 버튼 -->
             <a id="ranking_btn" href="{{ url_for('main.rank') }}">
-                <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="랭킹">
+                <img src="{{ url_for('static', filename='images/ranking_icon.png') }}" alt="순위">
             </a>
 {% include '_settings_button.html' %}
 
@@ -51,18 +51,18 @@
                 <div class="summary-label head3">총 자산</div>
                 <div class="summary-value head1">—</div>
                 <div class="summary-sub">
-                    <span class="summary-label head3">평가손익</span>
+                    <span class="summary-label head3">현재 손익</span>
                     <div class="summary-change negative head1">—</div>
                     <div class="summary-change-pct negative head3">—</div>
                 </div>
             </article>
 
-            <!-- 매입금액 & 보유 현금 -->
+            <!-- 매입금액 & 남은 현금 -->
             <article class="summary-card" id="card-purchase">
-                <div class="summary-label head3">총 매입금액</div>
+                <div class="summary-label head3">주식에 쓴 돈</div>
                 <div class="summary-value head1">—</div>
                 <div class="summary-sub">
-                    <span class="summary-label head3">보유 현금</span>
+                    <span class="summary-label head3">남은 현금</span>
                     <div class="summary-value head1">—</div>
                 </div>
             </article>
@@ -82,9 +82,9 @@
                         <th class="head3">종목명</th>
                         <th class="head3">보유 수량</th>
                         <th class="head3">현재가</th>
-                        <th class="head3">평가손익</th>
+                        <th class="head3">현재 손익</th>
                         <th class="head3">수익률</th>
-                        <th class="head3">차트(30분간)</th>
+                        <th class="head3">최근 30분 가격</th>
                         <th class="head3">거래</th>
                     </tr>
                 </thead>
@@ -99,9 +99,9 @@
         </section>
     </main>
 
-    <script src="{{ url_for('static', filename='js/header-profile.js', v='box-frames-1') }}"></script>
+    <script src="{{ url_for('static', filename='js/header-profile.js', v='clean-ui-1') }}"></script>
     <script src="{{ url_for('static', filename='js/charts.js', v='candles-2') }}"></script>
-    <script src="{{ url_for('static', filename='js/profile.js', v='auto-refresh-1') }}"></script>
+    <script src="{{ url_for('static', filename='js/profile.js', v='clean-ui-1') }}"></script>
 
 {% include '_mobile_nav.html' %}
 {% include '_pwa_script.html' %}

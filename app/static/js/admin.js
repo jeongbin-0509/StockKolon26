@@ -34,7 +34,7 @@ async function refreshMarket() {
             rate.textContent = `${stock.changeRate > 0 ? '+' : ''}${stock.changeRate.toFixed(2)}%`;
             rate.className = stock.changeRate >= 0 ? 'up' : 'down';
         }
-        updated.textContent = `${new Date(data.timestamp * 1000).toLocaleString('ko-KR', {timeZone: 'Asia/Seoul'})} 갱신${data.catchingUp ? ' · 이력 복구 중' : ''}`;
+        updated.textContent = `${new Date(data.timestamp * 1000).toLocaleString('ko-KR', {timeZone: 'Asia/Seoul'})} 갱신${data.catchingUp ? ' · 시세 갱신 중' : ''}`;
     } catch {
         updated.textContent = '연결이 끊겨 마지막 데이터를 표시 중입니다. 다시 연결합니다.';
     }

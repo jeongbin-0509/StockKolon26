@@ -78,11 +78,6 @@ def club_profile(user):
     return url_for('static', filename=filename), club_name
 
 
-def own_cosmetics():
-    key = profile_key(session['user_id'])
-    return current_app.extensions['cosmetics'].public([key])[key]
-
-
 def custom_profile_image(key, fallback):
     try:
         revision = current_app.extensions['profile_images'].revisions([key]).get(key)
@@ -96,13 +91,11 @@ def custom_profile_image(key, fallback):
 
 def set_member_images(members):
     keys = [member['profile_key'] for member in members if member.get('profile_key')]
-    decorations = current_app.extensions['cosmetics'].public(keys)
     try:
         revisions = current_app.extensions['profile_images'].revisions(keys)
     except (DatabaseError, sqlite3.Error):
         revisions = {}
     for member in members:
-        member['cosmetics'] = decorations.get(member.get('profile_key'))
         number = next((n for n, name in CLUBS.items() if name == member.get('club_name')), None)
         filename = f'images/{number}.png'
         if not (Path(current_app.static_folder) / filename).is_file():
@@ -182,7 +175,7 @@ def rankings():
         return response, 400
     except RANKING_ERRORS:
         current_app.logger.warning('랭킹 데이터베이스 조회에 실패했습니다.')
-        response = jsonify(success=False, message='랭킹 정보를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.')
+        response = jsonify(success=False, message='순위를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.')
         response.headers['Cache-Control'] = 'no-store'
         return response, 503
     set_member_images(result.get('members', []) + ([result['me']] if result.get('me') else []))
@@ -235,7 +228,7 @@ def my_portfolio():
         response = jsonify(success=True, user=result['me'], portfolio=result['portfolio'],
                            count=result['count'], timestamp=result['timestamp'], catching_up=result['catching_up'])
     except (ValueError, *RANKING_ERRORS):
-        response = jsonify(success=False, message='포트폴리오를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.')
+        response = jsonify(success=False, message='투자 현황을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.')
         response.status_code = 503
     response.headers['Cache-Control'] = 'no-store'
     return response
@@ -270,7 +263,6 @@ def index_data():
     data = {
         "success": True,
         "profile": {
-            "cosmetics": own_cosmetics(),
             "username": user["name"],
             "profileImg": profile_image,
             "clubName": club_name
@@ -296,7 +288,7 @@ def header_profile():
     user = display_user(session['user_id'])
     profile_image, club_name = club_profile(user)
     profile_image = custom_profile_image(profile_key(session['user_id']), profile_image)
-    response = jsonify(success=True, user={'name': user['name'], 'profileImg': profile_image, 'clubName': club_name, 'cosmetics': own_cosmetics()})
+    response = jsonify(success=True, user={'name': user['name'], 'profileImg': profile_image, 'clubName': club_name})
     response.headers['Cache-Control'] = 'no-store'
     return response
 
@@ -336,7 +328,6 @@ def profile_data():
     response = jsonify({
         "success": True,
         "user": {
-            "cosmetics": own_cosmetics(),
             "name": user["name"],
             "profileImg": profile_image,
             "clubName": club_name,

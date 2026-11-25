@@ -1,7 +1,6 @@
 {% extends 'auth/base.html' %}
 {% block title %}로그인{% endblock %}
-{% block heading %}다시 만나서 반가워요{% endblock %}
-{% block description %}로그인하고 내 동아리의 주식 시장을 확인하세요.{% endblock %}
+{% block heading %}로그인{% endblock %}
 {% block form %}
 <form method="post" action="{{ url_for('auth.login') }}" id="login_form" class="auth-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -23,7 +22,7 @@
 </form>
 {% endblock %}
 {% block footer %}
-<p class="auth-footer">아직 계정이 없으신가요? <a href="{{ url_for('auth.signup') }}" id="moveto_signup_btn">회원가입</a></p>
+<p class="auth-footer"><a href="{{ url_for('auth.signup') }}" id="moveto_signup_btn">회원가입</a></p>
 <p class="auth-footer"><a href="{{ url_for('auth.forgot_password') }}">비밀번호 찾기</a></p>
 {% endblock %}
 {% block scripts %}<script src="{{ url_for('static', filename='js/login.js') }}"></script>{% endblock %}

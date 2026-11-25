@@ -315,7 +315,7 @@ class AdminTests(unittest.TestCase):
             sess['user_id'] = 'regular-user'
         page = self.client.get('/news').get_data(as_text=True)
         self.assertIn(self.admin.articles()[0]['title'], page)
-        self.assertNotIn('아직 새로운 소식이 없어요', page)
+        self.assertNotIn('아직 새 소식이 없어요', page)
 
     def test_news_page_mixes_articles_without_target_or_sentiment_metadata(self):
         self.ready()
@@ -336,7 +336,7 @@ class AdminTests(unittest.TestCase):
         with self.client.session_transaction() as sess:
             sess['user_id'] = 'regular-user'
         page = self.client.get('/news').get_data(as_text=True)
-        self.assertIn('아직 새로운 소식이 없어요', page)
+        self.assertIn('아직 새 소식이 없어요', page)
         self.assertNotIn('호재', page)
         self.assertNotIn('악재', page)
 

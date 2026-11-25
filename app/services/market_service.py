@@ -26,8 +26,14 @@ class MarketService:
         self.max_catchup = max_catchup
         self.store = Database(database, schema=schema)
 
-    def connection(self, write=False):
-        return self.store.connection(write=write)
+    def connection(self, write=False, consistent_read=False):
+        return self.store.connection(write=write, consistent_read=consistent_read)
+
+    def advance(self):
+        target = int(self.clock()) // TICK_SECONDS * TICK_SECONDS
+        with self.connection(write=True) as db:
+            timestamp = self._advance(db, target)
+        return timestamp, timestamp < target
 
     def initialize(self):
         self.store.initialize()
@@ -101,8 +107,6 @@ class MarketService:
         for event in db.execute("SELECT * FROM market_flows WHERE effective_at>? AND effective_at<=? ORDER BY event_id", (last_tick, end)):
             flows_by_tick.setdefault(event["effective_at"], []).append(event)
         rows = []
-        tracker = getattr(self, 'cosmetics', None)
-        batch = tracker.batch(db) if tracker else None
         for tick in range(last_tick + TICK_SECONDS, end + 1, TICK_SECONDS):
             effects = {}
             for event in events:
@@ -122,13 +126,9 @@ class MarketService:
                 volumes[club_num] = volumes.get(club_num, 0) + abs(quantity)
             rng_seed = hashlib.sha256(f"{row['seed']}:{tick}".encode()).digest()
             prices, state, parts = next_tick(prices, state, effects, flows, random.Random(rng_seed))
-            if batch:
-                batch.observe(prices, tick)
             rows.extend((club_num, tick, price, volumes.get(club_num, 0), json.dumps(parts[club_num]))
                         for club_num, price in prices.items())
         self._save_rows(db, rows)
-        if batch:
-            batch.save(db)
         db.executemany("UPDATE market_stocks SET price=? WHERE club_num=?", [(price, club) for club, price in prices.items()])
         db.execute("UPDATE market_state SET last_tick=?, state=? WHERE id=1", (end, json.dumps(state)))
         if end // 3600 != last_tick // 3600:
@@ -140,8 +140,8 @@ class MarketService:
     def snapshot(self):
         """같은 트랜잭션의 현재가·일간 통계·최근 5분봉을 일괄 조회한다."""
         target = int(self.clock()) // TICK_SECONDS * TICK_SECONDS
-        with self.connection(write=True) as db:
-            timestamp = self._advance(db, target)
+        with self.connection(consistent_read=True) as db:
+            timestamp = db.execute("SELECT last_tick FROM market_state WHERE id=1").fetchone()[0]
             day_start = (timestamp + 9 * 3600) // 86400 * 86400 - 9 * 3600
             daily = {r["club_num"]: r for r in db.execute(
                 "SELECT club_num, MAX(CASE WHEN position=1 THEN open END) AS day_open, "
@@ -180,9 +180,8 @@ class MarketService:
 
     def five_minute_movers(self):
         """전체 종목의 정확히 5분 전 가격과 현재 가격을 비교한다."""
-        target = int(self.clock()) // TICK_SECONDS * TICK_SECONDS
-        with self.connection(write=True) as db:
-            timestamp = self._advance(db, target)
+        with self.connection(consistent_read=True) as db:
+            timestamp = db.execute("SELECT last_tick FROM market_state WHERE id=1").fetchone()[0]
             points = {}
             for row in db.execute(
                 "SELECT club_num, timestamp, price FROM market_ticks "
