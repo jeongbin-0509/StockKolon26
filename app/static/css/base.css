@@ -9,7 +9,7 @@
     --text-secondary: #7a7a7a;
     --color-stock-up: #ff3b30;
     --color-stock-down: #007aff;
-    --color-brand-mint: #00ff99;
+    --color-brand-mint: #66dcaa;
     --color-primary: var(--color-brand-mint);
     --page-width: 1400px;
     --page-gutter: clamp(1rem, 3vw, 2rem);
