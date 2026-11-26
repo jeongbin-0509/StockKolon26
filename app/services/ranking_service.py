@@ -43,7 +43,6 @@ class RankingService:
         users = 'public.users' if self.market.store.postgres else 'users'
         clubs = 'public.clubs' if self.market.store.postgres else 'clubs'
         with self.market.connection(consistent_read=True) as db:
-            target = int(self.market.clock()) // TICK_SECONDS * TICK_SECONDS
             timestamp = db.execute('SELECT last_tick FROM market_state WHERE id=1').fetchone()[0]
             if users_from_api is None:
                 # 배포 환경에서는 잔액과 보유 주식을 같은 트랜잭션에서 읽는다.
@@ -87,10 +86,17 @@ class RankingService:
                         'quantity': row['quantity'], 'price': price,
                         'value': value, 'cost': basis, 'profit': value - basis,
                         'rate': (value / basis - 1) * 100 if basis else 0})
-        return members, timestamp, timestamp < target
+        return members, timestamp
+
+    def market_is_delayed(self, timestamp):
+        latest_tick = self.market.last_committed_tick
+        if latest_tick is not None:
+            timestamp = max(timestamp, latest_tick)
+        target = int(self.market.clock()) // TICK_SECONDS * TICK_SECONDS
+        return target - timestamp > TICK_SECONDS
 
     def refresh_school(self):
-        members, timestamp, catching_up = self.load_members()
+        members, timestamp = self.load_members()
         selected = sorted(members.values(), key=lambda member: (-member['assets'], member['id']))
         ranked = {}
         previous_assets = None
@@ -100,7 +106,7 @@ class RankingService:
                 rank = position
                 previous_assets = member['assets']
             ranked[member['id']] = self.ranking_item(member, rank, None)
-        self.school_snapshot = ranked, list(ranked.items())[:100], timestamp, catching_up
+        self.school_snapshot = ranked, list(ranked.items())[:100], timestamp
 
     def ranking_item(self, member, rank, user_id):
         return {'profile_key': profile_key(member['id']), 'rank': rank, 'name': member['name'],
@@ -113,13 +119,13 @@ class RankingService:
             raise ValueError('랭킹 범위를 확인해주세요.')
         snapshot = self.school_snapshot
         if scope == 'school' and public_key is None and snapshot is not None:
-            ranked, top, timestamp, catching_up = snapshot
+            ranked, top, timestamp = snapshot
             key = str(user_id)
             if key in ranked:
                 return {'available': True, 'members': [dict(item, is_me=member_id == key) for member_id, item in top],
                         'me': dict(ranked[key], is_me=True), 'count': len(ranked), 'timestamp': timestamp,
-                        'catching_up': catching_up}
-        members, timestamp, catching_up = self.load_members(public_key)
+                        'catching_up': self.market_is_delayed(timestamp)}
+        members, timestamp = self.load_members(public_key)
         me = members.get(str(user_id))
         if public_key is not None:
             me = next((u for u in members.values() if profile_key(u['id']) == public_key), None)
@@ -150,7 +156,7 @@ class RankingService:
             if position <= 100:
                 result.append(item)
         response = {'available': True, 'members': result, 'me': my_rank, 'count': len(selected),
-                    'timestamp': timestamp, 'catching_up': catching_up}
+                    'timestamp': timestamp, 'catching_up': self.market_is_delayed(timestamp)}
         if public_key is not None:
             response['portfolio'] = {
                 'cash': me['assets'] - me['value'], 'value': me['value'], 'cost': me['cost'],

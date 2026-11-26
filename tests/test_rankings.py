@@ -62,6 +62,21 @@ class RankingTests(unittest.TestCase):
         ranking.refresh_school()
         self.assertEqual(self.client.get('/api/my-rank').json['rank'], 1)
 
+    def test_cached_school_ranking_warning_tracks_current_market(self):
+        ranking = self.app.extensions['ranking']
+        now = 1800000030
+        self.market.clock = lambda: now
+        ranking.refresh_school()
+        self.assertFalse(self.client.get('/api/rankings').json['catching_up'])
+
+        now += 30
+        self.assertTrue(self.client.get('/api/rankings').json['catching_up'])
+
+        self.market.advance()
+        result = self.client.get('/api/rankings').json
+        self.assertFalse(result['catching_up'])
+        self.assertEqual(result['timestamp'], 1800000000)
+
     def test_profile_charts_only_return_latest_seven_for_owned_stocks(self):
         with self.market.connection(write=True) as db:
             db.executemany(

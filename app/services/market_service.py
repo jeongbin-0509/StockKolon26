@@ -26,6 +26,7 @@ class MarketService:
         self.clock = clock
         self.max_catchup = max_catchup
         self.store = Database(database, schema=schema)
+        self.last_committed_tick = None
 
     def connection(self, write=False, consistent_read=False):
         return self.store.connection(write=write, consistent_read=consistent_read)
@@ -34,6 +35,7 @@ class MarketService:
         target = int(self.clock()) // TICK_SECONDS * TICK_SECONDS
         with self.connection(write=True) as db:
             timestamp = self._advance(db, target)
+        self.last_committed_tick = timestamp
         return timestamp, timestamp < target
 
     def initialize(self):

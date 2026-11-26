@@ -146,7 +146,7 @@
             document.querySelector('.rank-table-labels').hidden = data.members.length <= 3;
             content.hidden = false;
             status.hidden = !data.catching_up;
-            if (data.catching_up) status.textContent = '시장 가격을 갱신하는 중입니다. 잠시 후 다시 확인해주세요.';
+            status.textContent = data.catching_up ? '시세 갱신이 늦어져 마지막 순위를 표시하고 있어요.' : '';
         } catch (error) {
             if (current !== requestNumber) return;
             status.hidden = false;
