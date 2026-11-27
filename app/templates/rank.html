@@ -7,7 +7,7 @@
     {% include '_pwa_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css', v='club-logo-2') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/rank.css', v='club-logo-2') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/rank.css', v='restore-20261127') }}">
 </head>
 <body class="leaderboard-page">
 <header class="buy-header">
@@ -22,7 +22,7 @@
 <nav class="page-back-nav" aria-label="페이지 이동"><a class="page-back-link" href="{{ url_for('main.index') }}">← 메인으로</a></nav>
 <main class="rank-page">
     <div class="rank-heading">
-        <div><h1>순위</h1></div>
+        <div><p class="rank-eyebrow"><span></span> STOCKOLON 26</p><h1>리더보드<span class="heading-dot">.</span></h1></div>
         <button id="refresh" class="refresh-btn" type="button" aria-label="순위 새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 3M4 15l2 3a7 7 0 0 0 12-1"/></svg><span>새로고침</span></button>
     </div>
     <div class="rank-filter-bar">
@@ -51,8 +51,8 @@
 
     </section>
 </main>
-<script src="{{ url_for('static', filename='js/header-profile.js', v='clean-ui-1') }}" data-autoload="true"></script>
-<script src="{{ url_for('static', filename='js/rank.js', v='rank-status-1') }}"></script>
+<script src="{{ url_for('static', filename='js/header-profile.js', v='restore-20261127') }}" data-autoload="true"></script>
+<script src="{{ url_for('static', filename='js/rank.js', v='restore-20261127') }}"></script>
 {% include '_mobile_nav.html' %}
 {% include '_pwa_script.html' %}
 </body>

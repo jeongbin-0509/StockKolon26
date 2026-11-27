@@ -4,6 +4,7 @@
 </nav></header>
 <main class="settings-page"><h1>설정</h1>
 <section class="settings-section"><h2>내 계정</h2><a href="{{ url_for('main.profile') }}" class="settings-row"><span>내 투자 현황 · 거래 내역</span><span>→</span></a><a href="{{ url_for('auth.forgot_password') }}" class="settings-row"><span>비밀번호 재설정</span><span>→</span></a></section>
+{% include '_cosmetic_collection.html' %}
 <section class="settings-section"><h2>화면</h2><label class="settings-row" for="reduce-effects"><span>애니메이션 줄이기</span><input type="checkbox" id="reduce-effects"></label><p id="settings-status" role="status"></p></section>
 <div class="settings-logout">{% include '_logout_form.html' %}</div></main>
-<script src="{{ url_for('static',filename='js/header-profile.js',v='clean-ui-1') }}" data-autoload="true"></script><script src="{{ url_for('static',filename='js/settings.js',v='mobile-1') }}"></script>{% include '_mobile_nav.html' %}{% include '_pwa_script.html' %}</body></html>
+<script src="{{ url_for('static',filename='js/header-profile.js',v='restore-20261127') }}" data-autoload="true"></script><script src="{{ url_for('static',filename='js/settings.js',v='mobile-1') }}"></script>{% include '_mobile_nav.html' %}{% include '_pwa_script.html' %}</body></html>

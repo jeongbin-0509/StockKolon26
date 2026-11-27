@@ -44,6 +44,20 @@ class RankingTests(unittest.TestCase):
         self.assertNotIn('club_id', str(data))
         self.assertEqual(self.client.get('/api/rankings').headers['Cache-Control'], 'no-store')
 
+    def test_equipped_styles_refresh_without_rebuilding_cached_rankings(self):
+        cosmetics = self.app.extensions['cosmetics']
+        self.app.extensions['ranking'].refresh_school()
+        cosmetics.equip('a', 'prologue', None)
+        with patch.object(self.market, '_advance', side_effect=AssertionError('ranking read wrote market')):
+            result = self.client.get('/api/rankings').get_json()
+        self.assertEqual(result['me']['cosmetics'], {'signature':'prologue','name':'PROLOGUE','frame':None})
+        cosmetics.equip('a', None, 'prologue')
+        updated = self.client.get('/api/rankings').get_json()
+        self.assertEqual(updated['me']['cosmetics']['frame'], 'prologue')
+        self.assertIsNone(updated['me']['cosmetics']['signature'])
+        key = updated['me']['profile_key']
+        self.assertIn(b'cosmetics', self.client.get('/members/' + key).data)
+
     def test_header_rank_is_viewer_specific(self):
         first = self.client.get('/api/my-rank').get_json()
         self.assertEqual(first['rank'], 2)

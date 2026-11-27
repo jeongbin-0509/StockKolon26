@@ -107,8 +107,16 @@ def club_profile(user):
     return url_for('static', filename=filename), club_name
 
 
+def own_cosmetics():
+    key = profile_key(session['user_id'])
+    return current_app.extensions['cosmetics'].public([key])[key]
+
+
 def set_member_images(members):
+    keys = [member['profile_key'] for member in members if member.get('profile_key')]
+    decorations = current_app.extensions['cosmetics'].public(keys)
     for member in members:
+        member['cosmetics'] = decorations.get(member.get('profile_key'))
         number = next((n for n, name in CLUBS.items() if name == member.get('club_name')), None)
         filename = f'images/{number}.png'
         if not (Path(current_app.static_folder) / filename).is_file():
@@ -272,6 +280,7 @@ def index_data():
     data = {
         "success": True,
         "profile": {
+            "cosmetics": own_cosmetics(),
             "username": user["name"],
             "profileImg": profile_image,
             "clubName": club_name
@@ -296,7 +305,7 @@ def header_profile():
         return jsonify(success=False, message='로그인이 필요합니다.'), 401
     user = display_user(session['user_id'])
     profile_image, club_name = club_profile(user)
-    response = jsonify(success=True, user={'name': user['name'], 'profileImg': profile_image, 'clubName': club_name})
+    response = jsonify(success=True, user={'name': user['name'], 'profileImg': profile_image, 'clubName': club_name, 'cosmetics': own_cosmetics()})
     response.headers['Cache-Control'] = 'no-store'
     return response
 
@@ -337,6 +346,7 @@ def profile_data():
     response = jsonify({
         "success": True,
         "user": {
+            "cosmetics": own_cosmetics(),
             "name": user["name"],
             "profileImg": profile_image,
             "clubName": club_name,

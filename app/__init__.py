@@ -73,6 +73,13 @@ def create_app(test_config=None):
     trading = TradingService(service)
     trading.initialize()
     app.extensions["trading"] = trading
+    from app.services.cosmetics import Cosmetics
+    from app.routes.cosmetics import cosmetics
+    achievements = Cosmetics(service)
+    achievements.initialize()
+    service.cosmetics = achievements
+    app.extensions['cosmetics'] = achievements
+    app.register_blueprint(cosmetics)
     app.extensions["ranking"] = RankingService(
         service, member_loader=None if service.store.postgres else load_supabase_members)
     admin_service = AdminService(service)

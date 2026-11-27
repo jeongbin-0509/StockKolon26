@@ -7,6 +7,7 @@ function updateHeaderProfile(user) {
         avatar.alt = '프로필 사진';
     }
     if (name && (user.name || user.username)) name.textContent = `${user.name || user.username}님`;
+    if (window.StockCosmetics) StockCosmetics.label(name, user.cosmetics);
 }
 
 if (document.currentScript.dataset.autoload === 'true') {
