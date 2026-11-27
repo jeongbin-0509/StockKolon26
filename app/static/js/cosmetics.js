@@ -1,6 +1,7 @@
 (() => {
     const companionIds = new Set(['luckycat','busybee','moonbunny','cherry','octopus']);
     const materialIds = new Set(['sovereign','apex','slayer']);
+    const panelIds = new Set(['prime','apex','earlybird','oracle','anchor','tracker', ...companionIds]);
     const ids = new Set(['prologue','prime','apex','sovereign','earlybird','tracker','oracle','anchor','slayer', ...companionIds]);
     // Inline vector emblems stay crisp at header size and never depend on fonts.
     const emblems = {
@@ -30,66 +31,6 @@
         anchor: ['M5 40V17A12 12 0 0 1 17 5h23M11 40V17a6 6 0 0 1 6-6h23M2 22h12M22 2v12'],
         slayer: ['M0 55 6 6 18 0 12 25ZM15 45 23 12 48 0 32 19ZM31 35 45 13 72 8 52 24Z', 'M6 6l6 19M23 12l9 7M45 13l7 11'],
     };
-    const crests = {
-        apex: ['M9 29 37 23 32 10 48 19 60 0 72 19 88 10 83 23 111 29 75 32 60 23 45 32Z', 'M60 0v23M48 19l12 4 12-4M32 10l13 22M88 10 75 32'],
-        sovereign: ['M25 8 43 17 60 1 77 17 95 8 87 31H33ZM8 30l15-9 4 10ZM112 30l-15-9-4 10Z', 'M33 26h54M60 11l5 7-5 7-5-7ZM39 20l3 6M81 20l-3 6'],
-        slayer: ['M9 0 48 17 60 13 72 17 111 0 86 27 76 24 60 35 44 24 34 27ZM43 6l17 7 17-7-7 14H50Z', 'M9 0l35 24M111 0 76 24M60 19v10M53 19l3 2M67 19l-3 2'],
-    };
-    // Original code-native mascots; colors and moving parts remain independently styleable.
-    const mascots = {
-        luckycat: [
-            ['pet-body','M23 49V14L39 24Q50 19 61 24L77 14V49Q77 67 50 67T23 49Z'],
-            ['pet-blush','M28 23 37 28 28 33ZM72 23 63 28 72 33ZM29 48a5 3 0 1 0 10 0 5 3 0 1 0-10 0M61 48a5 3 0 1 0 10 0 5 3 0 1 0-10 0'],
-            ['pet-eyes','M37 38h3v5h-3ZM60 38h3v5h-3Z'],
-            ['pet-line','M47 46h6l-3 3ZM50 49q-5 7-8 1M50 49q5 7 8 1M20 42l10 2M19 49l11-1M70 44l10-2M70 48l11 1'],
-            ['pet-paws','M20 58c0-10 16-10 16 0v7H20ZM64 58c0-10 16-10 16 0v7H64Z'],
-        ],
-        busybee: [
-            ['pet-wing wing-left','M43 29C9-8 7 38 43 39Z'],
-            ['pet-wing wing-right','M53 29C89-8 91 38 53 39Z'],
-            ['pet-body','M20 46a30 19 0 1 0 60 0 30 19 0 1 0-60 0'],
-            ['pet-stripe','M34 30q-6 15 0 32l7 2q-6-18 0-35ZM49 28q-4 19 0 36l7-1q-4-16 0-34Z'],
-            ['pet-eyes','M65 40h3v5h-3ZM74 40h3v5h-3Z'],
-            ['pet-line','M67 50q4 4 8-1M67 29l-2-7M74 29l4-7'],
-            ['pet-blush','M62 48h4M76 48h4'],
-        ],
-        moonbunny: [
-            ['pet-moon','M69 6a30 30 0 1 0 23 43A28 28 0 0 1 69 6Z'],
-            ['pet-body','M29 35C12-9 36-9 39 31L47 30C42-8 63-6 57 35Q72 42 65 57Q59 69 38 65Q17 61 24 44Z'],
-            ['pet-blush','M31 12q-2 10 5 19M52 10v20M28 50h6M55 50h6'],
-            ['pet-eyes','M34 43h3v4h-3ZM53 43h3v4h-3Z'],
-            ['pet-line','M42 50h5l-2 3M40 56q5 3 10-1'],
-            ['pet-paws','M27 61q1-8 12-5l3 10H29ZM51 62q6-12 13-5l-1 8H51Z'],
-        ],
-        cherry: [
-            ['pet-leaf','M49 20Q63-2 81 11Q68 28 49 20Z'],
-            ['pet-stem','M32 40Q52 31 52 11M67 42Q55 27 52 11'],
-            ['pet-body','M17 48a17 17 0 1 0 34 0 17 17 0 1 0-34 0M52 50a17 17 0 1 0 34 0 17 17 0 1 0-34 0'],
-            ['pet-shine','M23 43q1-6 7-6M58 45q1-6 7-6'],
-            ['pet-eyes','M28 48h2v3h-2ZM38 48h2v3h-2ZM63 50h2v3h-2ZM73 50h2v3h-2Z'],
-            ['pet-line','M31 56q3 3 6 0M66 58q3 3 6 0'],
-        ],
-        octopus: [
-            ['pet-tentacles','M29 40C6 39 3 64 17 65q9 0 7-9c-8 2-3-11 5-8-13 29 9 29 11 9-4 21 17 24 17 2 4 19 24 15 14-9 10-2 15 12 7 10-1 10 12 12 15 0 5-19-14-26-22-20Z'],
-            ['pet-body','M26 42V30a24 24 0 0 1 48 0v12Q73 56 50 56T26 42Z'],
-            ['pet-shine','M34 26q2-10 11-11'],
-            ['pet-eyes','M38 32h3v5h-3ZM59 32h3v5h-3Z'],
-            ['pet-blush','M31 42h8M61 42h8'],
-            ['pet-line','M46 42q4 5 8 0'],
-        ],
-    };
-    const companionCorners = {
-        luckycat: ['M12 28c-12 14 26 14 14 0l-7-6ZM7 15a3 4 0 1 0 6 0 3 4 0 1 0-6 0M17 10a3 4 0 1 0 6 0 3 4 0 1 0-6 0M27 15a3 4 0 1 0 6 0 3 4 0 1 0-6 0'],
-        busybee: ['M7 8 19 1 31 8v14l-12 7-12-7ZM28 27l9-5 9 5v10l-9 5-9-5Z'],
-        moonbunny: ['M18 1 22 13 35 17 22 21 18 34 14 21 1 17 14 13ZM37 31l2 6 6 2-6 2-2 6-2-6-6-2 6-2Z'],
-        cherry: ['M4 26Q1 17 10 17Q4 8 15 9Q15-1 23 4Q32 2 30 12Q41 10 36 22Q38 29 28 28Z'],
-        octopus: ['M5 16a10 10 0 1 0 20 0 10 10 0 1 0-20 0M27 34a6 6 0 1 0 12 0 6 6 0 1 0-12 0M9 12l3-3M31 32l2-2'],
-    };
-    function mascot(id) {
-        const svg = vector(mascots[id].map(([cls,d]) => d), '0 0 100 72', 'frame-mascot');
-        [...svg.children].forEach((path, i) => path.setAttribute('class', mascots[id][i][0]));
-        return svg;
-    }
     function vector(paths, viewBox, cls, plated = false) {
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('viewBox', viewBox); svg.setAttribute('class', cls);
@@ -123,10 +64,20 @@
         box.classList.toggle('cosmetic-frame', ids.has(id));
         box.classList.toggle('companion-frame', companionIds.has(id));
         box.classList.toggle('material-frame', materialIds.has(id));
+        box.classList.toggle('panel-frame', panelIds.has(id));
         if (ids.has(id)) {
             box.dataset.style = id;
             const ornament = el('span', 'frame-ornament');
             ornament.setAttribute('aria-hidden', 'true');
+            if (panelIds.has(id)) {
+                // The artwork is the rectangular card itself, never a floating crest.
+                ornament.append(el('span', 'panel-art'), el('span', 'panel-glints'));
+                if (id === 'apex') {
+                    for (const position of ['tl','tr','bl','br']) ornament.append(el('span', `material-corner corner-${position}`));
+                }
+                box.append(ornament);
+                return box;
+            }
             if (materialIds.has(id)) {
                 for (const position of ['tl','tr','bl','br']) ornament.append(el('span', `material-corner corner-${position}`));
                 const crest = el('span', 'material-crest');
@@ -135,20 +86,25 @@
                     const mote = el('i'); mote.style.setProperty('--mote', i); motes.append(mote);
                 }
                 ornament.append(crest, motes, el('span','frame-energy energy-left'), el('span','frame-energy energy-right'));
-                box.append(ornament);
-                return box;
-            }
-            if (companionIds.has(id)) {
-                for (const position of ['tl','tr','bl','br']) ornament.append(vector(companionCorners[id], '0 0 48 48', `pet-corner corner-${position}`));
-                ornament.append(mascot(id), el('span', 'pet-trail'), el('span', 'pet-sparkles'));
+                if (id === 'sovereign') {
+                    const lightning = vector([
+                        'M0 4 18 2 14 6 36 3 32 7 49 4',
+                        'M100 3 82 6 86 2 63 5 68 1 53 4',
+                        'M3 0 1 25 5 21 2 48 6 43 3 67 5 63 2 100',
+                        'M98 0 100 23 96 20 99 44 94 40 98 65 95 61 99 100',
+                        'M1 98 21 95 17 100 43 97 40 99 58 96',
+                        'M99 98 80 96 84 100 63 97 67 94 52 98',
+                    ], '0 0 100 100', 'sovereign-lightning');
+                    lightning.setAttribute('preserveAspectRatio', 'none');
+                    [...lightning.children].forEach((path, i) => path.style.setProperty('--bolt', i));
+                    ornament.append(lightning);
+                }
                 box.append(ornament);
                 return box;
             }
             for (const position of ['tl','tr','bl','br']) {
                 ornament.append(vector(corners[id], '0 0 72 60', `frame-corner corner-${position}`, ['prime','apex','sovereign','slayer'].includes(id)));
             }
-            if (crests[id]) ornament.append(vector(crests[id], '0 0 120 36', 'frame-crest', true));
-            else if (['earlybird','oracle','anchor'].includes(id)) ornament.append(vector([emblems[id]], '0 0 24 24', 'frame-sigil'));
             ornament.append(el('span', 'frame-energy energy-left'), el('span', 'frame-energy energy-right'));
             box.append(ornament);
         } else delete box.dataset.style;

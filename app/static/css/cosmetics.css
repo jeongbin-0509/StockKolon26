@@ -299,6 +299,106 @@ header .signature-badge { font-size:8px; padding:3px 6px; letter-spacing:.8px; }
   .cosmetic-artwork.material-frame .material-corner { width:43px; }
 }
 
+/* Dedicated painted panels. Only SOVEREIGN / SLAYER have central external crests.
+   Nine-slice rendering preserves corner characters across wide rows and narrow podiums. */
+[data-style="prime"] { --frame-panel:url('../images/frames/prime-panel-v2.webp'); }
+[data-style="tracker"] { --frame-panel:url('../images/frames/tracker-panel-v2.webp'); }
+[data-style="apex"] { --frame-panel:url('../images/frames/apex-panel-v2.webp'); }
+[data-style="oracle"] { --frame-panel:url('../images/frames/oracle-panel-v2.webp'); }
+[data-style="earlybird"] { --frame-panel:url('../images/frames/earlybird-panel-v2.webp'); }
+[data-style="anchor"] { --frame-panel:url('../images/frames/anchor-panel-v2.webp'); }
+[data-style="cherry"] { --frame-panel:url('../images/frames/cherry-panel-v2.webp'); }
+[data-style="luckycat"] { --frame-panel:url('../images/frames/luckycat-panel-v2.webp'); }
+[data-style="busybee"] { --frame-panel:url('../images/frames/busybee-panel-v2.webp'); }
+[data-style="moonbunny"] { --frame-panel:url('../images/frames/moonbunny-panel-v2.webp'); }
+[data-style="octopus"] { --frame-panel:url('../images/frames/octopus-panel-v2.webp'); }
+[data-style="sovereign"] { --frame-atlas:url('../images/frames/sovereign-atlas-v2.webp'); --surface:#082c48; --metal:#f0c362; --flare:#c6f5ff; --shade:#156294; }
+.cosmetic-frame.panel-frame[data-style],#cosmetic-preview.panel-frame[data-style] {
+  background:var(--surface); border-radius:10px; border:1px solid color-mix(in srgb,var(--metal),transparent 40%);
+}
+.panel-frame>.frame-ornament::before,.panel-frame>.frame-ornament::after { display:none; }
+.panel-frame>.frame-ornament { z-index:0; }
+.panel-frame>:not(.frame-ornament) { position:relative; z-index:1; }
+.rank-card.panel-frame>.member-link { position:static; }
+.panel-art {
+  position:absolute; inset:0; border:solid transparent; border-width:26px 58px 48px;
+  border-image-source:var(--frame-panel); border-image-slice:240 512 340 512 fill;
+  border-image-width:26px 58px 48px; border-image-outset:0; border-image-repeat:stretch;
+  border-radius:inherit; pointer-events:none;
+}
+.panel-glints { position:absolute; inset:2px; border-radius:inherit; overflow:hidden; }
+.panel-glints::after {
+  content:''; position:absolute; inset:0; border:1px solid transparent; border-radius:inherit;
+  background:linear-gradient(115deg,transparent 30%,color-mix(in srgb,var(--flare),transparent 35%) 48%,transparent 65%) border-box;
+  background-size:300% 100%; mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0); mask-composite:exclude;
+  animation:panel-shimmer 9s ease-in-out infinite; opacity:.7;
+}
+.panel-frame[data-style="apex"] .panel-glints::after { animation-duration:5s; }
+.panel-frame[data-style="oracle"] .panel-glints::after { animation-duration:7s; }
+.panel-frame[data-style="anchor"] .panel-glints::after { animation-direction:alternate; animation-duration:6s; }
+.panel-frame[data-style="octopus"] .panel-glints::after { animation-direction:reverse; }
+.rank-list>.panel-frame { margin-block:0; padding:24px 32px 48px; min-height:126px; }
+.rank-list:has(.panel-frame) { gap:24px; padding-block:18px; }
+.my-position.panel-frame { margin-block:26px; padding:24px 32px 48px; }
+.podium-step.panel-frame { margin-top:48px; padding-top:22px; padding-bottom:42px; }
+.podium-step.panel-frame .panel-art { border-image-width:20px 40px 42px; }
+.cosmetic-artwork.panel-frame { margin-block:22px 16px; padding-block:25px 49px; }
+.cosmetic-artwork.panel-frame .panel-art { border-image-width:22px 45px 45px; }
+#cosmetic-preview.panel-frame { margin-block:28px; padding-block:24px 48px; }
+.cosmetic-frame[data-style="sovereign"]>.frame-ornament::before {
+  background-image:linear-gradient(110deg,#80601e,#ffe4a0 18%,#49c9ed 40%,#f9d578 60%,#137aaa 82%,#ffe4a0);
+}
+[data-style="sovereign"]>.frame-ornament .material-crest::after {
+  background-image:linear-gradient(110deg,transparent 40%,#b5f4ffbb 50%,transparent 60%);
+}
+[data-style="sovereign"]>.frame-ornament .material-motes i:nth-child(even) { background:#50d9ff; box-shadow:0 0 9px #22c5ff; }
+@keyframes panel-shimmer { 0%,15% { background-position:100% 0; } 75%,100% { background-position:-100% 0; } }
+@media(max-width:760px) {
+  .rank-list>.panel-frame,.my-position.panel-frame { padding:22px 16px 44px; }
+  .panel-art { border-image-width:21px 48px 43px; }
+  .podium-step.panel-frame { margin-top:30px; padding-top:18px; padding-bottom:32px; }
+  .podium-step.panel-frame .panel-art { border-image-width:15px 26px 31px; }
+  .cosmetic-artwork.panel-frame { margin-block:20px 16px; padding-block:22px 42px; }
+  .cosmetic-artwork.panel-frame .panel-art { border-image-width:18px 33px 36px; }
+}
+
+/* Compact Challenger-inspired silhouette, with correctly oriented L-shaped corners. */
+.material-frame[data-style="sovereign"]>.frame-ornament .material-crest {
+  width:110px; max-width:90%; aspect-ratio:1; bottom:calc(100% - 13px);
+  background-image:url('../images/frames/sovereign-crest-v3.webp'); background-size:contain; background-position:center;
+}
+[data-style="sovereign"]>.frame-ornament .material-crest::after {
+  mask-image:url('../images/frames/sovereign-crest-v3.webp'); mask-size:contain; mask-position:center;
+}
+.material-frame[data-style="sovereign"]>.frame-ornament .material-corner { width:46px; }
+[data-style="sovereign"]>.frame-ornament .material-corner.corner-tl { top:-9px; left:-9px; transform:scaleY(-1); }
+[data-style="sovereign"]>.frame-ornament .material-corner.corner-tr { top:-9px; right:-9px; transform:scale(-1); }
+[data-style="sovereign"]>.frame-ornament .material-corner.corner-bl { bottom:-9px; left:-9px; transform:none; }
+[data-style="sovereign"]>.frame-ornament .material-corner.corner-br { bottom:-9px; right:-9px; transform:scaleX(-1); }
+.podium-step.material-frame[data-style="sovereign"] { margin-top:100px; }
+.rank-list>.material-frame[data-style="sovereign"],.my-position.material-frame[data-style="sovereign"] { margin-top:122px; }
+.cosmetic-artwork.material-frame[data-style="sovereign"] { margin-top:112px; }
+#cosmetic-preview.material-frame[data-style="sovereign"] { margin-top:122px; }
+.sovereign-lightning { position:absolute; inset:-6px; width:calc(100% + 12px); height:calc(100% + 12px); overflow:visible; pointer-events:none; }
+.sovereign-lightning .frame-engraving {
+  fill:none; stroke:#d5fbff; stroke-width:1.2; vector-effect:non-scaling-stroke;
+  filter:drop-shadow(0 0 2px #2ae1ff) drop-shadow(0 0 5px #128bff);
+  opacity:0; animation:sovereign-storm 9s linear infinite; animation-delay:calc(var(--bolt)*-1.47s);
+}
+@keyframes sovereign-storm {
+  0%,12%,18%,100% { opacity:0; }
+  13%,15% { opacity:.9; }
+  14%,16% { opacity:.12; }
+  17% { opacity:.65; }
+}
+@media(max-width:760px) {
+  .podium-step.material-frame[data-style="sovereign"] { margin-top:62px; }
+  .podium-step.material-frame[data-style="sovereign"]>.frame-ornament .material-crest { width:74px; bottom:calc(100% - 10px); }
+  .podium-step.material-frame[data-style="sovereign"]>.frame-ornament .material-corner { width:28px; }
+  .cosmetic-artwork.material-frame[data-style="sovereign"] { margin-top:83px; }
+  .cosmetic-artwork.material-frame[data-style="sovereign"]>.frame-ornament .material-crest { width:86px; }
+  .cosmetic-artwork.material-frame[data-style="sovereign"]>.frame-ornament .material-corner { width:32px; }
+}
 /* Effect preferences cover every decorative layer, including pseudo-elements. */
 .reduce-effects .frame-ornament, .reduce-effects .frame-ornament *, .reduce-effects .frame-ornament::before, .reduce-effects .frame-ornament::after, .reduce-effects .frame-ornament *::after { animation:none!important; }
 @media(prefers-reduced-motion:reduce) { .frame-ornament,.frame-ornament *,.frame-ornament::before,.frame-ornament::after,.frame-ornament *::after { animation:none!important; } }
